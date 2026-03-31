@@ -1,0 +1,14 @@
+{
+  "name": "sonic-shepard",
+  "version": "1.0.0",
+  "description": "Agentic AI Orchestrator for automated student comment generation",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-comments.js",
+    "read": "node generate-comments.js --read-only",
+    "test-api": "node generate-comments.js --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #1a1d27;
+      --bg-card: #21242f;
+      --bg-input: #2a2d3a;
+      --border: #333848;
+      --text-primary: #e8eaed;
+      --text-secondary: #9aa0b0;
+      --text-muted: #6b7280;
+      --accent: #4f8cff;
+      --accent-hover: #6ba0ff;
+      --accent-glow: rgba(79, 140, 255, 0.15);
+      --success: #34d399;
+      --success-bg: rgba(52, 211, 153, 0.1);
+      --warning: #fbbf24;
+      --warning-bg: rgba(251, 191, 36, 0.1);
+      --danger: #f87171;
+      --danger-bg: rgba(248, 113, 113, 0.1);
+      --purple: #a78bfa;
+      --purple-bg: rgba(167, 139, 250, 0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(79, 140, 255, 0.25);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e8eaed 0%, #9aa0b0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* ─── Step Indicators ─── */
+    .steps-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .step-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .step-pill.active {
+      background: var(--accent-glow);
+      border-color: rgba(79, 140, 255, 0.3);
+      color: var(--accent);
+    }
+
+    .step-pill.done {
+      background: var(--success-bg);
+      border-color: rgba(52, 211, 153, 0.3);
+      color: var(--success);
+    }
+
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-input);
+    }
+
+    .step-pill.active .step-num {
+      background: rgba(79, 140, 255, 0.2);
+    }
+
+    .step-pill.done .step-num {
+      background: rgba(52, 211, 153, 0.2);
+    }
+
+    /* ─── Cards ─── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: #444a5c;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .card-title .icon.blue {
+      background: var(--accent-glow);
+    }
+
+    .card-title .icon.green {
+      background: var(--success-bg);
+    }
+
+    .card-title .icon.orange {
+      background: var(--warning-bg);
+    }
+
+    .card-title .icon.purple {
+      background: var(--purple-bg);
+    }
+
+    /* ─── Form Elements ─── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row.triple {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-group .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ─── Column Config ─── */
+    .columns-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 16px;
+      user-select: none;
+    }
+
+    .columns-toggle:hover {
+      color: var(--accent-hover);
+    }
+
+    .columns-toggle .arrow {
+      transition: transform 0.2s;
+      font-size: 10px;
+    }
+
+    .columns-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+
+    .columns-grid {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .columns-grid.show {
+      display: grid;
+    }
+
+    .columns-grid .form-group input {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      text-align: center;
+      padding: 8px 10px;
+    }
+
+    /* ─── Buttons ─── */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(79, 140, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #333848;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #0f1117;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      box-shadow: 0 4px 16px rgba(52, 211, 153, 0.3);
+    }
+
+    .btn-purple {
+      background: var(--purple);
+      color: #0f1117;
+    }
+
+    .btn-purple:hover:not(:disabled) {
+      box-shadow: 0 4px 16px rgba(167, 139, 250, 0.3);
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+
+    /* ─── Status / Alerts ─── */
+    .status {
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      margin-top: 16px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+
+    .status.show {
+      display: flex;
+    }
+
+    .status.info {
+      background: var(--accent-glow);
+      border: 1px solid rgba(79, 140, 255, 0.2);
+      color: var(--accent);
+    }
+
+    .status.success {
+      background: var(--success-bg);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      color: var(--success);
+    }
+
+    .status.error {
+      background: var(--danger-bg);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: var(--danger);
+    }
+
+    .status.warning {
+      background: var(--warning-bg);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      color: var(--warning);
+    }
+
+    /* ─── Preview Table ─── */
+    .section-hidden {
+      display: none;
+    }
+
+    .section-visible {
+      display: block;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .preview-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .preview-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: var(--bg-input);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    tbody tr:hover {
+      background: rgba(79, 140, 255, 0.04);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-a {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+    }
+
+    .badge-b {
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+    }
+
+    .badge-c {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+
+    .badge-d {
+      background: rgba(251, 146, 60, 0.15);
+      color: #fb923c;
+    }
+
+    .badge-f {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+
+    .badge-none {
+      background: rgba(107, 114, 128, 0.15);
+      color: #6b7280;
+    }
+
+    .has-comment {
+      color: var(--success);
+      font-size: 12px;
+    }
+
+    .no-comment {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .email-present {
+      color: var(--purple);
+      font-size: 12px;
+    }
+
+    .email-missing {
+      color: var(--danger);
+      font-size: 12px;
+    }
+
+    /* ─── Email Cards ─── */
+    .email-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .email-card.selected {
+      border-color: rgba(167, 139, 250, 0.4);
+    }
+
+    .email-card.no-email {
+      opacity: 0.5;
+    }
+
+    .email-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .email-card-header input[type="checkbox"] {
+      accent-color: var(--purple);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .email-card-info {
+      flex: 1;
+    }
+
+    .email-card-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .email-card-email {
+      font-size: 13px;
+      color: var(--purple);
+    }
+
+    .email-card-email.missing {
+      color: var(--danger);
+      font-style: italic;
+    }
+
+    .email-card-grade {
+      margin-left: auto;
+    }
+
+    .email-card-body {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-left: 30px;
+    }
+
+    .email-card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .email-card-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ─── Select All Bar ─── */
+    .select-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+    }
+
+    .select-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .select-bar label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .select-bar input[type="checkbox"] {
+      accent-color: var(--purple);
+      width: 16px;
+      height: 16px;
+    }
+
+    .select-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ─── Checkbox ─── */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox-row label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    /* ─── Spinner ─── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ─── Sent Badge ─── */
+    .sent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .sent-badge.sent {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .sent-badge.failed {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row.triple {
+        grid-template-columns: 1fr;
+      }
+
+      .columns-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .btn-row {
+        flex-direction: column;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .steps-bar {
+        flex-wrap: wrap;
+      }
+
+      .email-card-body {
+        margin-left: 0;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-badge">🔒 FERPA Compliant · No AI · Local Templates</div>
+      <h1>Biweekly Comment Generator</h1>
+      <p>Generate personalized student and parent comments, then email parent reports directly — all within Google
+        Workspace.</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps-bar">
+      <div class="step-pill active" id="step1pill">
+        <span class="step-num">1</span> Configure
+      </div>
+      <div class="step-pill" id="step2pill">
+        <span class="step-num">2</span> Preview
+      </div>
+      <div class="step-pill" id="step3pill">
+        <span class="step-num">3</span> Generate
+      </div>
+      <div class="step-pill" id="step4pill">
+        <span class="step-num">4</span> Email Parents
+      </div>
+    </div>
+
+    <!-- Step 1: Spreadsheet Config -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon blue">📋</div>
+        Spreadsheet Configuration
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Spreadsheet ID</label>
+          <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here">
+          <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
+        </div>
+        <div class="form-group">
+          <label>Sheet Tab Name</label>
+          <input type="text" id="sheetName" placeholder="e.g. biweeklyReport" value="biweeklyReport">
+        </div>
+      </div>
+
+      <!-- Column Mapping (collapsible) -->
+      <div class="columns-toggle" onclick="toggleColumns()">
+        <span class="arrow" id="colArrow">▶</span>
+        Column Mapping (adjust for your spreadsheet layout)
+      </div>
+
+      <div class="columns-grid" id="columnsGrid">
+        <div class="form-group">
+          <label>Student Name</label>
+          <input type="text" id="studentNameCol" value="B">
+        </div>
+        <div class="form-group">
+          <label>Student Comment</label>
+          <input type="text" id="studentCommentCol" value="C">
+        </div>
+        <div class="form-group">
+          <label>Parent Comment</label>
+          <input type="text" id="parentCommentCol" value="D">
+        </div>
+        <div class="form-group">
+          <label>Grade</label>
+          <input type="text" id="gradeCol" value="E">
+        </div>
+        <div class="form-group">
+          <label>Tardies</label>
+          <input type="text" id="tardiesCol" value="AJ">
+        </div>
+        <div class="form-group">
+          <label>Absences</label>
+          <input type="text" id="absencesCol" value="AK">
+        </div>
+        <div class="form-group">
+          <label>Header Row</label>
+          <input type="text" id="headerRow" value="3">
+        </div>
+        <div class="form-group">
+          <label>Data Start Row</label>
+          <input type="text" id="dataStartRow" value="4">
+        </div>
+      </div>
+
+      <!-- Email Sheet Config -->
+      <div class="columns-toggle" onclick="toggleEmailConfig()">
+        <span class="arrow" id="emailArrow">▶</span>
+        Parent Email Sheet (if emails are on a separate tab)
+      </div>
+
+      <div class="columns-grid" id="emailGrid" style="display:none;">
+        <div class="form-group">
+          <label>Email Sheet Tab</label>
+          <input type="text" id="emailSheetName" placeholder="e.g. ParentEmails">
+          <span class="hint">Tab name with parent emails</span>
+        </div>
+        <div class="form-group">
+          <label>Name Column</label>
+          <input type="text" id="emailSheetNameCol" value="A" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
+          <span class="hint">Student name column in email sheet</span>
+        </div>
+        <div class="form-group">
+          <label>Email Column</label>
+          <input type="text" id="emailSheetEmailCol" value="B" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
+          <span class="hint">Parent email column in email sheet</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="previewBtn" onclick="previewData()">
+          Preview Students
+        </button>
+      </div>
+
+      <div class="status" id="previewStatus"></div>
+    </div>
+
+    <!-- Step 2: Preview Section -->
+    <div class="section-hidden" id="previewSection">
+      <div class="card">
+        <div class="card-title">
+          <div class="icon green">👁️</div>
+          Student Preview
+        </div>
+
+        <div class="preview-header">
+          <h3 id="previewTitle">Students Found</h3>
+          <span class="preview-count" id="previewCount"></span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Student Name</th>
+                <th>Grade</th>
+                <th>Tardies</th>
+                <th>Absences</th>
+                <th>Student Comment</th>
+                <th>Parent Comment</th>
+                <th>Parent Email</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="overwrite">
+          <label for="overwrite">Overwrite existing comments (only generates for blank cells by default)</label>
+        </div>
+
+        <div class="btn-row" style="margin-top: 16px;">
+          <button class="btn btn-success" id="generateBtn" onclick="generateComments()">
+            ✏️ Generate & Write Comments
+          </button>
+          <button class="btn btn-secondary" onclick="previewData()">
+            🔄 Refresh
+          </button>
+        </div>
+
+        <div class="status" id="generateStatus"></div>
+      </div>
+    </div>
+
+    <!-- Print Reports Section -->
+    <div class="section-hidden" id="printSection">
+      <div class="card">
+        <div class="card-title">
+          <div class="icon orange">🖨️</div>
+          Print Report Cards
+        </div>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+          Print individual Blueprint Progress Report cards for each student, or a class summary table. Each student gets their own page.
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="openPrintView('individual')">
+            🖨️ Print Student Report Cards
+          </button>
+          <button class="btn btn-secondary" onclick="openPrintView('summary')">
+            📊 Print Class Summary
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 & 4: Email Section -->
+    <div class="section-hidden" id="emailSection">
+      <div class="card">
+        <div class="card-title">
+          <div class="icon purple">✉️</div>
+          Email Parent Comments
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+          Review each parent comment below. Check the ones you want to email, customize the subject and message, then
+          send.
+          Emails will come from <strong id="teacherEmailDisplay">your Google account</strong>.
+        </p>
+
+        <!-- Email Settings -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Name (appears in the email)</label>
+            <input type="text" id="teacherName" placeholder="e.g. Mr. Johnson">
+          </div>
+          <div class="form-group">
+            <label>Email Subject</label>
+            <input type="text" id="emailSubject" value="Biweekly Progress Report — {student}">
+            <span class="hint">Use {student} to insert the student's first name</span>
+          </div>
+        </div>
+
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Additional Message (optional — added after the comment)</label>
+            <textarea id="customMessage"
+              placeholder="e.g. Parent-teacher conferences are next week on Thursday. Please sign up at..."></textarea>
+          </div>
+        </div>
+
+        <!-- Select All Bar -->
+        <div class="select-bar">
+          <div class="select-bar-left">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" checked>
+            <label for="selectAll">Select All</label>
+          </div>
+          <span class="select-count" id="selectCount">0 selected</span>
+        </div>
+
+        <!-- Email Cards -->
+        <div id="emailCards"></div>
+
+        <div class="btn-row" style="margin-top: 16px;">
+          <button class="btn btn-purple" id="sendBtn" onclick="sendEmails()">
+            ✉️ Send Selected Emails
+          </button>
+        </div>
+
+        <div class="status" id="emailStatus"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      Biweekly Comment Generator · Template-based · No AI · No data leaves Google Workspace
+    </div>
+
+  </div>
+
+  <script>
+    // ─── State ───
+    var generatedResults = [];
+    var teacherEmail = '';
+
+    // ─── Column Toggle ───
+    function toggleColumns() {
+      var grid = document.getElementById('columnsGrid');
+      var arrow = document.getElementById('colArrow');
+      grid.classList.toggle('show');
+      arrow.classList.toggle('open');
+    }
+
+    function toggleEmailConfig() {
+      var grid = document.getElementById('emailGrid');
+      var arrow = document.getElementById('emailArrow');
+      var isShown = grid.style.display === 'grid';
+      grid.style.display = isShown ? 'none' : 'grid';
+      arrow.classList.toggle('open');
+    }
+
+    // ─── Step Management ───
+    function setStep(n) {
+      for (var i = 1; i <= 4; i++) {
+        var pill = document.getElementById('step' + i + 'pill');
+        pill.className = 'step-pill' + (i < n ? ' done' : (i === n ? ' active' : ''));
+      }
+    }
+
+    // ─── Extract Spreadsheet ID from URL or raw ID ───
+    function extractSpreadsheetId(input) {
+      input = input.trim();
+      // If it looks like a URL, extract the ID between /d/ and the next /
+      var match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) return match[1];
+      // Otherwise, treat the whole input as the ID
+      return input;
+    }
+
+    // ─── Build Config Object ───
+    function getConfig() {
+      var rawId = document.getElementById('spreadsheetId').value.trim();
+      var cleanId = extractSpreadsheetId(rawId);
+
+      // If we extracted an ID from a URL, update the input field so the teacher sees what was used
+      if (cleanId !== rawId) {
+        document.getElementById('spreadsheetId').value = cleanId;
+      }
+
+      return {
+        spreadsheetId: cleanId,
+        sheetName: document.getElementById('sheetName').value.trim(),
+        studentNameCol: document.getElementById('studentNameCol').value.trim().toUpperCase(),
+        studentCommentCol: document.getElementById('studentCommentCol').value.trim().toUpperCase(),
+        parentCommentCol: document.getElementById('parentCommentCol').value.trim().toUpperCase(),
+        gradeCol: document.getElementById('gradeCol').value.trim().toUpperCase(),
+        tardiesCol: document.getElementById('tardiesCol').value.trim().toUpperCase(),
+        absencesCol: document.getElementById('absencesCol').value.trim().toUpperCase(),
+        emailSheetName: document.getElementById('emailSheetName').value.trim(),
+        emailSheetNameCol: document.getElementById('emailSheetNameCol').value.trim().toUpperCase() || 'A',
+        emailSheetEmailCol: document.getElementById('emailSheetEmailCol').value.trim().toUpperCase() || 'B',
+        headerRow: document.getElementById('headerRow').value.trim(),
+        dataStartRow: document.getElementById('dataStartRow').value.trim()
+      };
+    }
+
+    // ─── Show Status ───
+    function showStatus(id, type, message) {
+      var el = document.getElementById(id);
+      el.className = 'status show ' + type;
+      el.innerHTML = message;
+    }
+
+    function hideStatus(id) {
+      document.getElementById(id).className = 'status';
+    }
+
+    // ─── Grade Badge ───
+    function gradeBadge(grade) {
+      if (!grade) return '<span class="badge badge-none">—</span>';
+      var cls = 'badge-' + grade.toLowerCase().charAt(0);
+      return '<span class="badge ' + cls + '">' + grade + '</span>';
+    }
+
+    // ─── Preview ───
+    function previewData() {
+      var config = getConfig();
+      if (!config.spreadsheetId) {
+        showStatus('previewStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+        return;
+      }
+
+      var btn = document.getElementById('previewBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Loading...';
+      hideStatus('previewStatus');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.innerHTML = 'Preview Students';
+
+          if (result.error) {
+            showStatus('previewStatus', 'error', '❌ ' + result.error);
+            document.getElementById('previewSection').className = 'section-hidden';
+            return;
+          }
+
+          var emailCount = result.students.filter(function (s) { return s.parentEmail; }).length;
+
+          var statusMsg = '✅ Connected! Found <strong>' + result.totalRows + '</strong> students in "' + result.sheetName + '"';
+          if (emailCount > 0) {
+            statusMsg += ' · <strong>' + emailCount + '</strong> have parent emails';
+          }
+          if (result.emailDiag) {
+            statusMsg += '<br><span style="font-size:12px;opacity:0.85;">' + result.emailDiag + '</span>';
+          }
+          showStatus('previewStatus', emailCount > 0 || !result.emailDiag ? 'success' : 'warning', statusMsg);
+
+          setStep(2);
+
+          // Populate table
+          var body = document.getElementById('previewBody');
+          body.innerHTML = '';
+
+          result.students.forEach(function (s) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td>' + s.rowNum + '</td>' +
+              '<td>' + s.name + '</td>' +
+              '<td>' + gradeBadge(s.grade) + '</td>' +
+              '<td>' + s.tardies + '</td>' +
+              '<td>' + s.absences + '</td>' +
+              '<td>' + (s.existingComment ? '<span class="has-comment">✓ Has comment</span>' : '<span class="no-comment">Empty</span>') + '</td>' +
+              '<td>' + (s.existingParent ? '<span class="has-comment">✓ Has comment</span>' : '<span class="no-comment">Empty</span>') + '</td>' +
+              '<td>' + (s.parentEmail ? '<span class="email-present">✉ ' + s.parentEmail + '</span>' : '<span class="email-missing">—</span>') + '</td>';
+            body.appendChild(tr);
+          });
+
+          document.getElementById('previewCount').textContent = result.totalRows + ' students';
+          document.getElementById('previewSection').className = 'section-visible';
+          document.getElementById('emailSection').className = 'section-hidden';
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = 'Preview Students';
+          showStatus('previewStatus', 'error', '❌ Error: ' + err.message);
+        })
+        .getStudentData(config);
+    }
+
+    // ─── Generate Comments ───
+    function generateComments() {
+      var config = getConfig();
+      var overwrite = document.getElementById('overwrite').checked;
+
+      var btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+      hideStatus('generateStatus');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.innerHTML = '✏️ Generate & Write Comments';
+
+          if (result.error) {
+            showStatus('generateStatus', 'error', '❌ ' + result.error);
+            return;
+          }
+
+          showStatus('generateStatus', 'success',
+            '✅ Done! Generated comments for <strong>' + result.generated + '</strong> students. ' +
+            (result.skipped > 0 ? '<strong>' + result.skipped + '</strong> skipped (already had comments).' : ''));
+
+          setStep(3);
+
+          // Store results and show print/email sections
+          generatedResults = result.results;
+
+          // Always show print section
+          document.getElementById('printSection').className = 'section-visible';
+
+          // Always show email section
+          var hasEmails = result.results.some(function (r) { return r.parentEmail; });
+          showEmailSection(result.results);
+
+          if (!hasEmails) {
+            showStatus('emailStatus', 'warning',
+              '⚠️ No parent emails found. To send emails, expand <strong>"Parent Email Sheet"</strong> above and enter the tab name where parent emails are stored. ' +
+              'Make sure student names match between both sheets.');
+          }
+
+          // Scroll to print section
+          document.getElementById('printSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '✏️ Generate & Write Comments';
+          showStatus('generateStatus', 'error', '❌ Error: ' + err.message);
+        })
+        .generateAndWriteComments(config, { overwrite: overwrite });
+
+      // Get teacher info
+      google.script.run
+        .withSuccessHandler(function (info) {
+          teacherEmail = info.email;
+          document.getElementById('teacherEmailDisplay').textContent = info.email;
+        })
+        .getTeacherInfo();
+    }
+
+    // ─── Email Section ───
+    function showEmailSection(results) {
+      setStep(4);
+      var container = document.getElementById('emailCards');
+      container.innerHTML = '';
+
+      var selectableCount = 0;
+
+      results.forEach(function (r, idx) {
+        var hasEmail = !!r.parentEmail;
+        if (hasEmail) selectableCount++;
+
+        var card = document.createElement('div');
+        card.className = 'email-card' + (hasEmail ? ' selected' : ' no-email');
+        card.id = 'emailCard' + idx;
+
+        card.innerHTML =
+          '<div class="email-card-header">' +
+          '<input type="checkbox" id="emailCheck' + idx + '" ' +
+          (hasEmail ? 'checked' : 'disabled') +
+          ' onchange="updateSelectCount()" data-idx="' + idx + '">' +
+          '<div class="email-card-info">' +
+          '<div class="email-card-name">Row ' + r.rowNum + ' — ' + r.name + '</div>' +
+          '<div class="email-card-email ' + (hasEmail ? '' : 'missing') + '">' +
+          (hasEmail ? '✉ ' + r.parentEmail : '⚠ No email address') +
+          '</div>' +
+          '</div>' +
+          '<div class="email-card-grade">' + gradeBadge(r.grade) + '</div>' +
+          '</div>' +
+          '<div class="email-card-body">' +
+          '<div class="email-card-label">Parent Comment (will be emailed)</div>' +
+          '<div class="email-card-text">' + r.parentComment + '</div>' +
+          '</div>';
+
+        container.appendChild(card);
+      });
+
+      document.getElementById('selectCount').textContent = selectableCount + ' selected';
+      document.getElementById('emailSection').className = 'section-visible';
+
+      // Scroll to email section
+      document.getElementById('emailSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ─── Select All Toggle ───
+    function toggleSelectAll() {
+      var checked = document.getElementById('selectAll').checked;
+      var boxes = document.querySelectorAll('#emailCards input[type="checkbox"]:not(:disabled)');
+      boxes.forEach(function (cb) {
+        cb.checked = checked;
+        var idx = cb.getAttribute('data-idx');
+        var card = document.getElementById('emailCard' + idx);
+        card.className = 'email-card' + (checked ? ' selected' : '');
+      });
+      updateSelectCount();
+    }
+
+    function updateSelectCount() {
+      var boxes = document.querySelectorAll('#emailCards input[type="checkbox"]:checked');
+      document.getElementById('selectCount').textContent = boxes.length + ' selected';
+    }
+
+    // ─── Send Emails ───
+    function sendEmails() {
+      var subject = document.getElementById('emailSubject').value.trim();
+      var teacherName = document.getElementById('teacherName').value.trim();
+      var customMessage = document.getElementById('customMessage').value.trim();
+
+      if (!subject) {
+        showStatus('emailStatus', 'error', '⚠️ Please enter an email subject.');
+        return;
+      }
+
+      // Gather selected students
+      var selected = [];
+      generatedResults.forEach(function (r, idx) {
+        var cb = document.getElementById('emailCheck' + idx);
+        if (cb && cb.checked && r.parentEmail) {
+          selected.push({
+            name: r.name,
+            parentEmail: r.parentEmail,
+            parentComment: r.parentComment,
+            grade: r.grade || '',
+            tardies: r.tardies || 0,
+            absences: r.absences || 0
+          });
+        }
+      });
+
+      if (selected.length === 0) {
+        showStatus('emailStatus', 'warning', '⚠️ No students selected. Check the boxes next to the parents you want to email.');
+        return;
+      }
+
+      var btn = document.getElementById('sendBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Sending ' + selected.length + ' emails...';
+      hideStatus('emailStatus');
+
+      var emailPayload = {
+        students: selected,
+        subject: subject,
+        teacherName: teacherName,
+        customMessage: customMessage
+      };
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.innerHTML = '✉️ Send Selected Emails';
+
+          if (result.error) {
+            showStatus('emailStatus', 'error', '❌ ' + result.error);
+            return;
+          }
+
+          var msg = '✅ <strong>' + result.sent + '</strong> emails sent successfully!';
+          if (result.failed > 0) {
+            msg += ' <strong>' + result.failed + '</strong> failed.';
+          }
+          msg += ' <br><span style="font-size:12px; opacity:0.8;">Daily email quota remaining: ' + result.remainingQuota + '</span>';
+
+          showStatus('emailStatus', result.failed > 0 ? 'warning' : 'success', msg);
+
+          // Mark sent/failed on cards
+          if (result.errors && result.errors.length > 0) {
+            result.errors.forEach(function (err) {
+              // Find matching card and mark as failed
+              generatedResults.forEach(function (r, idx) {
+                if (r.name === err.name) {
+                  var card = document.getElementById('emailCard' + idx);
+                  if (card) {
+                    var badge = document.createElement('span');
+                    badge.className = 'sent-badge failed';
+                    badge.textContent = '✗ Failed: ' + err.error;
+                    card.querySelector('.email-card-header').appendChild(badge);
+                  }
+                }
+              });
+            });
+          }
+
+          // Mark successful ones
+          generatedResults.forEach(function (r, idx) {
+            var cb = document.getElementById('emailCheck' + idx);
+            if (cb && cb.checked && r.parentEmail) {
+              var isError = result.errors && result.errors.some(function (e) { return e.name === r.name; });
+              if (!isError) {
+                cb.checked = false;
+                cb.disabled = true;
+                var card = document.getElementById('emailCard' + idx);
+                if (card) {
+                  card.className = 'email-card';
+                  var badge = document.createElement('span');
+                  badge.className = 'sent-badge sent';
+                  badge.textContent = '✓ Sent';
+                  card.querySelector('.email-card-header').appendChild(badge);
+                }
+              }
+            }
+          });
+
+          updateSelectCount();
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '✉️ Send Selected Emails';
+          showStatus('emailStatus', 'error', '❌ Error: ' + err.message);
+        })
+        .sendParentEmails(emailPayload);
+    }
+
+    // ─── Print Functions ───
+    function openPrintView(mode) {
+      if (!generatedResults || generatedResults.length === 0) {
+        alert('No results to print. Please generate comments first.');
+        return;
+      }
+      var w = window.open('', '_blank');
+      if (!w) {
+        alert('Pop-up blocked! Please allow pop-ups for this site and try again.');
+        return;
+      }
+      var html;
+      if (mode === 'summary') {
+        html = buildSummaryHTML(generatedResults);
+      } else {
+        html = buildReportCardsHTML(generatedResults);
+      }
+      w.document.write(html);
+      w.document.close();
+    }
+
+    function buildReportCardsHTML(results) {
+      var css = '\
+        @page { margin: 0.4in; size: letter; }\
+        @media print { .report-card { page-break-after: always; } .report-card:last-child { page-break-after: auto; } .no-print { display: none !important; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\
+        * { margin: 0; padding: 0; box-sizing: border-box; }\
+        body { font-family: Arial, Helvetica, sans-serif; color: #222; background: #f5f5f5; }\
+        .no-print { background: #2c3e50; color: #fff; padding: 14px 24px; text-align: center; position: sticky; top: 0; z-index: 10; }\
+        .no-print button { background: #6bb8c9; color: #fff; border: none; padding: 10px 28px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin: 0 8px; }\
+        .no-print button:hover { background: #5ca8b8; }\
+        .report-card { width: 7.5in; margin: 20px auto; background: #fff; border: 2px solid #333; }\
+        .report-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px 8px; }\
+        .report-title { font-size: 18px; font-weight: bold; }\
+        .report-logo { text-align: right; }\
+        .logo-main { font-size: 26px; font-weight: bold; color: #6bb8c9; }\
+        .logo-sub { font-size: 12px; color: #6bb8c9; letter-spacing: 1px; }\
+        .report-info { padding: 8px 20px 12px; font-size: 14px; }\
+        .report-info .row { display: flex; gap: 32px; margin-bottom: 6px; }\
+        .field-line { border-bottom: 1px solid #333; display: inline-block; min-width: 180px; font-weight: bold; padding: 0 4px; }\
+        .field-short { min-width: 80px; }\
+        .grid-table { width: 100%; border-collapse: collapse; }\
+        .grid-table th, .grid-table td { border: 1px solid #333; padding: 14px 12px; text-align: left; font-size: 13px; vertical-align: top; }\
+        .grid-table th { background: #fafafa; font-weight: bold; width: 55px; text-align: center; }\
+        .grades-cell { font-weight: bold; font-size: 13px; letter-spacing: 3px; }\
+        .comments-cell { background: #fafafa; vertical-align: top; width: 35%; }\
+        .comments-label { font-weight: bold; font-size: 13px; margin-bottom: 8px; }\
+        .comments-text { font-size: 12px; line-height: 1.6; }\
+        .signature-cell { font-weight: bold; font-size: 12px; }\
+        .report-footer { padding: 8px 20px; font-size: 11px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #ccc; }\
+      ';
+
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8">';
+      html += '<title>Blueprint Progress Reports</title>';
+      html += '<style>' + css + '</style></head><body>';
+      html += '<div class="no-print"><strong>Blueprint Progress Reports</strong> — ' + results.length + ' students &nbsp;';
+      html += '<button onclick="window.print()">🖨️ Print / Save as PDF</button></div>';
+
+      results.forEach(function (r) {
+        html += buildSingleCard(r);
+      });
+
+      html += '</body></html>';
+      return html;
+    }
+
+    function buildSingleCard(s) {
+      var firstName = s.name.indexOf(',') > -1 ? (s.name.split(',')[1] || '').trim() : s.name;
+      if (!firstName) firstName = s.name;
+
+      var h = '<div class="report-card">';
+      // Header
+      h += '<div class="report-header">';
+      h += '<div class="report-title">Blueprint Progress Report</div>';
+      h += '<div class="report-logo"><span class="logo-main">blueprint</span><br><span class="logo-sub">schools network</span></div>';
+      h += '</div>';
+      // Info
+      h += '<div class="report-info">';
+      h += '<div class="row">Student Name: <span class="field-line">' + s.name + '</span> &nbsp;&nbsp; Period <span class="field-line field-short">&nbsp;</span></div>';
+      h += '<div class="row">Week of <span class="field-line">&nbsp;</span> &nbsp;&nbsp; Current grade <span class="field-line field-short">' + (s.grade || '') + '</span></div>';
+      h += '</div>';
+      // Grid table
+      h += '<table class="grid-table">';
+      // Mon
+      h += '<tr><th>Mon</th><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td class="grades-cell">G R A D E S &nbsp; ET: ____</td>';
+      h += '<td class="comments-cell" rowspan="3"><div class="comments-label">Comments:</div><div class="comments-text">' + (s.studentComment || '') + '</div></td></tr>';
+      // Tues
+      h += '<tr><th>Tues</th><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td class="grades-cell">G R A D E S &nbsp; ET: ____</td></tr>';
+      // Wed
+      h += '<tr><th>Wed</th><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td class="grades-cell">G R A D E S &nbsp; ET: ____</td></tr>';
+      // Thurs
+      h += '<tr><th>Thurs</th><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td class="grades-cell">G R A D E S &nbsp; ET: ____</td>';
+      h += '<td class="signature-cell">Signature (for 2 extra credit pts)</td></tr>';
+      // Fri
+      h += '<tr><th>Fri</th><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td class="grades-cell">G R A D E S &nbsp; ET: ____</td><td></td></tr>';
+      h += '</table>';
+      // Footer
+      h += '<div class="report-footer"><span>Tardies: ' + (s.tardies || 0) + ' &nbsp;|&nbsp; Absences: ' + (s.absences || 0) + '</span><span>Grade: ' + (s.grade || '—') + '</span></div>';
+      h += '</div>';
+      return h;
+    }
+
+    function buildSummaryHTML(results) {
+      var css = '\
+        @page { margin: 0.5in; size: letter landscape; }\
+        @media print { .no-print { display: none !important; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\
+        * { margin: 0; padding: 0; box-sizing: border-box; }\
+        body { font-family: Arial, Helvetica, sans-serif; color: #222; background: #f5f5f5; }\
+        .no-print { background: #2c3e50; color: #fff; padding: 14px 24px; text-align: center; position: sticky; top: 0; z-index: 10; }\
+        .no-print button { background: #6bb8c9; color: #fff; border: none; padding: 10px 28px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin: 0 8px; }\
+        .summary-wrap { max-width: 10in; margin: 20px auto; background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 24px; }\
+        .summary-title { font-size: 20px; font-weight: bold; margin-bottom: 4px; }\
+        .summary-sub { font-size: 13px; color: #666; margin-bottom: 20px; }\
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }\
+        th { background: #2c3e50; color: #fff; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }\
+        td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }\
+        tr:hover { background: #f8fafc; }\
+        .grade-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }\
+        .grade-a { background: #d1fae5; color: #059669; }\
+        .grade-b { background: #dbeafe; color: #2563eb; }\
+        .grade-c { background: #fef3c7; color: #d97706; }\
+        .grade-d { background: #fed7aa; color: #ea580c; }\
+        .grade-f { background: #fee2e2; color: #dc2626; }\
+        .grade-none { background: #f3f4f6; color: #6b7280; }\
+      ';
+
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8">';
+      html += '<title>Class Summary</title>';
+      html += '<style>' + css + '</style></head><body>';
+      html += '<div class="no-print"><strong>Class Summary</strong> — ' + results.length + ' students &nbsp;';
+      html += '<button onclick="window.print()">🖨️ Print / Save as PDF</button></div>';
+      html += '<div class="summary-wrap">';
+      html += '<div class="summary-title">Biweekly Class Summary</div>';
+      html += '<div class="summary-sub">Generated on ' + new Date().toLocaleDateString() + ' · ' + results.length + ' students</div>';
+      html += '<table><thead><tr><th>Row</th><th>Student Name</th><th>Grade</th><th>Tardies</th><th>Absences</th><th>Student Comment</th><th>Parent Comment</th></tr></thead><tbody>';
+
+      results.forEach(function (r) {
+        var gc = (r.grade || '').toLowerCase();
+        var gcls = gc === 'a' ? 'grade-a' : gc === 'b' ? 'grade-b' : gc === 'c' ? 'grade-c' : gc === 'd' ? 'grade-d' : gc === 'f' ? 'grade-f' : 'grade-none';
+        html += '<tr>';
+        html += '<td>' + r.rowNum + '</td>';
+        html += '<td><strong>' + r.name + '</strong></td>';
+        html += '<td><span class="grade-badge ' + gcls + '">' + (r.grade || '—') + '</span></td>';
+        html += '<td>' + (r.tardies || 0) + '</td>';
+        html += '<td>' + (r.absences || 0) + '</td>';
+        html += '<td style="max-width:250px;">' + (r.studentComment || '').substring(0, 120) + '...</td>';
+        html += '<td style="max-width:250px;">' + (r.parentComment || '').substring(0, 120) + '...</td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div></body></html>';
+      return html;
+    }
+  </script>
+</body>
+
+</html>
