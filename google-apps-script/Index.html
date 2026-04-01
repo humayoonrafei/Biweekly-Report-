@@ -6,25 +6,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #0f1117;
-      --bg-secondary: #1a1d27;
-      --bg-card: #21242f;
-      --bg-input: #2a2d3a;
-      --border: #333848;
-      --text-primary: #e8eaed;
-      --text-secondary: #9aa0b0;
-      --text-muted: #6b7280;
-      --accent: #4f8cff;
-      --accent-hover: #6ba0ff;
-      --accent-glow: rgba(79, 140, 255, 0.15);
-      --success: #34d399;
-      --success-bg: rgba(52, 211, 153, 0.1);
-      --warning: #fbbf24;
-      --warning-bg: rgba(251, 191, 36, 0.1);
-      --danger: #f87171;
-      --danger-bg: rgba(248, 113, 113, 0.1);
-      --purple: #a78bfa;
-      --purple-bg: rgba(167, 139, 250, 0.1);
+      --bg-primary: #f5f7fa;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-input: #f0f2f5;
+      --border: #e2e5eb;
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --text-muted: #9ca3af;
+      --accent: #3b7ddd;
+      --accent-hover: #2b6cb0;
+      --accent-glow: rgba(59, 125, 221, 0.08);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.08);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.08);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.08);
+      --purple: #7c3aed;
+      --purple-bg: rgba(124, 58, 237, 0.08);
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -74,8 +74,9 @@
     .header h1 {
       font-size: 32px;
       font-weight: 700;
-      background: linear-gradient(135deg, #e8eaed 0%, #9aa0b0 100%);
+      background: linear-gradient(135deg, #1a202c 0%, #3b7ddd 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
@@ -152,7 +153,8 @@
     }
 
     .card:hover {
-      border-color: #444a5c;
+      border-color: #c7ccd5;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     }
 
     .card-title {
@@ -341,12 +343,12 @@
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background: #333848;
+      background: #e5e7eb;
     }
 
     .btn-success {
       background: var(--success);
-      color: #0f1117;
+      color: #ffffff;
     }
 
     .btn-success:hover:not(:disabled) {
@@ -355,7 +357,7 @@
 
     .btn-purple {
       background: var(--purple);
-      color: #0f1117;
+      color: #ffffff;
     }
 
     .btn-purple:hover:not(:disabled) {
@@ -464,7 +466,7 @@
     }
 
     tbody tr:hover {
-      background: rgba(79, 140, 255, 0.04);
+      background: rgba(59, 125, 221, 0.04);
     }
 
     .badge {
@@ -715,27 +717,243 @@
         grid-template-columns: 1fr;
       }
 
-      .columns-grid {
-        grid-template-columns: repeat(2, 1fr);
+      /* ─── Mode Toggle ─── */
+      .mode-bar {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: var(--bg-input);
+        border-radius: 10px;
+        padding: 4px;
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
-      .btn-row {
-        flex-direction: column;
+      .mode-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'Inter', sans-serif;
       }
 
-      .header h1 {
-        font-size: 24px;
+      .mode-btn.active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(59, 125, 221, 0.25);
       }
 
-      .steps-bar {
+      .mode-btn:not(.active):hover {
+        color: var(--text-primary);
+        background: rgba(0, 0, 0, 0.04);
+      }
+
+      /* ─── Activity Report Styles ─── */
+      .date-picker-row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-end;
         flex-wrap: wrap;
       }
 
-      .email-card-body {
-        margin-left: 0;
-        margin-top: 10px;
+      .date-picker-row .form-group {
+        flex: 1;
+        min-width: 140px;
       }
-    }
+
+      .student-report-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition: border-color 0.2s;
+      }
+
+      .student-report-card:hover {
+        border-color: #c7ccd5;
+      }
+
+      .src-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-input);
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .src-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-primary);
+      }
+
+      .src-meta {
+        font-size: 12px;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .src-meta .grade-pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+
+      .grade-a {
+        background: #d1fae5;
+        color: #059669;
+      }
+
+      .grade-b {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+
+      .grade-c {
+        background: #fef3c7;
+        color: #d97706;
+      }
+
+      .grade-d {
+        background: #fed7aa;
+        color: #ea580c;
+      }
+
+      .grade-f {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+
+      .src-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .src-table th {
+        padding: 8px 12px;
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        background: var(--bg-input);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .src-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+
+      .src-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .att-present {
+        color: #059669;
+        font-weight: 600;
+      }
+
+      .att-tardy {
+        color: #d97706;
+        font-weight: 600;
+      }
+
+      .att-absent {
+        color: #dc2626;
+        font-weight: 600;
+      }
+
+      .att-ns {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+
+      .et-score {
+        display: inline-block;
+        min-width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 12px;
+        background: #dbeafe;
+        color: #2563eb;
+      }
+
+      .grades-str {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+      }
+
+      .src-summary {
+        display: flex;
+        gap: 16px;
+        padding: 12px 20px;
+        background: var(--bg-input);
+        font-size: 13px;
+        color: var(--text-secondary);
+        flex-wrap: wrap;
+      }
+
+      .src-summary strong {
+        color: var(--text-primary);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 16px 12px;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .steps-bar {
+          flex-wrap: wrap;
+        }
+
+        .email-card-body {
+          margin-left: 0;
+          margin-top: 10px;
+        }
+
+        .date-picker-row {
+          flex-direction: column;
+        }
+
+        .columns-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .btn-row {
+          flex-direction: column;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+      }
   </style>
 </head>
 
@@ -745,251 +963,385 @@
     <!-- Header -->
     <div class="header">
       <div class="header-badge">🔒 FERPA Compliant · No AI · Local Templates</div>
-      <h1>Biweekly Comment Generator</h1>
-      <p>Generate personalized student and parent comments, then email parent reports directly — all within Google
-        Workspace.</p>
+      <h1>Blueprint Schools Tools</h1>
+      <p>Generate biweekly comments, email parents, and view daily activity reports — all within Google Workspace.</p>
     </div>
 
-    <!-- Steps -->
-    <div class="steps-bar">
-      <div class="step-pill active" id="step1pill">
-        <span class="step-num">1</span> Configure
-      </div>
-      <div class="step-pill" id="step2pill">
-        <span class="step-num">2</span> Preview
-      </div>
-      <div class="step-pill" id="step3pill">
-        <span class="step-num">3</span> Generate
-      </div>
-      <div class="step-pill" id="step4pill">
-        <span class="step-num">4</span> Email Parents
-      </div>
+    <!-- Mode Toggle -->
+    <div class="mode-bar">
+      <button class="mode-btn active" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly
+        Comments</button>
+      <button class="mode-btn" id="modeActivityBtn" onclick="switchMode('activity')">📊 Activity Report</button>
     </div>
 
-    <!-- Step 1: Spreadsheet Config -->
-    <div class="card">
-      <div class="card-title">
-        <div class="icon blue">📋</div>
-        Spreadsheet Configuration
-      </div>
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODE: COMMENTS -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="modeComments">
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Spreadsheet ID</label>
-          <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here">
-          <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
+      <!-- Steps -->
+      <div class="steps-bar">
+        <div class="step-pill active" id="step1pill">
+          <span class="step-num">1</span> Configure
         </div>
-        <div class="form-group">
-          <label>Sheet Tab Name</label>
-          <input type="text" id="sheetName" placeholder="e.g. biweeklyReport" value="biweeklyReport">
+        <div class="step-pill" id="step2pill">
+          <span class="step-num">2</span> Preview
         </div>
-      </div>
-
-      <!-- Column Mapping (collapsible) -->
-      <div class="columns-toggle" onclick="toggleColumns()">
-        <span class="arrow" id="colArrow">▶</span>
-        Column Mapping (adjust for your spreadsheet layout)
-      </div>
-
-      <div class="columns-grid" id="columnsGrid">
-        <div class="form-group">
-          <label>Student Name</label>
-          <input type="text" id="studentNameCol" value="B">
+        <div class="step-pill" id="step3pill">
+          <span class="step-num">3</span> Generate
         </div>
-        <div class="form-group">
-          <label>Student Comment</label>
-          <input type="text" id="studentCommentCol" value="C">
-        </div>
-        <div class="form-group">
-          <label>Parent Comment</label>
-          <input type="text" id="parentCommentCol" value="D">
-        </div>
-        <div class="form-group">
-          <label>Grade</label>
-          <input type="text" id="gradeCol" value="E">
-        </div>
-        <div class="form-group">
-          <label>Tardies</label>
-          <input type="text" id="tardiesCol" value="AJ">
-        </div>
-        <div class="form-group">
-          <label>Absences</label>
-          <input type="text" id="absencesCol" value="AK">
-        </div>
-        <div class="form-group">
-          <label>Header Row</label>
-          <input type="text" id="headerRow" value="3">
-        </div>
-        <div class="form-group">
-          <label>Data Start Row</label>
-          <input type="text" id="dataStartRow" value="4">
+        <div class="step-pill" id="step4pill">
+          <span class="step-num">4</span> Email Parents
         </div>
       </div>
 
-      <!-- Email Sheet Config -->
-      <div class="columns-toggle" onclick="toggleEmailConfig()">
-        <span class="arrow" id="emailArrow">▶</span>
-        Parent Email Sheet (if emails are on a separate tab)
-      </div>
-
-      <div class="columns-grid" id="emailGrid" style="display:none;">
-        <div class="form-group">
-          <label>Email Sheet Tab</label>
-          <input type="text" id="emailSheetName" placeholder="e.g. ParentEmails">
-          <span class="hint">Tab name with parent emails</span>
-        </div>
-        <div class="form-group">
-          <label>Name Column</label>
-          <input type="text" id="emailSheetNameCol" value="A" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
-          <span class="hint">Student name column in email sheet</span>
-        </div>
-        <div class="form-group">
-          <label>Email Column</label>
-          <input type="text" id="emailSheetEmailCol" value="B" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
-          <span class="hint">Parent email column in email sheet</span>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" id="previewBtn" onclick="previewData()">
-          Preview Students
-        </button>
-      </div>
-
-      <div class="status" id="previewStatus"></div>
-    </div>
-
-    <!-- Step 2: Preview Section -->
-    <div class="section-hidden" id="previewSection">
+      <!-- Step 1: Spreadsheet Config -->
       <div class="card">
         <div class="card-title">
-          <div class="icon green">👁️</div>
-          Student Preview
+          <div class="icon blue">📋</div>
+          Spreadsheet Configuration
         </div>
 
-        <div class="preview-header">
-          <h3 id="previewTitle">Students Found</h3>
-          <span class="preview-count" id="previewCount"></span>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Row</th>
-                <th>Student Name</th>
-                <th>Grade</th>
-                <th>Tardies</th>
-                <th>Absences</th>
-                <th>Student Comment</th>
-                <th>Parent Comment</th>
-                <th>Parent Email</th>
-              </tr>
-            </thead>
-            <tbody id="previewBody"></tbody>
-          </table>
-        </div>
-
-        <div class="checkbox-row">
-          <input type="checkbox" id="overwrite">
-          <label for="overwrite">Overwrite existing comments (only generates for blank cells by default)</label>
-        </div>
-
-        <div class="btn-row" style="margin-top: 16px;">
-          <button class="btn btn-success" id="generateBtn" onclick="generateComments()">
-            ✏️ Generate & Write Comments
-          </button>
-          <button class="btn btn-secondary" onclick="previewData()">
-            🔄 Refresh
-          </button>
-        </div>
-
-        <div class="status" id="generateStatus"></div>
-      </div>
-    </div>
-
-    <!-- Print Reports Section -->
-    <div class="section-hidden" id="printSection">
-      <div class="card">
-        <div class="card-title">
-          <div class="icon orange">🖨️</div>
-          Print Report Cards
-        </div>
-        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
-          Print individual Blueprint Progress Report cards for each student, or a class summary table. Each student gets their own page.
-        </p>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="openPrintView('individual')">
-            🖨️ Print Student Report Cards
-          </button>
-          <button class="btn btn-secondary" onclick="openPrintView('summary')">
-            📊 Print Class Summary
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3 & 4: Email Section -->
-    <div class="section-hidden" id="emailSection">
-      <div class="card">
-        <div class="card-title">
-          <div class="icon purple">✉️</div>
-          Email Parent Comments
-        </div>
-
-        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
-          Review each parent comment below. Check the ones you want to email, customize the subject and message, then
-          send.
-          Emails will come from <strong id="teacherEmailDisplay">your Google account</strong>.
-        </p>
-
-        <!-- Email Settings -->
         <div class="form-row">
           <div class="form-group">
-            <label>Your Name (appears in the email)</label>
-            <input type="text" id="teacherName" placeholder="e.g. Mr. Johnson">
+            <label>Spreadsheet ID</label>
+            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here">
+            <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
           </div>
           <div class="form-group">
-            <label>Email Subject</label>
-            <input type="text" id="emailSubject" value="Biweekly Progress Report — {student}">
-            <span class="hint">Use {student} to insert the student's first name</span>
+            <label>Sheet Tab Name</label>
+            <input type="text" id="sheetName" placeholder="e.g. biweeklyReport" value="biweeklyReport">
           </div>
         </div>
 
-        <div class="form-row single">
+        <!-- Column Mapping (collapsible) -->
+        <div class="columns-toggle" onclick="toggleColumns()">
+          <span class="arrow" id="colArrow">▶</span>
+          Column Mapping (adjust for your spreadsheet layout)
+        </div>
+
+        <div class="columns-grid" id="columnsGrid">
           <div class="form-group">
-            <label>Additional Message (optional — added after the comment)</label>
-            <textarea id="customMessage"
-              placeholder="e.g. Parent-teacher conferences are next week on Thursday. Please sign up at..."></textarea>
+            <label>Student Name</label>
+            <input type="text" id="studentNameCol" value="B">
+          </div>
+          <div class="form-group">
+            <label>Student Comment</label>
+            <input type="text" id="studentCommentCol" value="C">
+          </div>
+          <div class="form-group">
+            <label>Parent Comment</label>
+            <input type="text" id="parentCommentCol" value="D">
+          </div>
+          <div class="form-group">
+            <label>Grade</label>
+            <input type="text" id="gradeCol" value="E">
+          </div>
+          <div class="form-group">
+            <label>Tardies</label>
+            <input type="text" id="tardiesCol" value="AJ">
+          </div>
+          <div class="form-group">
+            <label>Absences</label>
+            <input type="text" id="absencesCol" value="AK">
+          </div>
+          <div class="form-group">
+            <label>Header Row</label>
+            <input type="text" id="headerRow" value="3">
+          </div>
+          <div class="form-group">
+            <label>Data Start Row</label>
+            <input type="text" id="dataStartRow" value="4">
           </div>
         </div>
 
-        <!-- Select All Bar -->
-        <div class="select-bar">
-          <div class="select-bar-left">
-            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" checked>
-            <label for="selectAll">Select All</label>
-          </div>
-          <span class="select-count" id="selectCount">0 selected</span>
+        <!-- Email Sheet Config -->
+        <div class="columns-toggle" onclick="toggleEmailConfig()">
+          <span class="arrow" id="emailArrow">▶</span>
+          Parent Email Sheet (if emails are on a separate tab)
         </div>
 
-        <!-- Email Cards -->
-        <div id="emailCards"></div>
+        <div class="columns-grid" id="emailGrid" style="display:none;">
+          <div class="form-group">
+            <label>Email Sheet Tab</label>
+            <input type="text" id="emailSheetName" placeholder="e.g. ParentEmails">
+            <span class="hint">Tab name with parent emails</span>
+          </div>
+          <div class="form-group">
+            <label>Name Column</label>
+            <input type="text" id="emailSheetNameCol" value="A"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
+            <span class="hint">Student name column in email sheet</span>
+          </div>
+          <div class="form-group">
+            <label>Email Column</label>
+            <input type="text" id="emailSheetEmailCol" value="B"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
+            <span class="hint">Parent email column in email sheet</span>
+          </div>
+        </div>
 
-        <div class="btn-row" style="margin-top: 16px;">
-          <button class="btn btn-purple" id="sendBtn" onclick="sendEmails()">
-            ✉️ Send Selected Emails
+        <div class="btn-row">
+          <button class="btn btn-primary" id="previewBtn" onclick="previewData()">
+            Preview Students
           </button>
         </div>
 
-        <div class="status" id="emailStatus"></div>
+        <div class="status" id="previewStatus"></div>
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      Biweekly Comment Generator · Template-based · No AI · No data leaves Google Workspace
-    </div>
+      <!-- Step 2: Preview Section -->
+      <div class="section-hidden" id="previewSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon green">👁️</div>
+            Student Preview
+          </div>
+
+          <div class="preview-header">
+            <h3 id="previewTitle">Students Found</h3>
+            <span class="preview-count" id="previewCount"></span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Row</th>
+                  <th>Student Name</th>
+                  <th>Grade</th>
+                  <th>Tardies</th>
+                  <th>Absences</th>
+                  <th>Student Comment</th>
+                  <th>Parent Comment</th>
+                  <th>Parent Email</th>
+                </tr>
+              </thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="overwrite">
+            <label for="overwrite">Overwrite existing comments (only generates for blank cells by default)</label>
+          </div>
+
+          <div class="btn-row" style="margin-top: 16px;">
+            <button class="btn btn-success" id="generateBtn" onclick="generateComments()">
+              ✏️ Generate & Write Comments
+            </button>
+            <button class="btn btn-secondary" onclick="previewData()">
+              🔄 Refresh
+            </button>
+          </div>
+
+          <div class="status" id="generateStatus"></div>
+        </div>
+      </div>
+
+      <!-- Print Reports Section -->
+      <div class="section-hidden" id="printSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon orange">🖨️</div>
+            Print Report Cards
+          </div>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+            Print individual Blueprint Progress Report cards for each student, or a class summary table. Each student
+            gets their own page.
+          </p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="openPrintView('individual')">
+              🖨️ Print Student Report Cards
+            </button>
+            <button class="btn btn-secondary" onclick="openPrintView('summary')">
+              📊 Print Class Summary
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 & 4: Email Section -->
+      <div class="section-hidden" id="emailSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon purple">✉️</div>
+            Email Parent Comments
+          </div>
+
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
+            Review each parent comment below. Check the ones you want to email, customize the subject and message, then
+            send.
+            Emails will come from <strong id="teacherEmailDisplay">your Google account</strong>.
+          </p>
+
+          <!-- Email Settings -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your Name (appears in the email)</label>
+              <input type="text" id="teacherName" placeholder="e.g. Mr. Johnson">
+            </div>
+            <div class="form-group">
+              <label>Email Subject</label>
+              <input type="text" id="emailSubject" value="Biweekly Progress Report — {student}">
+              <span class="hint">Use {student} to insert the student's first name</span>
+            </div>
+          </div>
+
+          <div class="form-row single">
+            <div class="form-group">
+              <label>Additional Message (optional — added after the comment)</label>
+              <textarea id="customMessage"
+                placeholder="e.g. Parent-teacher conferences are next week on Thursday. Please sign up at..."></textarea>
+            </div>
+          </div>
+
+          <!-- Select All Bar -->
+          <div class="select-bar">
+            <div class="select-bar-left">
+              <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" checked>
+              <label for="selectAll">Select All</label>
+            </div>
+            <span class="select-count" id="selectCount">0 selected</span>
+          </div>
+
+          <!-- Email Cards -->
+          <div id="emailCards"></div>
+
+          <div class="btn-row" style="margin-top: 16px;">
+            <button class="btn btn-purple" id="sendBtn" onclick="sendEmails()">
+              ✉️ Send Selected Emails
+            </button>
+          </div>
+
+          <div class="status" id="emailStatus"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        Blueprint Schools Tools · Template-based · No AI · No data leaves Google Workspace
+      </div>
+
+    </div> <!-- END modeComments -->
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODE: ACTIVITY REPORT -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="modeActivity" style="display:none;">
+
+      <!-- Step 1: Activity Config -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon blue">📊</div>
+          Activity Report Configuration
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Spreadsheet ID</label>
+            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID">
+            <span class="hint">Same spreadsheet, different tab</span>
+          </div>
+          <div class="form-group">
+            <label>Activity Sheet Tab</label>
+            <input type="text" id="actSheetName" placeholder="e.g. Period 2">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date Header Row</label>
+            <input type="text" id="actDateRow" value="4">
+            <span class="hint">Row with dates across the top</span>
+          </div>
+          <div class="form-group">
+            <label>Grades Sheet Tab (optional)</label>
+            <input type="text" id="actGradesSheet" placeholder="e.g. biweeklyReport">
+            <span class="hint">Tab to look up letter grades</span>
+          </div>
+        </div>
+
+        <!-- Grades Column Mapping (collapsible) -->
+        <div class="columns-toggle" onclick="toggleGradesConfig()">
+          <span class="arrow" id="gradesArrow">▶</span>
+          Grade Lookup Columns (if using grades sheet)
+        </div>
+
+        <div class="columns-grid" id="gradesGrid" style="display:none;">
+          <div class="form-group">
+            <label>Name Column</label>
+            <input type="text" id="actGradesNameCol" value="B">
+            <span class="hint">Student name column in grades sheet</span>
+          </div>
+          <div class="form-group">
+            <label>Grade Column</label>
+            <input type="text" id="actGradesGradeCol" value="E">
+            <span class="hint">Letter grade column in grades sheet</span>
+          </div>
+          <div class="form-group">
+            <label>Data Start Row</label>
+            <input type="text" id="actGradesStartRow" value="4">
+            <span class="hint">First row of student data</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="loadDatesBtn" onclick="loadActivityDates()">
+            📅 Load Available Dates
+          </button>
+        </div>
+        <div class="status" id="actConfigStatus"></div>
+      </div>
+
+      <!-- Step 2: Date Range -->
+      <div class="section-hidden" id="actDateSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon green">📅</div>
+            Select Date Range
+          </div>
+
+          <div class="date-picker-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <select id="actStartDate"></select>
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <select id="actEndDate"></select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-success" id="genReportBtn" onclick="generateActivityReport()">
+                📊 Generate Report
+              </button>
+            </div>
+          </div>
+          <div class="status" id="actDateStatus"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Report Display -->
+      <div class="section-hidden" id="actReportSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon purple">📝</div>
+            <span id="actReportTitle">Activity Report</span>
+          </div>
+          <div class="btn-row" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="printActivityReport()">
+              🖨️ Print / Save as PDF
+            </button>
+          </div>
+          <div id="actReportBody"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Blueprint Schools Tools · Activity Report · No data leaves Google Workspace
+      </div>
+
+    </div> <!-- END modeActivity -->
 
   </div>
 
@@ -1450,7 +1802,7 @@
       // Header
       h += '<div class="report-header">';
       h += '<div class="report-title">Blueprint Progress Report</div>';
-      h += '<div class="report-logo"><span class="logo-main">blueprint</span><br><span class="logo-sub">schools network</span></div>';
+      h += '<div class="report-logo"><img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" alt="Blueprint Schools Network" style="height: 48px; width: auto; display: block;"></div>';
       h += '</div>';
       // Info
       h += '<div class="report-info">';
@@ -1528,6 +1880,382 @@
 
       html += '</tbody></table></div></body></html>';
       return html;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ─── Mode Switching ───
+    // ═══════════════════════════════════════════════
+    function switchMode(mode) {
+      document.getElementById('modeComments').style.display = mode === 'comments' ? 'block' : 'none';
+      document.getElementById('modeActivity').style.display = mode === 'activity' ? 'block' : 'none';
+      document.getElementById('modeCommentsBtn').className = 'mode-btn' + (mode === 'comments' ? ' active' : '');
+      document.getElementById('modeActivityBtn').className = 'mode-btn' + (mode === 'activity' ? ' active' : '');
+
+      // Sync spreadsheet ID between modes
+      if (mode === 'activity') {
+        var commentsId = document.getElementById('spreadsheetId').value;
+        if (commentsId && !document.getElementById('actSpreadsheetId').value) {
+          document.getElementById('actSpreadsheetId').value = commentsId;
+        }
+      }
+    }
+
+    function toggleGradesConfig() {
+      var grid = document.getElementById('gradesGrid');
+      var arrow = document.getElementById('gradesArrow');
+      var isShown = grid.style.display === 'grid';
+      grid.style.display = isShown ? 'none' : 'grid';
+      arrow.classList.toggle('open');
+    }
+
+    // ═══════════════════════════════════════════════
+    // ─── Activity Report Functions ───
+    // ═══════════════════════════════════════════════
+    var activityDates = [];
+    var activityReport = null;
+
+    function getActivityConfig() {
+      var rawId = document.getElementById('actSpreadsheetId').value.trim();
+      var cleanId = extractSpreadsheetId(rawId);
+      if (cleanId !== rawId) {
+        document.getElementById('actSpreadsheetId').value = cleanId;
+      }
+      return {
+        spreadsheetId: cleanId,
+        activitySheetName: document.getElementById('actSheetName').value.trim(),
+        activityDateRow: document.getElementById('actDateRow').value.trim(),
+        gradesSheetName: document.getElementById('actGradesSheet').value.trim(),
+        gradesNameCol: document.getElementById('actGradesNameCol').value.trim().toUpperCase() || 'B',
+        gradesGradeCol: document.getElementById('actGradesGradeCol').value.trim().toUpperCase() || 'E',
+        gradesStartRow: document.getElementById('actGradesStartRow').value.trim() || '4'
+      };
+    }
+
+    function loadActivityDates() {
+      var config = getActivityConfig();
+      if (!config.spreadsheetId) {
+        showStatus('actConfigStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+        return;
+      }
+      if (!config.activitySheetName) {
+        showStatus('actConfigStatus', 'error', '⚠️ Please enter the Activity Sheet Tab name.');
+        return;
+      }
+
+      var btn = document.getElementById('loadDatesBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Loading dates...';
+      hideStatus('actConfigStatus');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.innerHTML = '📅 Load Available Dates';
+
+          if (result.error) {
+            showStatus('actConfigStatus', 'error', '❌ ' + result.error);
+            return;
+          }
+
+          activityDates = result.dates;
+          showStatus('actConfigStatus', 'success',
+            '✅ Found <strong>' + result.total + '</strong> dates in the sheet.');
+
+          // Populate date dropdowns
+          var startSel = document.getElementById('actStartDate');
+          var endSel = document.getElementById('actEndDate');
+          startSel.innerHTML = '';
+          endSel.innerHTML = '';
+
+          result.dates.forEach(function (d) {
+            var opt1 = document.createElement('option');
+            opt1.value = d.isoDate;
+            opt1.textContent = d.dateStr + ' (' + d.dayOfWeek + ')';
+            startSel.appendChild(opt1);
+
+            var opt2 = document.createElement('option');
+            opt2.value = d.isoDate;
+            opt2.textContent = d.dateStr + ' (' + d.dayOfWeek + ')';
+            endSel.appendChild(opt2);
+          });
+
+          // Default: select last 5 dates
+          if (result.dates.length > 5) {
+            startSel.selectedIndex = result.dates.length - 5;
+          }
+          endSel.selectedIndex = result.dates.length - 1;
+
+          document.getElementById('actDateSection').className = 'section-visible';
+          document.getElementById('actDateSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '📅 Load Available Dates';
+          showStatus('actConfigStatus', 'error', '❌ Error: ' + err.message);
+        })
+        .getActivityDates(config);
+    }
+
+    function generateActivityReport() {
+      var config = getActivityConfig();
+      var startDate = document.getElementById('actStartDate').value;
+      var endDate = document.getElementById('actEndDate').value;
+
+      if (!startDate || !endDate) {
+        showStatus('actDateStatus', 'error', '⚠️ Please select start and end dates.');
+        return;
+      }
+
+      var btn = document.getElementById('genReportBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+      hideStatus('actDateStatus');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.innerHTML = '📊 Generate Report';
+
+          if (result.error) {
+            showStatus('actDateStatus', 'error', '❌ ' + result.error);
+            return;
+          }
+
+          activityReport = result;
+
+          showStatus('actDateStatus', 'success',
+            '✅ Report ready! <strong>' + result.studentCount + '</strong> students × <strong>' +
+            result.dateCount + '</strong> days' +
+            (result.gradeLookupMsg ? ' · ' + result.gradeLookupMsg : ''));
+
+          // Update title
+          document.getElementById('actReportTitle').textContent =
+            'Activity Report · ' + result.dateRange.start + ' to ' + result.dateRange.end;
+
+          // Render report
+          renderActivityReport(result);
+
+          document.getElementById('actReportSection').className = 'section-visible';
+          document.getElementById('actReportSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          btn.innerHTML = '📊 Generate Report';
+          showStatus('actDateStatus', 'error', '❌ Error: ' + err.message);
+        })
+        .getActivityReport(config, startDate, endDate);
+    }
+
+    function attendanceClass(att) {
+      var a = att.toLowerCase();
+      if (a === 'present') return 'att-present';
+      if (a === 'tardy') return 'att-tardy';
+      if (a === 'absent') return 'att-absent';
+      if (a.indexOf('not s') > -1 || a.indexOf('not scheduled') > -1) return 'att-ns';
+      return '';
+    }
+
+    function gradeClass(g) {
+      if (!g) return '';
+      var gl = g.toLowerCase();
+      if (gl === 'a') return 'grade-a';
+      if (gl === 'b') return 'grade-b';
+      if (gl === 'c') return 'grade-c';
+      if (gl === 'd') return 'grade-d';
+      if (gl === 'f') return 'grade-f';
+      return '';
+    }
+
+    function renderActivityReport(report) {
+      var body = document.getElementById('actReportBody');
+      body.innerHTML = '';
+
+      report.students.forEach(function (student) {
+        var card = document.createElement('div');
+        card.className = 'student-report-card';
+
+        // Header
+        var gradeHtml = '';
+        if (student.letterGrade) {
+          gradeHtml = '<span class="grade-pill ' + gradeClass(student.letterGrade) + '">' + student.letterGrade + '</span>';
+        }
+
+        card.innerHTML =
+          '<div class="src-header">' +
+          '<span class="src-name">' + student.name + '</span>' +
+          '<div class="src-meta">' +
+          '<span>Period ' + student.period + '</span>' +
+          '<span>' + student.fellow + '</span>' +
+          gradeHtml +
+          '</div>' +
+          '</div>';
+
+        // Table
+        var table = '<table class="src-table"><thead><tr>' +
+          '<th>Date</th><th>Day</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>' +
+          '</tr></thead><tbody>';
+
+        student.dates.forEach(function (d) {
+          var etHtml = d.exitTicket !== '' && d.exitTicket !== null
+            ? '<span class="et-score">' + d.exitTicket + '</span>'
+            : '<span style="color:var(--text-muted);">—</span>';
+
+          var etPctHtml = d.exitTicketPct !== null
+            ? '<strong>' + d.exitTicketPct + '%</strong>'
+            : '<span style="color:var(--text-muted);">—</span>';
+
+          var gradesHtml = d.gradesStr !== '—'
+            ? '<span class="grades-str">' + d.gradesStr + '</span>'
+            : '<span style="color:var(--text-muted);">—</span>';
+
+          var partHtml = d.participationPct !== null
+            ? '<strong>' + d.participationPct + '%</strong>'
+            : '<span style="color:var(--text-muted);">—</span>';
+
+          table += '<tr>' +
+            '<td>' + d.date + '</td>' +
+            '<td>' + d.dayOfWeek + '</td>' +
+            '<td><span class="' + attendanceClass(d.attendance) + '">' + d.attendance + '</span></td>' +
+            '<td>' + etHtml + '</td>' +
+            '<td>' + etPctHtml + '</td>' +
+            '<td>' + gradesHtml + '</td>' +
+            '<td>' + partHtml + '</td>' +
+            '</tr>';
+        });
+
+        table += '</tbody></table>';
+        card.innerHTML += table;
+
+        // Summary bar
+        var s = student.summary;
+        card.innerHTML +=
+          '<div class="src-summary">' +
+          '<span>Present: <strong>' + s.totalPresent + '</strong></span>' +
+          '<span>Tardy: <strong style="color:#d97706;">' + s.totalTardy + '</strong></span>' +
+          '<span>Absent: <strong style="color:#dc2626;">' + s.totalAbsent + '</strong></span>' +
+          '<span>Not Scheduled: <strong>' + s.totalNotScheduled + '</strong></span>' +
+          '<span>Days: <strong>' + s.totalDays + '</strong></span>' +
+          '</div>';
+
+        body.appendChild(card);
+      });
+    }
+
+    function printActivityReport() {
+      if (!activityReport) {
+        alert('No report to print. Generate a report first.');
+        return;
+      }
+      var w = window.open('', '_blank');
+      if (!w) { alert('Pop-up blocked! Allow pop-ups and try again.'); return; }
+
+      var r = activityReport;
+      var css = '\
+        @page { margin: 0.4in; size: letter; }\
+        @media print { .report-card { page-break-after: always; } .report-card:last-child { page-break-after: auto; } .no-print { display: none !important; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\
+        * { margin: 0; padding: 0; box-sizing: border-box; }\
+        body { font-family: Arial, Helvetica, sans-serif; color: #222; background: #f5f5f5; }\
+        .no-print { background: #2c3e50; color: #fff; padding: 14px 24px; text-align: center; position: sticky; top: 0; z-index: 10; }\
+        .no-print button { background: #6bb8c9; color: #fff; border: none; padding: 10px 28px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin: 0 8px; }\
+        .no-print button:hover { background: #5ca8b8; }\
+        .report-card { width: 7.5in; margin: 20px auto; background: #fff; border: 2px solid #333; }\
+        .report-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px 8px; }\
+        .report-title { font-size: 18px; font-weight: bold; }\
+        .report-logo { text-align: right; }\
+        .logo-main { font-size: 26px; font-weight: bold; color: #6bb8c9; }\
+        .logo-sub { font-size: 12px; color: #6bb8c9; letter-spacing: 1px; }\
+        .report-info { padding: 8px 20px 12px; font-size: 14px; }\
+        .report-info .row { display: flex; gap: 32px; margin-bottom: 6px; }\
+        .field-line { border-bottom: 1px solid #333; display: inline-block; min-width: 180px; font-weight: bold; padding: 0 4px; }\
+        .field-short { min-width: 80px; }\
+        .data-table { width: 100%; border-collapse: collapse; }\
+        .data-table th { background: #f0f2f5; border: 1px solid #333; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }\
+        .data-table td { border: 1px solid #333; padding: 7px 10px; font-size: 12px; vertical-align: middle; }\
+        .att-p { color: #059669; font-weight: 600; }\
+        .att-t { color: #d97706; font-weight: 600; }\
+        .att-a { color: #dc2626; font-weight: 600; }\
+        .att-ns { color: #999; font-style: italic; }\
+        .grade-pill { display: inline-block; padding: 1px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; }\
+        .grade-a { background: #d1fae5; color: #059669; }\
+        .grade-b { background: #dbeafe; color: #2563eb; }\
+        .grade-c { background: #fef3c7; color: #d97706; }\
+        .grade-d { background: #fed7aa; color: #ea580c; }\
+        .grade-f { background: #fee2e2; color: #dc2626; }\
+        .grades-mono { font-family: "Courier New", monospace; font-size: 12px; letter-spacing: 2px; font-weight: bold; }\
+        .report-footer { padding: 10px 20px; font-size: 12px; display: flex; justify-content: space-between; border-top: 1px solid #999; flex-wrap: wrap; gap: 8px; }\
+        .footer-item { display: inline-flex; gap: 4px; }\
+        .footer-item strong { color: #222; }\
+      ';
+
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8">';
+      html += '<title>Blueprint Activity Report</title>';
+      html += '<style>' + css + '</style></head><body>';
+      html += '<div class="no-print"><strong>Blueprint Activity Reports</strong> \u2014 ' +
+        r.dateRange.start + ' to ' + r.dateRange.end + ' \u00b7 ' + r.studentCount + ' students &nbsp;';
+      html += '<button onclick="window.print()">\ud83d\udda8\ufe0f Print / Save as PDF</button></div>';
+
+      r.students.forEach(function (student) {
+        var gc = gradeClass(student.letterGrade);
+        var gp = student.letterGrade ? '<span class="grade-pill ' + gc + '">' + student.letterGrade + '</span>' : '';
+
+        html += '<div class="report-card">';
+
+        // Header
+        html += '<div class="report-header">';
+        html += '<div class="report-title">Blueprint Activity Report</div>';
+        html += '<div class="report-logo"><img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" alt="Blueprint Schools Network" style="height: 48px; width: auto; display: block;"></div>';
+
+        html += '</div>';
+
+        // Student Info
+        html += '<div class="report-info">';
+        html += '<div class="row">Student Name: <span class="field-line">' + student.name + '</span> &nbsp;&nbsp; Period <span class="field-line field-short">' + student.period + '</span></div>';
+        html += '<div class="row">Fellow: <span class="field-line">' + student.fellow + '</span> &nbsp;&nbsp; Current Grade <span class="field-line field-short">' + gp + '</span></div>';
+        html += '<div class="row">Date Range: <span class="field-line">' + r.dateRange.start + ' \u2013 ' + r.dateRange.end + '</span></div>';
+        html += '</div>';
+
+        // Data Table
+        html += '<table class="data-table"><thead><tr>';
+        html += '<th>Date</th><th>Day</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>';
+        html += '</tr></thead><tbody>';
+
+        student.dates.forEach(function (d) {
+          var ac = d.attendance.toLowerCase();
+          var acls = ac === 'present' ? 'att-p' : ac === 'tardy' ? 'att-t' : ac === 'absent' ? 'att-a' : 'att-ns';
+          var et = d.exitTicket !== '' && d.exitTicket !== null ? '<strong>' + d.exitTicket + '</strong>' : '\u2014';
+          var etPct = d.exitTicketPct !== null ? d.exitTicketPct + '%' : '\u2014';
+          var gs = d.gradesStr !== '\u2014' ? '<span class="grades-mono">' + d.gradesStr + '</span>' : '\u2014';
+          var pp = d.participationPct !== null ? d.participationPct + '%' : '\u2014';
+
+          html += '<tr>';
+          html += '<td>' + d.date + '</td>';
+          html += '<td>' + d.dayOfWeek + '</td>';
+          html += '<td class="' + acls + '">' + d.attendance + '</td>';
+          html += '<td style="text-align:center;">' + et + '</td>';
+          html += '<td style="text-align:center;">' + etPct + '</td>';
+          html += '<td>' + gs + '</td>';
+          html += '<td style="text-align:center;">' + pp + '</td>';
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        // Footer summary
+        var s = student.summary;
+        html += '<div class="report-footer">';
+        html += '<span class="footer-item">Present: <strong>' + s.totalPresent + '</strong></span>';
+        html += '<span class="footer-item">Tardy: <strong style="color:#d97706">' + s.totalTardy + '</strong></span>';
+        html += '<span class="footer-item">Absent: <strong style="color:#dc2626">' + s.totalAbsent + '</strong></span>';
+        html += '<span class="footer-item">Not Sched.: <strong>' + s.totalNotScheduled + '</strong></span>';
+        html += '<span class="footer-item">Days: <strong>' + s.totalDays + '</strong></span>';
+        html += '</div>';
+
+        html += '</div>'; // close report-card
+      });
+
+      html += '</body></html>';
+      w.document.write(html);
+      w.document.close();
     }
   </script>
 </body>

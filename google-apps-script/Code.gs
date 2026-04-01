@@ -501,11 +501,11 @@ function generateParentComment(name, grade, tardies, absences) {
   if (grade === 'A' || grade === 'B') {
     var msg = firstName + ' is performing ' + (grade === 'A' ? 'exceptionally well' : 'well') + ' with ' + (grade === 'A' ? 'an' : 'a') + ' ' + grade + ' in the course.';
     if (tardies === 0 && absences === 0) {
-      msg += ' firstName has perfect attendance this period with no tardies or absences. Their commitment to education is exemplary and we are very proud of their consistent effort and performance.';
+      msg += firstName +'has perfect attendance this period with no tardies or absences. Their commitment to education is exemplary and we are very proud of their consistent effort and performance.';
     } else if (tardies > 0) {
-      msg += ' firstname have ' + spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + ' this period. Improving punctuality would help make the most of class time. We appreciate your support in encouraging on-time arrival.';
+      msg +=  firstname +'have ' + spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + ' this period. Improving punctuality would help make the most of class time. We appreciate your support in encouraging on-time arrival.';
     } else {
-      msg += ' firstName  have zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. Their consistent work ethic and focus in class are commendable. We are very pleased with their academic progress.';
+      msg += firstName +'have zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. Their consistent work ethic and focus in class are commendable. We are very pleased with their academic progress.';
     }
     return msg;
   }
@@ -513,11 +513,11 @@ function generateParentComment(name, grade, tardies, absences) {
   if (grade === 'C' || grade === 'D') {
     var msg = firstName + ' is maintaining a ' + grade + ' grade in the course.';
     if (tardies > 3) {
-      msg += ' firstName has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
+      msg += firstName +'has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
     } else if (absences > 0) {
-      msg += ' firstName has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
+      msg +=  firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
     } else {
-      msg += ' firstName attendance is solid with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
+      msg += firstName +'attendance is solid with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
     }
     return msg;
   }
@@ -528,7 +528,7 @@ function generateParentComment(name, grade, tardies, absences) {
       var parts = [];
       if (tardies > 0) parts.push(spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
       if (absences > 0) parts.push(spellNumber(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
-      msg += ' firstName has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
+      msg +=  firstName +'has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
     } else {
       msg += ' Attendance is not the issue but engagement and effort need improvement. We would like to partner with you to discuss strategies for improvement.';
     }
@@ -540,4 +540,257 @@ function generateParentComment(name, grade, tardies, absences) {
     return firstName + ' has accumulated ' + spellNumber(absences) + ' absences this period which is significantly impacting their ability to keep up with coursework. We are concerned about attendance and would like to work with you to ensure they are present in class. Please contact me so we can discuss a plan for academic success.';
   }
   return firstName + ' needs to check in with us regarding their current standing. We would appreciate your support in encouraging them to connect with the teacher.';
+}
+
+// ═══════════════════════════════════════════════════
+// ─── Activity Report Functions ───
+// ═══════════════════════════════════════════════════
+
+/**
+ * Scan row 4 of the activity sheet for date columns.
+ * Returns all available dates for the date-range picker.
+ */
+function getActivityDates(config) {
+  try {
+    var ss = SpreadsheetApp.openById(config.spreadsheetId);
+    var sheet = ss.getSheetByName(config.activitySheetName);
+    if (!sheet) {
+      return { error: 'Sheet tab "' + config.activitySheetName + '" not found. Available tabs: ' +
+        ss.getSheets().map(function(s) { return s.getName(); }).join(', ') };
+    }
+
+    var dateRow = parseInt(config.activityDateRow) || 4;
+    var lastCol = sheet.getLastColumn();
+    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getValues()[0];
+    var tz = Session.getScriptTimeZone();
+
+    var dates = [];
+    for (var i = 0; i < row4.length; i++) {
+      var cell = row4[i];
+      if (cell instanceof Date && !isNaN(cell.getTime())) {
+        var day = cell.getDay();
+        if (day === 0 || day === 6) continue; // Skip weekends
+        dates.push({
+          col: i + 1,
+          dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
+          isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
+          dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][day]
+        });
+      }
+    }
+
+    if (dates.length === 0) {
+      return { error: 'No dates found in row ' + dateRow + '. Make sure the activity sheet has dates in row ' + dateRow + '.' };
+    }
+
+    return { success: true, dates: dates, total: dates.length };
+  } catch(e) {
+    return { error: 'Could not load dates: ' + e.message };
+  }
+}
+
+/**
+ * Build a name → grade lookup from a separate grades tab.
+ * Returns { map: { "name": "A", ... }, found: true/false }
+ */
+function buildGradeLookup(ss, config) {
+  var lookup = {};
+  if (!config.gradesSheetName) return { map: lookup, found: false };
+
+  var gradeSheet = ss.getSheetByName(config.gradesSheetName);
+  if (!gradeSheet) return { map: lookup, found: false, error: 'Sheet "' + config.gradesSheetName + '" not found' };
+
+  var nameCol = colToIndex(config.gradesNameCol || 'B') - 1;
+  var gradeCol = colToIndex(config.gradesGradeCol || 'E') - 1;
+  var maxCol = Math.max(nameCol, gradeCol) + 1;
+  var startRow = parseInt(config.gradesStartRow) || 4;
+  var lastRow = gradeSheet.getLastRow();
+  if (lastRow < startRow) return { map: lookup, found: true };
+
+  var data = gradeSheet.getRange(startRow, 1, lastRow - startRow + 1, maxCol).getValues();
+
+  for (var i = 0; i < data.length; i++) {
+    var name = String(data[i][nameCol] || '').trim();
+    var grade = String(data[i][gradeCol] || '').trim().toUpperCase();
+    if (name && grade) {
+      // Store multiple variants for flexible matching
+      var keys = nameVariants(name);
+      for (var k = 0; k < keys.length; k++) {
+        lookup[keys[k]] = grade;
+      }
+    }
+  }
+
+  return { map: lookup, found: true };
+}
+
+/**
+ * Read student activity data for a date range.
+ * Parses the 3-row-per-student block structure:
+ *   Row 1: Attendance   Row 2: Exit Ticket   Row 3: GRADES
+ * Returns structured data for the frontend report.
+ */
+function getActivityReport(config, startDate, endDate) {
+  try {
+    var ss = SpreadsheetApp.openById(config.spreadsheetId);
+    var sheet = ss.getSheetByName(config.activitySheetName);
+    if (!sheet) return { error: 'Sheet tab "' + config.activitySheetName + '" not found.' };
+
+    var dateRow = parseInt(config.activityDateRow) || 4;
+    var lastCol = sheet.getLastColumn();
+    var lastRow = sheet.getLastRow();
+    var tz = Session.getScriptTimeZone();
+
+    // Parse start/end dates
+    var start = new Date(startDate + 'T00:00:00');
+    var end = new Date(endDate + 'T23:59:59');
+
+    // Scan row 4 for date columns within range
+    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getValues()[0];
+    var dateCols = [];
+    for (var i = 0; i < row4.length; i++) {
+      var cell = row4[i];
+      if (cell instanceof Date && !isNaN(cell.getTime())) {
+        var day = cell.getDay();
+        if (day === 0 || day === 6) continue; // Skip weekends
+        if (cell >= start && cell <= end) {
+          dateCols.push({
+            colIdx: i,
+            date: cell,
+            dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
+            isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
+            dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][day]
+          });
+        }
+      }
+    }
+
+    if (dateCols.length === 0) {
+      return { error: 'No dates found between ' + startDate + ' and ' + endDate + ' in this sheet.' };
+    }
+
+    // Read all student data (starting from row after date header)
+    var dataStartRow = dateRow + 1;
+    if (lastRow < dataStartRow) return { error: 'No student data below row ' + dateRow + '.' };
+
+    var data = sheet.getRange(dataStartRow, 1, lastRow - dataStartRow + 1, lastCol).getValues();
+
+    // Fixed column indices (0-based): A=Period, B=Name, C=Fellow, D=Component
+    var PERIOD_COL = 0;
+    var NAME_COL = 1;
+    var FELLOW_COL = 2;
+    var COMPONENT_COL = 3;
+
+    // Build optional grade lookup
+    var gradeLookup = buildGradeLookup(ss, config);
+    var gradeMap = gradeLookup.map;
+
+    // Process students in 3-row blocks
+    var students = [];
+    var i = 0;
+    while (i < data.length) {
+      var name = String(data[i][NAME_COL] || '').trim();
+      if (!name) { i++; continue; }
+
+      // Identify the 3-row block by checking Component
+      var attendanceRowIdx = null, exitTicketRowIdx = null, gradesRowIdx = null;
+
+      for (var j = 0; j < 3 && (i + j) < data.length; j++) {
+        var comp = String(data[i + j][COMPONENT_COL] || '').trim().toLowerCase();
+        if (comp === 'attendance') attendanceRowIdx = i + j;
+        else if (comp === 'exit ticket') exitTicketRowIdx = i + j;
+        else if (comp === 'grades') gradesRowIdx = i + j;
+      }
+
+      // Skip if we can't identify the block
+      if (attendanceRowIdx === null && exitTicketRowIdx === null && gradesRowIdx === null) {
+        i++;
+        continue;
+      }
+
+      var period = String(data[i][PERIOD_COL] || '').trim();
+      var fellow = String(data[i][FELLOW_COL] || '').trim();
+
+      // Look up letter grade from the grades sheet
+      var letterGrade = '';
+      if (Object.keys(gradeMap).length > 0) {
+        letterGrade = lookupEmail(gradeMap, name) || ''; // reuse the flexible name lookup
+      }
+
+      // Extract data for each date column
+      var dateData = [];
+      var totalPresent = 0, totalTardy = 0, totalAbsent = 0, totalNotScheduled = 0;
+
+      for (var d = 0; d < dateCols.length; d++) {
+        var colIdx = dateCols[d].colIdx;
+
+        // Attendance
+        var attendance = attendanceRowIdx !== null ? String(data[attendanceRowIdx][colIdx] || '').trim() : '';
+
+        // Exit Ticket
+        var etRaw = exitTicketRowIdx !== null ? data[exitTicketRowIdx][colIdx] : '';
+        var etValue = parseFloat(etRaw);
+        var etDisplay = isNaN(etValue) ? '' : etValue;
+
+        // GRADES string
+        var gradesStr = gradesRowIdx !== null ? String(data[gradesRowIdx][colIdx] || '').trim().toUpperCase() : '';
+
+        // Calculate participation % from GRADES
+        var participationPct = null;
+        if (gradesStr && gradesStr !== '—') {
+          var validChars = 0;
+          for (var c = 0; c < gradesStr.length; c++) {
+            if (gradesStr[c] !== 'X') validChars++;
+          }
+          participationPct = Math.round((validChars / 6) * 100);
+        }
+
+        // Count attendance totals
+        var attLower = attendance.toLowerCase();
+        if (attLower === 'present') totalPresent++;
+        else if (attLower === 'tardy') totalTardy++;
+        else if (attLower === 'absent') totalAbsent++;
+        else if (attLower.indexOf('not s') > -1 || attLower.indexOf('not scheduled') > -1) totalNotScheduled++;
+
+        dateData.push({
+          date: dateCols[d].dateStr,
+          dayOfWeek: dateCols[d].dayOfWeek,
+          attendance: attendance || '—',
+          exitTicket: etDisplay,
+          exitTicketPct: !isNaN(etValue) ? Math.round((etValue / 4) * 100) : null,
+          gradesStr: gradesStr || '—',
+          participationPct: participationPct
+        });
+      }
+
+      students.push({
+        name: name,
+        period: period,
+        fellow: fellow,
+        letterGrade: letterGrade,
+        dates: dateData,
+        summary: {
+          totalPresent: totalPresent,
+          totalTardy: totalTardy,
+          totalAbsent: totalAbsent,
+          totalNotScheduled: totalNotScheduled,
+          totalDays: dateCols.length
+        }
+      });
+
+      i += 3; // Skip to next student block
+    }
+
+    return {
+      success: true,
+      students: students,
+      dateRange: { start: startDate, end: endDate },
+      dateCount: dateCols.length,
+      studentCount: students.length,
+      dateHeaders: dateCols.map(function(d) { return { date: d.dateStr, dayOfWeek: d.dayOfWeek }; }),
+      gradeLookupMsg: config.gradesSheetName ? (gradeLookup.error || (Object.keys(gradeMap).length > 0 ? 'Grades loaded' : 'No grades found in "' + config.gradesSheetName + '"')) : ''
+    };
+  } catch(e) {
+    return { error: 'Activity report error: ' + e.message };
+  }
 }
