@@ -52,6 +52,57 @@ function getTeacherInfo() {
   return { email: email };
 }
 
+// ─── Get All Sheet Tab Names ───
+function getSheetNames(spreadsheetId) {
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheets = ss.getSheets();
+    var names = [];
+    for (var i = 0; i < sheets.length; i++) {
+      names.push(sheets[i].getName());
+    }
+    return { success: true, names: names };
+  } catch (e) {
+    return { error: 'Could not access spreadsheet: ' + e.message };
+  }
+}
+
+// ─── Get Column Headers from a Sheet ───
+function getSheetHeaders(spreadsheetId, sheetName, headerRow) {
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      return { error: 'Sheet tab "' + sheetName + '" not found.' };
+    }
+
+    var row = parseInt(headerRow) || 3;
+    var lastCol = sheet.getLastColumn();
+    if (lastCol < 1) return { error: 'Sheet appears to be empty.' };
+
+    var values = sheet.getRange(row, 1, 1, lastCol).getValues()[0];
+    var headers = [];
+
+    for (var i = 0; i < values.length; i++) {
+      var text = String(values[i] || '').trim();
+      if (text) {
+        headers.push({
+          col: indexToCol(i + 1),
+          colIndex: i + 1,
+          header: text
+        });
+      }
+    }
+
+    // Also detect the first row of data (row after header)
+    var dataStartRow = row + 1;
+
+    return { success: true, headers: headers, headerRow: row, dataStartRow: dataStartRow };
+  } catch (e) {
+    return { error: 'Could not read headers: ' + e.message };
+  }
+}
+
 // ─── Read Student Data (called from frontend) ───
 
 // Helper: Normalize a name into multiple lookup keys
@@ -568,16 +619,16 @@ function getActivityDates(config) {
     for (var i = 0; i < row4.length; i++) {
       var cell = row4[i];
       if (cell instanceof Date && !isNaN(cell.getTime())) {
-        var day = cell.getDay();
-        if (day === 0 || day === 6) continue; // Skip weekends
-        dates.push({
-          col: i + 1,
-          dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
-          isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
-          dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][day]
-        });
-      }
-    }
+      var dayOfWeek = parseInt(Utilities.formatDate(cell, tz, 'u')); // 1=Mon, 7=Sun
+      if (dayOfWeek === 6 || dayOfWeek === 7) continue; // Skip Sat & Sun
+      dates.push({
+        col: i + 1,
+        dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
+        isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
+        dayOfWeek: ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', '', ''][dayOfWeek]
+    });
+  }
+}
 
     if (dates.length === 0) {
       return { error: 'No dates found in row ' + dateRow + '. Make sure the activity sheet has dates in row ' + dateRow + '.' };
@@ -592,28 +643,65 @@ function getActivityDates(config) {
 /**
  * Build a name → grade lookup from a separate grades tab.
  * Returns { map: { "name": "A", ... }, found: true/false }
+ * 
+ * Uses config.gradesGradeCol (user-selected column) as the primary source.
+ * Falls back to scanning for "Full Year" → "Letter Grade" if no column specified.
  */
-function buildGradeLookup(ss, config) {
+function buildGradeLookup(ss, config, endDate) {
   var lookup = {};
   if (!config.gradesSheetName) return { map: lookup, found: false };
 
   var gradeSheet = ss.getSheetByName(config.gradesSheetName);
   if (!gradeSheet) return { map: lookup, found: false, error: 'Sheet "' + config.gradesSheetName + '" not found' };
 
-  var nameCol = colToIndex(config.gradesNameCol || 'B') - 1;
-  var gradeCol = colToIndex(config.gradesGradeCol || 'E') - 1;
-  var maxCol = Math.max(nameCol, gradeCol) + 1;
-  var startRow = parseInt(config.gradesStartRow) || 4;
+  var lastCol = gradeSheet.getLastColumn();
   var lastRow = gradeSheet.getLastRow();
-  if (lastRow < startRow) return { map: lookup, found: true };
+  var nameCol = colToIndex(config.gradesNameCol || 'B') - 1; // 0-based
+  var startRow = parseInt(config.gradesStartRow) || 5;
 
+  // ── Primary: Use user-selected grade column ──
+  var targetCol = null;
+  if (config.gradesGradeCol) {
+    targetCol = colToIndex(config.gradesGradeCol) - 1; // 0-based
+  }
+
+  // ── Fallback: Scan for "Full Year" → "Letter Grade" in rows 2 & 4 ──
+  if (targetCol === null) {
+    var row2 = gradeSheet.getRange(2, 1, 1, lastCol).getValues()[0];
+    var row4 = gradeSheet.getRange(4, 1, 1, lastCol).getValues()[0];
+
+    for (var c = 0; c < row2.length; c++) {
+      var r2Label = String(row2[c] || '').toLowerCase();
+      
+      if (r2Label.indexOf('full year') > -1 || r2Label.indexOf('year grade') > -1) {
+        for (var lc = c; lc < row4.length; lc++) {
+          var header = String(row4[lc] || '').toLowerCase();
+          if (lc > c && row2[lc] && row2[lc] !== row2[c]) break;
+          if (header.indexOf('letter grade') > -1) {
+            targetCol = lc;
+            break;
+          }
+        }
+      }
+      if (targetCol !== null) break;
+    }
+  }
+
+  if (targetCol === null) {
+    return { map: lookup, found: false, error: 'No grade column found — select one in the Grade Lookup settings' };
+  }
+
+  if (lastRow < startRow) return { map: lookup, found: false, error: 'No data in grades sheet starting from row ' + startRow };
+
+  // Read data
+  var maxCol = Math.max(nameCol, targetCol) + 1;
   var data = gradeSheet.getRange(startRow, 1, lastRow - startRow + 1, maxCol).getValues();
 
   for (var i = 0; i < data.length; i++) {
     var name = String(data[i][nameCol] || '').trim();
-    var grade = String(data[i][gradeCol] || '').trim().toUpperCase();
+    var grade = String(data[i][targetCol] || '').trim().toUpperCase();
+    
     if (name && grade) {
-      // Store multiple variants for flexible matching
       var keys = nameVariants(name);
       for (var k = 0; k < keys.length; k++) {
         lookup[keys[k]] = grade;
@@ -623,7 +711,6 @@ function buildGradeLookup(ss, config) {
 
   return { map: lookup, found: true };
 }
-
 /**
  * Read student activity data for a date range.
  * Parses the 3-row-per-student block structure:

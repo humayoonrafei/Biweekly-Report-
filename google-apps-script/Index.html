@@ -1005,53 +1005,74 @@
         <div class="form-row">
           <div class="form-group">
             <label>Spreadsheet ID</label>
-            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here">
+            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here" onchange="loadSheetNames('spreadsheetId')" onblur="loadSheetNames('spreadsheetId')">
             <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
           </div>
           <div class="form-group">
             <label>Sheet Tab Name</label>
-            <input type="text" id="sheetName" placeholder="e.g. biweeklyReport" value="biweeklyReport">
+            <select id="sheetName" onchange="loadColumnHeaders()">
+              <option value="" disabled selected>— enter Spreadsheet ID first —</option>
+            </select>
+            <span class="hint">Select a tab to auto-detect columns</span>
+          </div>
+        </div>
+
+        <!-- Header Row Config -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Header Row</label>
+            <input type="text" id="headerRow" value="3" onchange="loadColumnHeaders()" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <span class="hint">Row number with column headers</span>
+          </div>
+          <div class="form-group">
+            <label>Data Start Row</label>
+            <input type="text" id="dataStartRow" value="4" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <span class="hint">First row of student data</span>
           </div>
         </div>
 
         <!-- Column Mapping (collapsible) -->
         <div class="columns-toggle" onclick="toggleColumns()">
           <span class="arrow" id="colArrow">▶</span>
-          Column Mapping (adjust for your spreadsheet layout)
+          Column Mapping <span id="colMapStatus" style="font-size:11px;color:var(--success);margin-left:6px;"></span>
         </div>
 
         <div class="columns-grid" id="columnsGrid">
           <div class="form-group">
             <label>Student Name</label>
-            <input type="text" id="studentNameCol" value="B">
+            <select id="studentNameCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Student Comment</label>
-            <input type="text" id="studentCommentCol" value="C">
+            <select id="studentCommentCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Parent Comment</label>
-            <input type="text" id="parentCommentCol" value="D">
+            <select id="parentCommentCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Grade</label>
-            <input type="text" id="gradeCol" value="E">
+            <select id="gradeCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Tardies</label>
-            <input type="text" id="tardiesCol" value="AJ">
+            <select id="tardiesCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Absences</label>
-            <input type="text" id="absencesCol" value="AK">
-          </div>
-          <div class="form-group">
-            <label>Header Row</label>
-            <input type="text" id="headerRow" value="3">
-          </div>
-          <div class="form-group">
-            <label>Data Start Row</label>
-            <input type="text" id="dataStartRow" value="4">
+            <select id="absencesCol">
+              <option value="" disabled selected>— select sheet first —</option>
+            </select>
           </div>
         </div>
 
@@ -1064,20 +1085,24 @@
         <div class="columns-grid" id="emailGrid" style="display:none;">
           <div class="form-group">
             <label>Email Sheet Tab</label>
-            <input type="text" id="emailSheetName" placeholder="e.g. ParentEmails">
+            <select id="emailSheetName" onchange="loadEmailHeaders()">
+              <option value="">— none —</option>
+            </select>
             <span class="hint">Tab name with parent emails</span>
           </div>
           <div class="form-group">
             <label>Name Column</label>
-            <input type="text" id="emailSheetNameCol" value="A"
-              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
-            <span class="hint">Student name column in email sheet</span>
+            <select id="emailSheetNameCol">
+              <option value="A">— select email sheet —</option>
+            </select>
+            <span class="hint">Student name column</span>
           </div>
           <div class="form-group">
             <label>Email Column</label>
-            <input type="text" id="emailSheetEmailCol" value="B"
-              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;">
-            <span class="hint">Parent email column in email sheet</span>
+            <select id="emailSheetEmailCol">
+              <option value="B">— select email sheet —</option>
+            </select>
+            <span class="hint">Parent email column</span>
           </div>
         </div>
 
@@ -1240,12 +1265,14 @@
         <div class="form-row">
           <div class="form-group">
             <label>Spreadsheet ID</label>
-            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID">
+            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID" onchange="loadSheetNames('actSpreadsheetId')" onblur="loadSheetNames('actSpreadsheetId')">
             <span class="hint">Same spreadsheet, different tab</span>
           </div>
           <div class="form-group">
             <label>Activity Sheet Tab</label>
-            <input type="text" id="actSheetName" placeholder="e.g. Period 2">
+            <select id="actSheetName" onchange="loadGradesSheetHeaders()">
+              <option value="" disabled selected>— enter Spreadsheet ID first —</option>
+            </select>
           </div>
         </div>
 
@@ -1257,7 +1284,9 @@
           </div>
           <div class="form-group">
             <label>Grades Sheet Tab (optional)</label>
-            <input type="text" id="actGradesSheet" placeholder="e.g. biweeklyReport">
+            <select id="actGradesSheet" onchange="loadActGradesHeaders()">
+              <option value="">— none —</option>
+            </select>
             <span class="hint">Tab to look up letter grades</span>
           </div>
         </div>
@@ -1265,23 +1294,27 @@
         <!-- Grades Column Mapping (collapsible) -->
         <div class="columns-toggle" onclick="toggleGradesConfig()">
           <span class="arrow" id="gradesArrow">▶</span>
-          Grade Lookup Columns (if using grades sheet)
+          Grade Lookup Columns <span id="gradeColMapStatus" style="font-size:11px;color:var(--success);margin-left:6px;"></span>
         </div>
 
         <div class="columns-grid" id="gradesGrid" style="display:none;">
           <div class="form-group">
             <label>Name Column</label>
-            <input type="text" id="actGradesNameCol" value="B">
-            <span class="hint">Student name column in grades sheet</span>
+            <select id="actGradesNameCol">
+              <option value="B">— select grades sheet —</option>
+            </select>
+            <span class="hint">Student name column</span>
           </div>
           <div class="form-group">
             <label>Grade Column</label>
-            <input type="text" id="actGradesGradeCol" value="E">
-            <span class="hint">Letter grade column in grades sheet</span>
+            <select id="actGradesGradeCol">
+              <option value="E">— select grades sheet —</option>
+            </select>
+            <span class="hint">Letter grade column</span>
           </div>
           <div class="form-group">
             <label>Data Start Row</label>
-            <input type="text" id="actGradesStartRow" value="4">
+            <input type="text" id="actGradesStartRow" value="4" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
             <span class="hint">First row of student data</span>
           </div>
         </div>
@@ -1349,6 +1382,78 @@
     // ─── State ───
     var generatedResults = [];
     var teacherEmail = '';
+    var _lastLoadedSheetId = {};  // track per input so we don't re-fetch the same ID
+
+    // ─── Load Sheet Names into Dropdowns ───
+    function loadSheetNames(inputId) {
+      var rawId = document.getElementById(inputId).value.trim();
+      var cleanId = extractSpreadsheetId(rawId);
+      if (!cleanId) return;
+
+      // Update the field to show the clean ID
+      if (cleanId !== rawId) {
+        document.getElementById(inputId).value = cleanId;
+      }
+
+      // Don't re-fetch if we already loaded this ID for this input
+      if (_lastLoadedSheetId[inputId] === cleanId) return;
+      _lastLoadedSheetId[inputId] = cleanId;
+
+      // Determine which set of dropdowns to populate
+      var dropdowns;
+      if (inputId === 'spreadsheetId') {
+        dropdowns = ['sheetName', 'emailSheetName'];
+      } else if (inputId === 'actSpreadsheetId') {
+        dropdowns = ['actSheetName', 'actGradesSheet'];
+      } else {
+        return;
+      }
+
+      // Show loading state
+      dropdowns.forEach(function(selId) {
+        var sel = document.getElementById(selId);
+        sel.innerHTML = '<option value="" disabled selected>Loading sheets...</option>';
+      });
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.error) {
+            dropdowns.forEach(function(selId) {
+              var sel = document.getElementById(selId);
+              sel.innerHTML = '<option value="" disabled selected>⚠️ Error loading sheets</option>';
+            });
+            return;
+          }
+
+          dropdowns.forEach(function(selId) {
+            var sel = document.getElementById(selId);
+            var isOptional = (selId === 'emailSheetName' || selId === 'actGradesSheet');
+            sel.innerHTML = '';
+
+            // Add a "none" option for optional fields
+            if (isOptional) {
+              var noneOpt = document.createElement('option');
+              noneOpt.value = '';
+              noneOpt.textContent = '— none —';
+              sel.appendChild(noneOpt);
+            }
+
+            result.names.forEach(function(name) {
+              var opt = document.createElement('option');
+              opt.value = name;
+              opt.textContent = name;
+              sel.appendChild(opt);
+            });
+          });
+        })
+        .withFailureHandler(function(err) {
+          dropdowns.forEach(function(selId) {
+            var sel = document.getElementById(selId);
+            sel.innerHTML = '<option value="" disabled selected>⚠️ ' + err.message + '</option>';
+          });
+        })
+        .getSheetNames(cleanId);
+    }
 
     // ─── Column Toggle ───
     function toggleColumns() {
@@ -1364,6 +1469,252 @@
       var isShown = grid.style.display === 'grid';
       grid.style.display = isShown ? 'none' : 'grid';
       arrow.classList.toggle('open');
+    }
+
+    // ─── Populate a <select> with header options ───
+    function populateHeaderSelect(selectId, headers, autoValue) {
+      var sel = document.getElementById(selectId);
+      sel.innerHTML = '';
+      // Add a blank/unselected option
+      var blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '— select column —';
+      sel.appendChild(blank);
+
+      headers.forEach(function(h) {
+        var opt = document.createElement('option');
+        opt.value = h.col;
+        opt.textContent = h.col + ' — ' + h.header;
+        sel.appendChild(opt);
+      });
+
+      // Auto-select if we have a match
+      if (autoValue) {
+        sel.value = autoValue;
+      }
+    }
+
+    // ─── Auto-Detect Column Mapping ───
+    // Returns { fieldId: colLetter } for best-guess matches
+    function autoDetectColumns(headers) {
+      var rules = {
+        studentNameCol: [/\bstudent\s*name\b/i, /\bname\b/i, /\bstudent\b/i],
+        studentCommentCol: [/\bstudent\s*comment/i, /\bcomment\b/i],
+        parentCommentCol: [/\bparent\s*comment/i, /\bparent\b.*comment/i, /\bguardian/i],
+        gradeCol: [/\bletter\s*grade\b/i, /\bcurrent\s*grade\b/i, /\bgrade\b/i],
+        tardiesCol: [/\btardies\b/i, /\btardy\b/i, /\btard/i],
+        absencesCol: [/\babsences\b/i, /\babsence\b/i, /\babsent/i]
+      };
+
+      var detected = {};
+
+      // For each field, find the first header that matches any pattern
+      Object.keys(rules).forEach(function(field) {
+        var patterns = rules[field];
+        for (var p = 0; p < patterns.length; p++) {
+          for (var h = 0; h < headers.length; h++) {
+            if (patterns[p].test(headers[h].header)) {
+              if (!detected[field]) {
+                detected[field] = headers[h].col;
+              }
+              break;
+            }
+          }
+          if (detected[field]) break;
+        }
+      });
+
+      return detected;
+    }
+
+    // ─── Load Column Headers (Comments Mode) ───
+    function loadColumnHeaders() {
+      var spreadsheetId = extractSpreadsheetId(document.getElementById('spreadsheetId').value.trim());
+      var sheetName = document.getElementById('sheetName').value.trim();
+      var headerRow = document.getElementById('headerRow').value.trim() || '3';
+
+      if (!spreadsheetId || !sheetName) return;
+
+      // Show loading state on all column selects
+      var colFields = ['studentNameCol', 'studentCommentCol', 'parentCommentCol', 'gradeCol', 'tardiesCol', 'absencesCol'];
+      colFields.forEach(function(id) {
+        var sel = document.getElementById(id);
+        sel.innerHTML = '<option value="" disabled selected>Loading headers...</option>';
+      });
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.error) {
+            colFields.forEach(function(id) {
+              var sel = document.getElementById(id);
+              sel.innerHTML = '<option value="" disabled selected>⚠️ ' + result.error + '</option>';
+            });
+            document.getElementById('colMapStatus').textContent = '';
+            return;
+          }
+
+          // Auto-detect columns
+          var detected = autoDetectColumns(result.headers);
+          var detectedCount = Object.keys(detected).length;
+
+          // Populate each dropdown
+          colFields.forEach(function(id) {
+            populateHeaderSelect(id, result.headers, detected[id] || '');
+          });
+
+          // Update data start row to match
+          if (result.dataStartRow) {
+            document.getElementById('dataStartRow').value = result.dataStartRow;
+          }
+
+          // Show status and auto-expand
+          if (detectedCount > 0) {
+            document.getElementById('colMapStatus').textContent = '✓ ' + detectedCount + '/6 auto-detected';
+            // Auto-expand the column mapping section
+            var grid = document.getElementById('columnsGrid');
+            var arrow = document.getElementById('colArrow');
+            if (!grid.classList.contains('show')) {
+              grid.classList.add('show');
+              arrow.classList.add('open');
+            }
+          } else {
+            document.getElementById('colMapStatus').textContent = '⚠ could not auto-detect — please select manually';
+            document.getElementById('colMapStatus').style.color = 'var(--warning)';
+            // Auto-expand so user can select
+            var grid = document.getElementById('columnsGrid');
+            var arrow = document.getElementById('colArrow');
+            if (!grid.classList.contains('show')) {
+              grid.classList.add('show');
+              arrow.classList.add('open');
+            }
+          }
+        })
+        .withFailureHandler(function(err) {
+          colFields.forEach(function(id) {
+            var sel = document.getElementById(id);
+            sel.innerHTML = '<option value="" disabled selected>⚠️ Error</option>';
+          });
+        })
+        .getSheetHeaders(spreadsheetId, sheetName, headerRow);
+    }
+
+    // ─── Load Email Sheet Headers ───
+    function loadEmailHeaders() {
+      var spreadsheetId = extractSpreadsheetId(document.getElementById('spreadsheetId').value.trim());
+      var emailSheet = document.getElementById('emailSheetName').value.trim();
+
+      if (!spreadsheetId || !emailSheet) {
+        // Reset to defaults if "none" selected
+        document.getElementById('emailSheetNameCol').innerHTML = '<option value="A">— select email sheet —</option>';
+        document.getElementById('emailSheetEmailCol').innerHTML = '<option value="B">— select email sheet —</option>';
+        return;
+      }
+
+      var fields = ['emailSheetNameCol', 'emailSheetEmailCol'];
+      fields.forEach(function(id) {
+        document.getElementById(id).innerHTML = '<option value="" disabled selected>Loading...</option>';
+      });
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.error) {
+            fields.forEach(function(id) {
+              document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
+            });
+            return;
+          }
+
+          // Auto-detect name and email columns
+          var nameCol = '', emailCol = '';
+          for (var i = 0; i < result.headers.length; i++) {
+            var h = result.headers[i].header.toLowerCase();
+            if (!nameCol && (/\bname\b/.test(h) || /\bstudent\b/.test(h))) {
+              nameCol = result.headers[i].col;
+            }
+            if (!emailCol && (/\bemail\b/.test(h) || /\be-mail\b/.test(h) || /\bparent.*email\b/.test(h))) {
+              emailCol = result.headers[i].col;
+            }
+          }
+
+          populateHeaderSelect('emailSheetNameCol', result.headers, nameCol);
+          populateHeaderSelect('emailSheetEmailCol', result.headers, emailCol);
+        })
+        .withFailureHandler(function(err) {
+          fields.forEach(function(id) {
+            document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
+          });
+        })
+        .getSheetHeaders(spreadsheetId, emailSheet, '1');
+    }
+
+    // ─── (Activity Mode) Not used for column headers — just placeholder ───
+    function loadGradesSheetHeaders() {
+      // The actSheetName is the activity sheet — no column mapping needed for it
+      // (columns A-D are fixed: Period, Name, Fellow, Component)
+    }
+
+    // ─── Load Activity Grades Sheet Headers ───
+    function loadActGradesHeaders() {
+      var spreadsheetId = extractSpreadsheetId(document.getElementById('actSpreadsheetId').value.trim());
+      var gradesSheet = document.getElementById('actGradesSheet').value.trim();
+
+      if (!spreadsheetId || !gradesSheet) {
+        document.getElementById('actGradesNameCol').innerHTML = '<option value="B">— select grades sheet —</option>';
+        document.getElementById('actGradesGradeCol').innerHTML = '<option value="E">— select grades sheet —</option>';
+        return;
+      }
+
+      var fields = ['actGradesNameCol', 'actGradesGradeCol'];
+      fields.forEach(function(id) {
+        document.getElementById(id).innerHTML = '<option value="" disabled selected>Loading...</option>';
+      });
+
+      var startRow = document.getElementById('actGradesStartRow').value.trim() || '4';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.error) {
+            fields.forEach(function(id) {
+              document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
+            });
+            document.getElementById('gradeColMapStatus').textContent = '';
+            return;
+          }
+
+          // Auto-detect name and grade columns
+          var nameCol = '', gradeCol = '';
+          for (var i = 0; i < result.headers.length; i++) {
+            var h = result.headers[i].header.toLowerCase();
+            if (!nameCol && (/\bname\b/.test(h) || /\bstudent\b/.test(h))) {
+              nameCol = result.headers[i].col;
+            }
+            if (!gradeCol && (/\bletter\s*grade\b/.test(h) || /\bgrade\b/.test(h))) {
+              gradeCol = result.headers[i].col;
+            }
+          }
+
+          populateHeaderSelect('actGradesNameCol', result.headers, nameCol);
+          populateHeaderSelect('actGradesGradeCol', result.headers, gradeCol);
+
+          // Show status
+          var detectedCount = (nameCol ? 1 : 0) + (gradeCol ? 1 : 0);
+          if (detectedCount > 0) {
+            document.getElementById('gradeColMapStatus').textContent = '✓ ' + detectedCount + '/2 auto-detected';
+            // Auto-expand
+            var grid = document.getElementById('gradesGrid');
+            var arrow = document.getElementById('gradesArrow');
+            if (grid.style.display !== 'grid') {
+              grid.style.display = 'grid';
+              arrow.classList.add('open');
+            }
+          }
+        })
+        .withFailureHandler(function(err) {
+          fields.forEach(function(id) {
+            document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
+          });
+        })
+        .getSheetHeaders(spreadsheetId, gradesSheet, startRow);
     }
 
     // ─── Step Management ───
@@ -2096,11 +2447,11 @@
           '</tr></thead><tbody>';
 
         student.dates.forEach(function (d) {
-          var etHtml = d.exitTicket !== '' && d.exitTicket !== null
+          var etHtml = d.exitTicket !== '' && d.exitTicket != null
             ? '<span class="et-score">' + d.exitTicket + '</span>'
             : '<span style="color:var(--text-muted);">—</span>';
 
-          var etPctHtml = d.exitTicketPct !== null
+          var etPctHtml = d.exitTicketPct != null
             ? '<strong>' + d.exitTicketPct + '%</strong>'
             : '<span style="color:var(--text-muted);">—</span>';
 
@@ -2108,7 +2459,7 @@
             ? '<span class="grades-str">' + d.gradesStr + '</span>'
             : '<span style="color:var(--text-muted);">—</span>';
 
-          var partHtml = d.participationPct !== null
+          var partHtml = d.participationPct != null
             ? '<strong>' + d.participationPct + '%</strong>'
             : '<span style="color:var(--text-muted);">—</span>';
 
@@ -2222,10 +2573,10 @@
         student.dates.forEach(function (d) {
           var ac = d.attendance.toLowerCase();
           var acls = ac === 'present' ? 'att-p' : ac === 'tardy' ? 'att-t' : ac === 'absent' ? 'att-a' : 'att-ns';
-          var et = d.exitTicket !== '' && d.exitTicket !== null ? '<strong>' + d.exitTicket + '</strong>' : '\u2014';
-          var etPct = d.exitTicketPct !== null ? d.exitTicketPct + '%' : '\u2014';
-          var gs = d.gradesStr !== '\u2014' ? '<span class="grades-mono">' + d.gradesStr + '</span>' : '\u2014';
-          var pp = d.participationPct !== null ? d.participationPct + '%' : '\u2014';
+          var et = d.exitTicket !== '' && d.exitTicket != null ? '<strong>' + d.exitTicket + '</strong>' : '\u2014';
+          var etPct = d.exitTicketPct != null ? d.exitTicketPct + '%' : '\u2014';
+          var gs = d.gradesStr != null && d.gradesStr !== '\u2014' && d.gradesStr !== '' ? '<span class="grades-mono">' + d.gradesStr + '</span>' : '\u2014';
+          var pp = d.participationPct != null ? d.participationPct + '%' : '\u2014';
 
           html += '<tr>';
           html += '<td>' + d.date + '</td>';

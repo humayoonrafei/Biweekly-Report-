@@ -1,0 +1,25 @@
+here is the plan 
+
+the user wants   generate comments for students and email them to parents.
+He has the data from the data tracker shows the date and their grades and exit ticket 
+the Letter Grade for that specific student is in the Grade calculater 
+
+The user should have a Tab where the students email addresses are listed along with their parrents email address 
+
+The process of the user generating text and sending it to students 
+
+1- upload the file specify the tab of daily data recorded.
+
+2- The app will read the data from the data tracker and the grade calculator 
+
+3- spits out the students with their comments and reports 
+
+4- emails read or a special comment added for specific student and then be able to send out ! 
+5- should be able to just send it to the email address of both student and parrent 
+    A- The parrent email address 
+    B- Print the cards for students and also email because they might not have the an email address in the elementry.
+
+
+
+Test : 
+    
