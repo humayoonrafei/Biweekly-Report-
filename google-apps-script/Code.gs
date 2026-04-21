@@ -598,8 +598,37 @@ function generateParentComment(name, grade, tardies, absences) {
 // ═══════════════════════════════════════════════════
 
 /**
+ * Parse a display date string like "2/20/2026" or "2/20/26" into components.
+ * Returns { month, day, year, dateObj, dayOfWeek (0=Sun..6=Sat) } or null.
+ * Uses explicit year/month/day construction to avoid timezone shifts.
+ */
+function parseDateStr(str) {
+  if (!str) return null;
+  var s = String(str).trim();
+  var parts = s.split('/');
+  if (parts.length !== 3) return null;
+  var m = parseInt(parts[0]);
+  var d = parseInt(parts[1]);
+  var y = parseInt(parts[2]);
+  if (isNaN(m) || isNaN(d) || isNaN(y)) return null;
+  if (y < 100) y += 2000;
+  // Construct date from explicit components — day-of-week is always correct
+  var dateObj = new Date(y, m - 1, d);
+  return {
+    month: m,
+    day: d,
+    year: y,
+    dateObj: dateObj,
+    dayOfWeek: dateObj.getDay(), // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+    isoDate: y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
+    dateStr: s
+  };
+}
+
+/**
  * Scan row 4 of the activity sheet for date columns.
  * Returns all available dates for the date-range picker.
+ * Uses getDisplayValues() to read dates as raw strings, avoiding timezone shifts.
  */
 function getActivityDates(config) {
   try {
@@ -612,23 +641,21 @@ function getActivityDates(config) {
 
     var dateRow = parseInt(config.activityDateRow) || 4;
     var lastCol = sheet.getLastColumn();
-    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getValues()[0];
-    var tz = Session.getScriptTimeZone();
+    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getDisplayValues()[0];
 
     var dates = [];
     for (var i = 0; i < row4.length; i++) {
-      var cell = row4[i];
-      if (cell instanceof Date && !isNaN(cell.getTime())) {
-      var dayOfWeek = parseInt(Utilities.formatDate(cell, tz, 'u')); // 1=Mon, 7=Sun
-      if (dayOfWeek === 6 || dayOfWeek === 7) continue; // Skip Sat & Sun
+      var parsed = parseDateStr(row4[i]);
+      if (!parsed) continue;
+      var dow = parsed.dayOfWeek; // 0=Sun, 6=Sat
+      if (dow === 0 || dow === 6) continue; // Skip Sat & Sun
       dates.push({
         col: i + 1,
-        dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
-        isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
-        dayOfWeek: ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', '', ''][dayOfWeek]
-    });
-  }
-}
+        dateStr: parsed.dateStr,
+        isoDate: parsed.isoDate,
+        dayOfWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dow]
+      });
+    }
 
     if (dates.length === 0) {
       return { error: 'No dates found in row ' + dateRow + '. Make sure the activity sheet has dates in row ' + dateRow + '.' };
@@ -726,29 +753,30 @@ function getActivityReport(config, startDate, endDate) {
     var dateRow = parseInt(config.activityDateRow) || 4;
     var lastCol = sheet.getLastColumn();
     var lastRow = sheet.getLastRow();
-    var tz = Session.getScriptTimeZone();
 
-    // Parse start/end dates
-    var start = new Date(startDate + 'T00:00:00');
-    var end = new Date(endDate + 'T23:59:59');
+    // Parse start/end as numeric YYYYMMDD for clean comparison (no timezone)
+    var startParts = startDate.split('-');
+    var endParts = endDate.split('-');
+    var startNum = parseInt(startParts[0]) * 10000 + parseInt(startParts[1]) * 100 + parseInt(startParts[2]);
+    var endNum = parseInt(endParts[0]) * 10000 + parseInt(endParts[1]) * 100 + parseInt(endParts[2]);
 
-    // Scan row 4 for date columns within range
-    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getValues()[0];
+    // Scan row 4 for date columns within range (using display values to avoid timezone shifts)
+    var row4 = sheet.getRange(dateRow, 1, 1, lastCol).getDisplayValues()[0];
     var dateCols = [];
     for (var i = 0; i < row4.length; i++) {
-      var cell = row4[i];
-      if (cell instanceof Date && !isNaN(cell.getTime())) {
-        var day = cell.getDay();
-        if (day === 0 || day === 6) continue; // Skip weekends
-        if (cell >= start && cell <= end) {
-          dateCols.push({
-            colIdx: i,
-            date: cell,
-            dateStr: Utilities.formatDate(cell, tz, 'M/d/yyyy'),
-            isoDate: Utilities.formatDate(cell, tz, 'yyyy-MM-dd'),
-            dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][day]
-          });
-        }
+      var parsed = parseDateStr(row4[i]);
+      if (!parsed) continue;
+      var dow = parsed.dayOfWeek; // 0=Sun, 6=Sat
+      if (dow === 0 || dow === 6) continue; // Skip weekends
+      var dateNum = parsed.year * 10000 + parsed.month * 100 + parsed.day;
+      if (dateNum >= startNum && dateNum <= endNum) {
+        dateCols.push({
+          colIdx: i,
+          date: parsed.dateObj,
+          dateStr: parsed.dateStr,
+          isoDate: parsed.isoDate,
+          dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dow]
+        });
       }
     }
 
