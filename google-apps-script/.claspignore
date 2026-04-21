@@ -1,0 +1,5 @@
+# Ignore everything except the Apps Script files
+**/**
+!Code.gs
+!Index.html
+!appsscript.json

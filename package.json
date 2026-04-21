@@ -6,9 +6,17 @@
   "scripts": {
     "generate": "node generate-comments.js",
     "read": "node generate-comments.js --read-only",
-    "test-api": "node generate-comments.js --test"
+    "test-api": "node generate-comments.js --test",
+    "setup": "chmod +x setup-clasp.sh && ./setup-clasp.sh",
+    "push": "cd google-apps-script && npx -y @google/clasp push",
+    "deploy": "cd google-apps-script && npx -y @google/clasp push && node ../deploy-helper.js",
+    "open": "open \"https://script.google.com/d/19Dh-6u88-zd19RISysk48kad5U4JMtxMdccwOqLXSPI4eEFWhd7p-AoW/edit\"",
+    "open:web": "open \"https://script.google.com/a/macros/blueprintfellows.org/s/AKfycbwjAJntmuZ_DHYYrSVfOZ-WPGFO5m2mrxgZ9ydKDkh9_r_y86pQsU79eJPfv52nZZYy/exec\"",
+    "status": "cd google-apps-script && npx -y @google/clasp status",
+    "logs": "cd google-apps-script && npx -y @google/clasp logs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC"
 }
+
