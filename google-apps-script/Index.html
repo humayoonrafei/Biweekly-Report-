@@ -920,6 +920,56 @@
         color: var(--text-primary);
       }
 
+      /* ─── Two-Column Card Layout (Table + Comment) ─── */
+      .src-body {
+        display: flex;
+        gap: 0;
+      }
+
+      .src-data-col {
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+      }
+
+      .src-comment-col {
+        width: 280px;
+        min-width: 240px;
+        border-left: 1px solid var(--border);
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--bg-input);
+      }
+
+      .src-comment-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      .src-comment-text {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--text-secondary);
+        flex: 1;
+      }
+
+      @media (max-width: 900px) {
+        .src-body {
+          flex-direction: column;
+        }
+
+        .src-comment-col {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid var(--border);
+        }
+      }
+
       @media (max-width: 600px) {
         .container {
           padding: 16px 12px;
@@ -1005,7 +1055,8 @@
         <div class="form-row">
           <div class="form-group">
             <label>Spreadsheet ID</label>
-            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here" onchange="loadSheetNames('spreadsheetId')" onblur="loadSheetNames('spreadsheetId')">
+            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here"
+              onchange="loadSheetNames('spreadsheetId')" onblur="loadSheetNames('spreadsheetId')">
             <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
           </div>
           <div class="form-group">
@@ -1021,12 +1072,14 @@
         <div class="form-row">
           <div class="form-group">
             <label>Header Row</label>
-            <input type="text" id="headerRow" value="3" onchange="loadColumnHeaders()" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <input type="text" id="headerRow" value="3" onchange="loadColumnHeaders()"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
             <span class="hint">Row number with column headers</span>
           </div>
           <div class="form-group">
             <label>Data Start Row</label>
-            <input type="text" id="dataStartRow" value="4" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <input type="text" id="dataStartRow" value="4"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
             <span class="hint">First row of student data</span>
           </div>
         </div>
@@ -1045,13 +1098,13 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Student Comment</label>
+            <label>Comment to Student</label>
             <select id="studentCommentCol">
               <option value="" disabled selected>— select sheet first —</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Parent Comment</label>
+            <label>Comment to Parents</label>
             <select id="parentCommentCol">
               <option value="" disabled selected>— select sheet first —</option>
             </select>
@@ -1265,7 +1318,8 @@
         <div class="form-row">
           <div class="form-group">
             <label>Spreadsheet ID</label>
-            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID" onchange="loadSheetNames('actSpreadsheetId')" onblur="loadSheetNames('actSpreadsheetId')">
+            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
+              onchange="loadSheetNames('actSpreadsheetId')" onblur="loadSheetNames('actSpreadsheetId')">
             <span class="hint">Same spreadsheet, different tab</span>
           </div>
           <div class="form-group">
@@ -1294,7 +1348,8 @@
         <!-- Grades Column Mapping (collapsible) -->
         <div class="columns-toggle" onclick="toggleGradesConfig()">
           <span class="arrow" id="gradesArrow">▶</span>
-          Grade Lookup Columns <span id="gradeColMapStatus" style="font-size:11px;color:var(--success);margin-left:6px;"></span>
+          Grade Lookup Columns <span id="gradeColMapStatus"
+            style="font-size:11px;color:var(--success);margin-left:6px;"></span>
         </div>
 
         <div class="columns-grid" id="gradesGrid" style="display:none;">
@@ -1314,7 +1369,8 @@
           </div>
           <div class="form-group">
             <label>Data Start Row</label>
-            <input type="text" id="actGradesStartRow" value="4" style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <input type="text" id="actGradesStartRow" value="4"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
             <span class="hint">First row of student data</span>
           </div>
         </div>
@@ -1410,22 +1466,22 @@
       }
 
       // Show loading state
-      dropdowns.forEach(function(selId) {
+      dropdowns.forEach(function (selId) {
         var sel = document.getElementById(selId);
         sel.innerHTML = '<option value="" disabled selected>Loading sheets...</option>';
       });
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           if (result.error) {
-            dropdowns.forEach(function(selId) {
+            dropdowns.forEach(function (selId) {
               var sel = document.getElementById(selId);
               sel.innerHTML = '<option value="" disabled selected>⚠️ Error loading sheets</option>';
             });
             return;
           }
 
-          dropdowns.forEach(function(selId) {
+          dropdowns.forEach(function (selId) {
             var sel = document.getElementById(selId);
             var isOptional = (selId === 'emailSheetName' || selId === 'actGradesSheet');
             sel.innerHTML = '';
@@ -1438,7 +1494,7 @@
               sel.appendChild(noneOpt);
             }
 
-            result.names.forEach(function(name) {
+            result.names.forEach(function (name) {
               var opt = document.createElement('option');
               opt.value = name;
               opt.textContent = name;
@@ -1446,8 +1502,8 @@
             });
           });
         })
-        .withFailureHandler(function(err) {
-          dropdowns.forEach(function(selId) {
+        .withFailureHandler(function (err) {
+          dropdowns.forEach(function (selId) {
             var sel = document.getElementById(selId);
             sel.innerHTML = '<option value="" disabled selected>⚠️ ' + err.message + '</option>';
           });
@@ -1481,7 +1537,7 @@
       blank.textContent = '— select column —';
       sel.appendChild(blank);
 
-      headers.forEach(function(h) {
+      headers.forEach(function (h) {
         var opt = document.createElement('option');
         opt.value = h.col;
         opt.textContent = h.col + ' — ' + h.header;
@@ -1509,7 +1565,7 @@
       var detected = {};
 
       // For each field, find the first header that matches any pattern
-      Object.keys(rules).forEach(function(field) {
+      Object.keys(rules).forEach(function (field) {
         var patterns = rules[field];
         for (var p = 0; p < patterns.length; p++) {
           for (var h = 0; h < headers.length; h++) {
@@ -1537,15 +1593,15 @@
 
       // Show loading state on all column selects
       var colFields = ['studentNameCol', 'studentCommentCol', 'parentCommentCol', 'gradeCol', 'tardiesCol', 'absencesCol'];
-      colFields.forEach(function(id) {
+      colFields.forEach(function (id) {
         var sel = document.getElementById(id);
         sel.innerHTML = '<option value="" disabled selected>Loading headers...</option>';
       });
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           if (result.error) {
-            colFields.forEach(function(id) {
+            colFields.forEach(function (id) {
               var sel = document.getElementById(id);
               sel.innerHTML = '<option value="" disabled selected>⚠️ ' + result.error + '</option>';
             });
@@ -1558,7 +1614,7 @@
           var detectedCount = Object.keys(detected).length;
 
           // Populate each dropdown
-          colFields.forEach(function(id) {
+          colFields.forEach(function (id) {
             populateHeaderSelect(id, result.headers, detected[id] || '');
           });
 
@@ -1589,8 +1645,8 @@
             }
           }
         })
-        .withFailureHandler(function(err) {
-          colFields.forEach(function(id) {
+        .withFailureHandler(function (err) {
+          colFields.forEach(function (id) {
             var sel = document.getElementById(id);
             sel.innerHTML = '<option value="" disabled selected>⚠️ Error</option>';
           });
@@ -1611,14 +1667,14 @@
       }
 
       var fields = ['emailSheetNameCol', 'emailSheetEmailCol'];
-      fields.forEach(function(id) {
+      fields.forEach(function (id) {
         document.getElementById(id).innerHTML = '<option value="" disabled selected>Loading...</option>';
       });
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           if (result.error) {
-            fields.forEach(function(id) {
+            fields.forEach(function (id) {
               document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
             });
             return;
@@ -1639,8 +1695,8 @@
           populateHeaderSelect('emailSheetNameCol', result.headers, nameCol);
           populateHeaderSelect('emailSheetEmailCol', result.headers, emailCol);
         })
-        .withFailureHandler(function(err) {
-          fields.forEach(function(id) {
+        .withFailureHandler(function (err) {
+          fields.forEach(function (id) {
             document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
           });
         })
@@ -1665,16 +1721,16 @@
       }
 
       var fields = ['actGradesNameCol', 'actGradesGradeCol'];
-      fields.forEach(function(id) {
+      fields.forEach(function (id) {
         document.getElementById(id).innerHTML = '<option value="" disabled selected>Loading...</option>';
       });
 
       var startRow = document.getElementById('actGradesStartRow').value.trim() || '4';
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           if (result.error) {
-            fields.forEach(function(id) {
+            fields.forEach(function (id) {
               document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
             });
             document.getElementById('gradeColMapStatus').textContent = '';
@@ -1709,8 +1765,8 @@
             }
           }
         })
-        .withFailureHandler(function(err) {
-          fields.forEach(function(id) {
+        .withFailureHandler(function (err) {
+          fields.forEach(function (id) {
             document.getElementById(id).innerHTML = '<option value="" disabled>⚠️ Error</option>';
           });
         })
@@ -2417,6 +2473,68 @@
       return '';
     }
 
+    // ─── Client-side Student Comment Generator (same templates as Code.gs) ───
+    function spellNumberClient(n) {
+      var words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+      return n <= 10 ? words[n] : String(n);
+    }
+
+    function generateStudentCommentClient(name, grade, tardies, absences) {
+      var firstName = name.indexOf(',') > -1
+        ? (name.split(',')[1] || '').trim()
+        : name.split(',')[0].trim();
+      if (!firstName) firstName = name;
+
+      if (!grade && absences >= 5) {
+        return firstName + '- you have ' + spellNumberClient(absences) + ' absences this biweekly period which is making it very difficult to keep up with the lessons. Please make sure to attend every class so we can help you succeed. Check in with me to find out what assignments you have missed.';
+      }
+
+      if (grade === 'A' || grade === 'B') {
+        var msg = firstName + '- you are doing ' + (grade === 'A' ? 'an excellent' : 'a solid') + ' job in the class with ' + (grade === 'A' ? 'an' : 'a') + ' ' + grade + '.';
+        if (tardies === 0 && absences === 0) {
+          msg += ' You have perfect attendance with zero tardies and zero absences. Your dedication and hard work are truly impressive. Keep it up!';
+        } else if (tardies > 0 && absences === 0) {
+          msg += ' You have ' + spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' this period - please try to arrive on time so you can start class strong. Keep up the great work!';
+        } else if (tardies === 0 && absences > 0) {
+          msg += ' You have zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period which shows great dedication. Keep up the outstanding work and maintain this consistency.';
+        } else {
+          msg += ' Watch out for those ' + spellNumberClient(tardies) + ' tardies and ' + spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences') + ' - arriving on time will help you stay at the top. Keep pushing!';
+        }
+        return msg;
+      }
+
+      if (grade === 'C' || grade === 'D') {
+        var msg = firstName + '- you currently have a ' + grade + ' in the class.';
+        if (tardies > 3) {
+          msg += ' You have ' + spellNumberClient(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
+        } else if (absences > 0) {
+          msg += ' You have ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Please keep working hard on your assignments and participation to bring your grade up. You have the ability to do great things!';
+        } else {
+          msg += ' Your attendance is solid with zero tardies and zero absences. Please continue your hard work to improve your grade - you are capable of more!';
+        }
+        return msg;
+      }
+
+      if (grade === 'F') {
+        var msg = firstName + '- I need to see more from you - your grade is an F right now.';
+        if (tardies > 0 || absences > 0) {
+          var parts = [];
+          if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
+          if (absences > 0) parts.push(spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
+          msg += ' You have been ' + parts.join(' and ') + ' this period which makes it difficult to stay caught up. Please see me during office hours so we can make a plan for your success.';
+        } else {
+          msg += ' Your attendance is fine but I need to see more effort and engagement. Lets set a goal together to bring this grade up.';
+        }
+        return msg;
+      }
+
+      // Fallback: no grade
+      if (absences >= 3) {
+        return firstName + '- you have ' + spellNumberClient(absences) + ' absences this biweekly period which is making it very difficult to keep up with the lessons. Please make sure to attend every class so we can help you succeed. Check in with me to find out what assignments you have missed.';
+      }
+      return firstName + '- please check in with me about your current standing in the class. I want to make sure you are on track and have what you need to succeed.';
+    }
+
     function renderActivityReport(report) {
       var body = document.getElementById('actReportBody');
       body.innerHTML = '';
@@ -2431,6 +2549,14 @@
           gradeHtml = '<span class="grade-pill ' + gradeClass(student.letterGrade) + '">' + student.letterGrade + '</span>';
         }
 
+        // Generate the student comment
+        var comment = generateStudentCommentClient(
+          student.name,
+          student.letterGrade || '',
+          student.summary.totalTardy,
+          student.summary.totalAbsent
+        );
+
         card.innerHTML =
           '<div class="src-header">' +
           '<span class="src-name">' + student.name + '</span>' +
@@ -2441,9 +2567,9 @@
           '</div>' +
           '</div>';
 
-        // Table
+        // Two-column body: Table + Comment
         var table = '<table class="src-table"><thead><tr>' +
-          '<th>Date</th><th>Day</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>' +
+          '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>' +
           '</tr></thead><tbody>';
 
         student.dates.forEach(function (d) {
@@ -2465,7 +2591,6 @@
 
           table += '<tr>' +
             '<td>' + d.date + '</td>' +
-            '<td>' + d.dayOfWeek + '</td>' +
             '<td><span class="' + attendanceClass(d.attendance) + '">' + d.attendance + '</span></td>' +
             '<td>' + etHtml + '</td>' +
             '<td>' + etPctHtml + '</td>' +
@@ -2475,7 +2600,17 @@
         });
 
         table += '</tbody></table>';
-        card.innerHTML += table;
+
+        // Build two-column layout
+        var bodyHtml = '<div class="src-body">' +
+          '<div class="src-data-col">' + table + '</div>' +
+          '<div class="src-comment-col">' +
+          '<div class="src-comment-label">💬 Student Comment</div>' +
+          '<div class="src-comment-text">' + comment + '</div>' +
+          '</div>' +
+          '</div>';
+
+        card.innerHTML += bodyHtml;
 
         // Summary bar
         var s = student.summary;
@@ -2565,9 +2700,21 @@
         html += '<div class="row">Date Range: <span class="field-line">' + r.dateRange.start + ' \u2013 ' + r.dateRange.end + '</span></div>';
         html += '</div>';
 
-        // Data Table
+        // Generate student comment
+        var comment = generateStudentCommentClient(
+          student.name,
+          student.letterGrade || '',
+          student.summary.totalTardy,
+          student.summary.totalAbsent
+        );
+
+        // Two-column: Data Table + Comment
+        html += '<div style="display:flex;">';
+
+        // Left: Data Table
+        html += '<div style="flex:1;min-width:0;">';
         html += '<table class="data-table"><thead><tr>';
-        html += '<th>Date</th><th>Day</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>';
+        html += '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>';
         html += '</tr></thead><tbody>';
 
         student.dates.forEach(function (d) {
@@ -2580,7 +2727,6 @@
 
           html += '<tr>';
           html += '<td>' + d.date + '</td>';
-          html += '<td>' + d.dayOfWeek + '</td>';
           html += '<td class="' + acls + '">' + d.attendance + '</td>';
           html += '<td style="text-align:center;">' + et + '</td>';
           html += '<td style="text-align:center;">' + etPct + '</td>';
@@ -2590,6 +2736,15 @@
         });
 
         html += '</tbody></table>';
+        html += '</div>'; // close left col
+
+        // Right: Comment
+        html += '<div style="width:220px;min-width:200px;border-left:2px solid #333;padding:12px 14px;background:#f8f9fa;font-size:12px;">';
+        html += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#666;font-weight:bold;margin-bottom:8px;">Student Comment</div>';
+        html += '<div style="line-height:1.6;color:#333;">' + comment + '</div>';
+        html += '</div>'; // close right col
+
+        html += '</div>'; // close flex row
 
         // Footer summary
         var s = student.summary;
