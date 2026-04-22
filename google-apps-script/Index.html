@@ -1019,11 +1019,143 @@
 
     <!-- Mode Toggle -->
     <div class="mode-bar">
-      <button class="mode-btn active" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly
-        Comments</button>
+
       <button class="mode-btn" id="modeActivityBtn" onclick="switchMode('activity')">📊 Activity Report</button>
     </div>
 
+    <!-- <button class="mode-btn active" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly
+        Comments</button> -->
+
+
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODE: ACTIVITY REPORT -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="modeActivity" style="display:none;">
+
+      <!-- Step 1: Activity Config -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon blue">📊</div>
+          Activity Report Configuration
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Spreadsheet ID</label>
+            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
+              onchange="loadSheetNames('actSpreadsheetId')" onblur="loadSheetNames('actSpreadsheetId')">
+            <span class="hint">Same spreadsheet, different tab</span>
+          </div>
+          <div class="form-group">
+            <label>Activity Sheet Tab</label>
+            <select id="actSheetName" onchange="loadGradesSheetHeaders()">
+              <option value="" disabled selected>— enter Spreadsheet ID first —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date Header Row</label>
+            <input type="text" id="actDateRow" value="4">
+            <span class="hint">Row with dates across the top</span>
+          </div>
+          <div class="form-group">
+            <label>Grades Sheet Tab (optional)</label>
+            <select id="actGradesSheet" onchange="loadActGradesHeaders()">
+              <option value="">— none —</option>
+            </select>
+            <span class="hint">Tab to look up letter grades</span>
+          </div>
+        </div>
+
+        <!-- Grades Column Mapping (collapsible) -->
+        <div class="columns-toggle" onclick="toggleGradesConfig()">
+          <span class="arrow" id="gradesArrow">▶</span>
+          Grade Lookup Columns <span id="gradeColMapStatus"
+            style="font-size:11px;color:var(--success);margin-left:6px;"></span>
+        </div>
+
+        <div class="columns-grid" id="gradesGrid" style="display:none;">
+          <div class="form-group">
+            <label>Name Column</label>
+            <select id="actGradesNameCol">
+              <option value="B">— select grades sheet —</option>
+            </select>
+            <span class="hint">Student name column</span>
+          </div>
+          <div class="form-group">
+            <label>Grade Column</label>
+            <select id="actGradesGradeCol">
+              <option value="E">— select grades sheet —</option>
+            </select>
+            <span class="hint">Letter grade column</span>
+          </div>
+          <div class="form-group">
+            <label>Data Start Row</label>
+            <input type="text" id="actGradesStartRow" value="4"
+              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
+            <span class="hint">First row of student data</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="loadDatesBtn" onclick="loadActivityDates()">
+            📅 Load Available Dates
+          </button>
+        </div>
+        <div class="status" id="actConfigStatus"></div>
+      </div>
+
+      <!-- Step 2: Date Range -->
+      <div class="section-hidden" id="actDateSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon green">📅</div>
+            Select Date Range
+          </div>
+
+          <div class="date-picker-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <select id="actStartDate"></select>
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <select id="actEndDate"></select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-success" id="genReportBtn" onclick="generateActivityReport()">
+                📊 Generate Report
+              </button>
+            </div>
+          </div>
+          <div class="status" id="actDateStatus"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Report Display -->
+      <div class="section-hidden" id="actReportSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon purple">📝</div>
+            <span id="actReportTitle">Activity Report</span>
+          </div>
+          <div class="btn-row" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="printActivityReport()">
+              🖨️ Print / Save as PDF
+            </button>
+          </div>
+          <div id="actReportBody"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Blueprint Schools Tools · Activity Report · No data leaves Google Workspace
+      </div>
+
+    </div> <!-- END modeActivity -->
     <!-- ═══════════════════════════════════════ -->
     <!-- MODE: COMMENTS -->
     <!-- ═══════════════════════════════════════ -->
@@ -1303,134 +1435,6 @@
 
     </div> <!-- END modeComments -->
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- MODE: ACTIVITY REPORT -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="modeActivity" style="display:none;">
-
-      <!-- Step 1: Activity Config -->
-      <div class="card">
-        <div class="card-title">
-          <div class="icon blue">📊</div>
-          Activity Report Configuration
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Spreadsheet ID</label>
-            <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
-              onchange="loadSheetNames('actSpreadsheetId')" onblur="loadSheetNames('actSpreadsheetId')">
-            <span class="hint">Same spreadsheet, different tab</span>
-          </div>
-          <div class="form-group">
-            <label>Activity Sheet Tab</label>
-            <select id="actSheetName" onchange="loadGradesSheetHeaders()">
-              <option value="" disabled selected>— enter Spreadsheet ID first —</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Date Header Row</label>
-            <input type="text" id="actDateRow" value="4">
-            <span class="hint">Row with dates across the top</span>
-          </div>
-          <div class="form-group">
-            <label>Grades Sheet Tab (optional)</label>
-            <select id="actGradesSheet" onchange="loadActGradesHeaders()">
-              <option value="">— none —</option>
-            </select>
-            <span class="hint">Tab to look up letter grades</span>
-          </div>
-        </div>
-
-        <!-- Grades Column Mapping (collapsible) -->
-        <div class="columns-toggle" onclick="toggleGradesConfig()">
-          <span class="arrow" id="gradesArrow">▶</span>
-          Grade Lookup Columns <span id="gradeColMapStatus"
-            style="font-size:11px;color:var(--success);margin-left:6px;"></span>
-        </div>
-
-        <div class="columns-grid" id="gradesGrid" style="display:none;">
-          <div class="form-group">
-            <label>Name Column</label>
-            <select id="actGradesNameCol">
-              <option value="B">— select grades sheet —</option>
-            </select>
-            <span class="hint">Student name column</span>
-          </div>
-          <div class="form-group">
-            <label>Grade Column</label>
-            <select id="actGradesGradeCol">
-              <option value="E">— select grades sheet —</option>
-            </select>
-            <span class="hint">Letter grade column</span>
-          </div>
-          <div class="form-group">
-            <label>Data Start Row</label>
-            <input type="text" id="actGradesStartRow" value="4"
-              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
-            <span class="hint">First row of student data</span>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-primary" id="loadDatesBtn" onclick="loadActivityDates()">
-            📅 Load Available Dates
-          </button>
-        </div>
-        <div class="status" id="actConfigStatus"></div>
-      </div>
-
-      <!-- Step 2: Date Range -->
-      <div class="section-hidden" id="actDateSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon green">📅</div>
-            Select Date Range
-          </div>
-
-          <div class="date-picker-row">
-            <div class="form-group">
-              <label>Start Date</label>
-              <select id="actStartDate"></select>
-            </div>
-            <div class="form-group">
-              <label>End Date</label>
-              <select id="actEndDate"></select>
-            </div>
-            <div class="form-group">
-              <button class="btn btn-success" id="genReportBtn" onclick="generateActivityReport()">
-                📊 Generate Report
-              </button>
-            </div>
-          </div>
-          <div class="status" id="actDateStatus"></div>
-        </div>
-      </div>
-
-      <!-- Step 3: Report Display -->
-      <div class="section-hidden" id="actReportSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon purple">📝</div>
-            <span id="actReportTitle">Activity Report</span>
-          </div>
-          <div class="btn-row" style="margin-bottom: 16px;">
-            <button class="btn btn-primary" onclick="printActivityReport()">
-              🖨️ Print / Save as PDF
-            </button>
-          </div>
-          <div id="actReportBody"></div>
-        </div>
-      </div>
-
-      <div class="footer">
-        Blueprint Schools Tools · Activity Report · No data leaves Google Workspace
-      </div>
-
-    </div> <!-- END modeActivity -->
 
   </div>
 
