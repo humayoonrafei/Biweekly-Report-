@@ -598,6 +598,37 @@ function generateParentComment(name, grade, tardies, absences) {
 // ═══════════════════════════════════════════════════
 
 /**
+ * Quickly extract unique fellow names from column C of an activity sheet.
+ * Called when the user selects a sheet tab, before loading dates.
+ */
+function getActivityFellows(spreadsheetId, sheetName) {
+  try {
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) return { fellows: [] };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 5) return { fellows: [] };
+
+    // Column C = column 3, start reading from row 5 (after headers)
+    var data = sheet.getRange(5, 3, lastRow - 4, 1).getValues();
+    var fellowSet = {};
+    var fellows = [];
+    for (var i = 0; i < data.length; i++) {
+      var name = String(data[i][0] || '').trim();
+      if (name && !fellowSet[name]) {
+        fellowSet[name] = true;
+        fellows.push(name);
+      }
+    }
+    fellows.sort();
+    return { fellows: fellows };
+  } catch (e) {
+    return { fellows: [] };
+  }
+}
+
+/**
  * Parse a display date string like "2/20/2026" or "2/20/26" into components.
  * Returns { month, day, year, dateObj, dayOfWeek (0=Sun..6=Sat) } or null.
  * Uses explicit year/month/day construction to avoid timezone shifts.
@@ -661,7 +692,25 @@ function getActivityDates(config) {
       return { error: 'No dates found in row ' + dateRow + '. Make sure the activity sheet has dates in row ' + dateRow + '.' };
     }
 
-    return { success: true, dates: dates, total: dates.length };
+    // Extract unique fellow names from column C (0-based index 2)
+    var FELLOW_COL = 2; // Column C
+    var lastRow = sheet.getLastRow();
+    var dataStartRow = dateRow + 1;
+    var fellows = [];
+    if (lastRow >= dataStartRow) {
+      var fellowData = sheet.getRange(dataStartRow, FELLOW_COL + 1, lastRow - dataStartRow + 1, 1).getValues();
+      var fellowSet = {};
+      for (var f = 0; f < fellowData.length; f++) {
+        var name = String(fellowData[f][0] || '').trim();
+        if (name && !fellowSet[name]) {
+          fellowSet[name] = true;
+          fellows.push(name);
+        }
+      }
+      fellows.sort();
+    }
+
+    return { success: true, dates: dates, total: dates.length, fellows: fellows };
   } catch(e) {
     return { error: 'Could not load dates: ' + e.message };
   }

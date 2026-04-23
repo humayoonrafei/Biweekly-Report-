@@ -716,10 +716,11 @@
       .form-row.triple {
         grid-template-columns: 1fr;
       }
+    } /* MISSING CLOSING BRACE RESTORED */
 
-      /* ─── Mode Toggle ─── */
-      .mode-bar {
-        display: flex;
+    /* ─── Mode Toggle ─── */
+    .mode-bar {
+      display: flex;
         justify-content: center;
         gap: 4px;
         margin-bottom: 28px;
@@ -1004,6 +1005,111 @@
           font-size: 24px;
         }
       }
+
+      /* ─── Modal / Popup ─── */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-overlay.show {
+        display: flex;
+      }
+
+      .modal-box {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px 28px 24px;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        animation: modalIn 0.25s ease;
+      }
+
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: scale(0.92) translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .modal-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .modal-body {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .modal-details {
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        text-align: left;
+      }
+
+      .modal-details .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .modal-details .detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .modal-details .detail-label {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .modal-details .detail-value {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      .modal-btns {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .modal-btns .btn {
+        min-width: 120px;
+      }
   </style>
 </head>
 
@@ -1031,7 +1137,7 @@
     <!-- ═══════════════════════════════════════ -->
     <!-- MODE: ACTIVITY REPORT -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="modeActivity" style="display:none;">
+    <div id="modeActivity">
 
       <!-- Step 1: Activity Config -->
       <div class="card">
@@ -1049,7 +1155,7 @@
           </div>
           <div class="form-group">
             <label>Activity Sheet Tab</label>
-            <select id="actSheetName" onchange="loadGradesSheetHeaders()">
+            <select id="actSheetName" onchange="loadGradesSheetHeaders(); loadActivityFellows();">
               <option value="" disabled selected>— enter Spreadsheet ID first —</option>
             </select>
           </div>
@@ -1061,6 +1167,16 @@
             <input type="text" id="actDateRow" value="4">
             <span class="hint">Row with dates across the top</span>
           </div>
+          <div class="form-group">
+            <label>Fellow Filter</label>
+            <select id="actFellowFilter">
+              <option value="">All Fellows</option>
+            </select>
+            <span class="hint">Generate report for all or one fellow</span>
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label>Grades Sheet Tab (optional)</label>
             <select id="actGradesSheet" onchange="loadActGradesHeaders()">
@@ -1151,15 +1267,16 @@
         </div>
       </div>
 
-      <div class="footer">
+      <div class="footer" style="display:none;">
         Blueprint Schools Tools · Activity Report · No data leaves Google Workspace
       </div>
 
     </div> <!-- END modeActivity -->
+
     <!-- ═══════════════════════════════════════ -->
-    <!-- MODE: COMMENTS -->
+    <!-- MODE: COMMENTS (HIDDEN TEMPORARILY) -->
     <!-- ═══════════════════════════════════════ -->
-    <div id="modeComments">
+    <div id="modeComments" style="display:none;">
 
       <!-- Steps -->
       <div class="steps-bar">
@@ -1338,7 +1455,7 @@
 
           <div class="btn-row" style="margin-top: 16px;">
             <button class="btn btn-success" id="generateBtn" onclick="generateComments()">
-              ✏️ Generate & Write Comments
+              ✏️ Generate &amp; Write Comments
             </button>
             <button class="btn btn-secondary" onclick="previewData()">
               🔄 Refresh
@@ -1433,9 +1550,21 @@
         Blueprint Schools Tools · Template-based · No AI · No data leaves Google Workspace
       </div>
 
+
     </div> <!-- END modeComments -->
 
 
+  </div>
+
+
+  <!-- Reusable Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-box">
+      <div class="modal-icon" id="modalIcon"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-btns" id="modalBtns"></div>
+    </div>
   </div>
 
   <script>
@@ -1711,6 +1840,33 @@
     function loadGradesSheetHeaders() {
       // The actSheetName is the activity sheet — no column mapping needed for it
       // (columns A-D are fixed: Period, Name, Fellow, Component)
+    }
+
+    // ─── Load Fellows from Activity Sheet (column C) ───
+    function loadActivityFellows() {
+      var spreadsheetId = extractSpreadsheetId(document.getElementById('actSpreadsheetId').value.trim());
+      var sheetName = document.getElementById('actSheetName').value.trim();
+      if (!spreadsheetId || !sheetName) return;
+
+      var sel = document.getElementById('actFellowFilter');
+      sel.innerHTML = '<option value="">Loading fellows...</option>';
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          sel.innerHTML = '<option value="">All Fellows</option>';
+          if (result.fellows && result.fellows.length > 0) {
+            result.fellows.forEach(function (f) {
+              var opt = document.createElement('option');
+              opt.value = f;
+              opt.textContent = f;
+              sel.appendChild(opt);
+            });
+          }
+        })
+        .withFailureHandler(function () {
+          sel.innerHTML = '<option value="">All Fellows</option>';
+        })
+        .getActivityFellows(spreadsheetId, sheetName);
     }
 
     // ─── Load Activity Grades Sheet Headers ───
@@ -2297,14 +2453,20 @@
     // ─── Mode Switching ───
     // ═══════════════════════════════════════════════
     function switchMode(mode) {
-      document.getElementById('modeComments').style.display = mode === 'comments' ? 'block' : 'none';
-      document.getElementById('modeActivity').style.display = mode === 'activity' ? 'block' : 'none';
-      document.getElementById('modeCommentsBtn').className = 'mode-btn' + (mode === 'comments' ? ' active' : '');
-      document.getElementById('modeActivityBtn').className = 'mode-btn' + (mode === 'activity' ? ' active' : '');
+      var modeComments = document.getElementById('modeComments');
+      var modeActivity = document.getElementById('modeActivity');
+      var modeCommentsBtn = document.getElementById('modeCommentsBtn');
+      var modeActivityBtn = document.getElementById('modeActivityBtn');
+
+      if (modeComments) modeComments.style.display = mode === 'comments' ? 'block' : 'none';
+      if (modeActivity) modeActivity.style.display = mode === 'activity' ? 'block' : 'none';
+      if (modeCommentsBtn) modeCommentsBtn.className = 'mode-btn' + (mode === 'comments' ? ' active' : '');
+      if (modeActivityBtn) modeActivityBtn.className = 'mode-btn' + (mode === 'activity' ? ' active' : '');
 
       // Sync spreadsheet ID between modes
       if (mode === 'activity') {
-        var commentsId = document.getElementById('spreadsheetId').value;
+        var spreadsheetEl = document.getElementById('spreadsheetId');
+        var commentsId = spreadsheetEl ? spreadsheetEl.value : '';
         if (commentsId && !document.getElementById('actSpreadsheetId').value) {
           document.getElementById('actSpreadsheetId').value = commentsId;
         }
@@ -2396,6 +2558,18 @@
           }
           endSel.selectedIndex = result.dates.length - 1;
 
+          // Populate Fellow Filter dropdown
+          if (result.fellows && result.fellows.length > 0) {
+            var fellowSel = document.getElementById('actFellowFilter');
+            fellowSel.innerHTML = '<option value="">All Fellows</option>';
+            result.fellows.forEach(function (f) {
+              var opt = document.createElement('option');
+              opt.value = f;
+              opt.textContent = f;
+              fellowSel.appendChild(opt);
+            });
+          }
+
           document.getElementById('actDateSection').className = 'section-visible';
           document.getElementById('actDateSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         })
@@ -2407,16 +2581,78 @@
         .getActivityDates(config);
     }
 
+    // ─── Modal Helpers ───
+    function showModal(opts) {
+      document.getElementById('modalIcon').textContent = opts.icon || '';
+      document.getElementById('modalTitle').textContent = opts.title || '';
+      document.getElementById('modalBody').innerHTML = opts.body || '';
+
+      var btnsDiv = document.getElementById('modalBtns');
+      btnsDiv.innerHTML = '';
+      (opts.buttons || []).forEach(function (b) {
+        var btn = document.createElement('button');
+        btn.className = 'btn ' + (b.cls || 'btn-secondary');
+        btn.textContent = b.label;
+        btn.onclick = function () { closeModal(); if (b.action) b.action(); };
+        btnsDiv.appendChild(btn);
+      });
+
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target === document.getElementById('modalOverlay')) closeModal();
+    }
+
+    // ─── Generate Activity Report (with confirmation) ───
     function generateActivityReport() {
-      var config = getActivityConfig();
-      var startDate = document.getElementById('actStartDate').value;
-      var endDate = document.getElementById('actEndDate').value;
+      try {
+        var config = getActivityConfig();
+        var startSel = document.getElementById('actStartDate');
+        var endSel = document.getElementById('actEndDate');
+        var startDate = startSel ? startSel.value : '';
+        var endDate = endSel ? endSel.value : '';
 
-      if (!startDate || !endDate) {
-        showStatus('actDateStatus', 'error', '⚠️ Please select start and end dates.');
-        return;
+        if (!startDate || !endDate) {
+          showStatus('actDateStatus', 'error', '⚠️ Please select start and end dates.');
+          return;
+        }
+
+        var sheetName = config.activitySheetName || '—';
+        var gradesSheet = config.gradesSheetName || 'None';
+        var startText = (startSel && startSel.selectedIndex >= 0) ? startSel.options[startSel.selectedIndex].text : startDate;
+        var endText = (endSel && endSel.selectedIndex >= 0) ? endSel.options[endSel.selectedIndex].text : endDate;
+
+        // Show confirmation modal
+        var fellowFilter = document.getElementById('actFellowFilter');
+        var fellowDisplay = (fellowFilter && fellowFilter.value) ? fellowFilter.value : 'All Fellows';
+
+        showModal({
+          icon: '📊',
+          title: 'Confirm Report Settings',
+          body: '<div class="modal-details">' +
+            '<div class="detail-row"><span class="detail-label">Activity Sheet</span><span class="detail-value">' + sheetName + '</span></div>' +
+            '<div class="detail-row"><span class="detail-label">Fellow</span><span class="detail-value">' + fellowDisplay + '</span></div>' +
+            '<div class="detail-row"><span class="detail-label">Start Date</span><span class="detail-value">' + startText + '</span></div>' +
+            '<div class="detail-row"><span class="detail-label">End Date</span><span class="detail-value">' + endText + '</span></div>' +
+            '<div class="detail-row"><span class="detail-label">Grades Sheet</span><span class="detail-value">' + gradesSheet + '</span></div>' +
+            '</div>' +
+            'Does this look correct?',
+          buttons: [
+            { label: 'Cancel', cls: 'btn-secondary' },
+            { label: 'Generate Report', cls: 'btn-success', action: function () { doGenerateActivityReport(config, startDate, endDate); } }
+          ]
+        });
+      } catch (e) {
+        alert('Error in generateActivityReport: ' + e.message);
       }
+    }
 
+    function doGenerateActivityReport(config, startDate, endDate) {
       var btn = document.getElementById('genReportBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Generating...';
@@ -2432,19 +2668,74 @@
             return;
           }
 
-          activityReport = result;
+          // Populate the Fellow filter dropdown from the report data
+          var fellowSet = {};
+          result.students.forEach(function (s) {
+            if (s.fellow) fellowSet[s.fellow] = true;
+          });
+          var fellowSel = document.getElementById('actFellowFilter');
+          var currentFellow = fellowSel.value; // preserve current selection
+          fellowSel.innerHTML = '<option value="">All Fellows</option>';
+          Object.keys(fellowSet).sort().forEach(function (f) {
+            var opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f;
+            fellowSel.appendChild(opt);
+          });
+          // Restore selection if it still exists
+          if (currentFellow) fellowSel.value = currentFellow;
 
+          // Apply fellow filter client-side
+          var selectedFellow = document.getElementById('actFellowFilter').value;
+          var filteredStudents = result.students;
+          if (selectedFellow) {
+            filteredStudents = result.students.filter(function (s) {
+              return s.fellow === selectedFellow;
+            });
+          }
+
+          // Check for no students after filtering
+          if (filteredStudents.length === 0) {
+            var noStudentMsg = selectedFellow
+              ? 'No students found for fellow <strong>"' + selectedFellow + '"</strong> in sheet <strong>"' + config.activitySheetName + '"</strong>.'
+              : 'The selected sheet <strong>"' + config.activitySheetName + '"</strong> returned <strong>0 students</strong>.';
+            showModal({
+              icon: '⚠️',
+              title: 'No Students Found',
+              body: noStudentMsg + '<br><br>This usually means the wrong sheet tab is selected, or the data format doesn\'t match the expected layout.',
+              buttons: [
+                { label: 'OK', cls: 'btn-primary' }
+              ]
+            });
+            showStatus('actDateStatus', 'error', '⚠️ No students found. Please check your sheet tab and fellow filter selection.');
+            return;
+          }
+
+          // Build a filtered copy of the result for rendering
+          var filteredResult = {
+            students: filteredStudents,
+            dateRange: result.dateRange,
+            dateCount: result.dateCount,
+            studentCount: filteredStudents.length,
+            dateHeaders: result.dateHeaders,
+            gradeLookupMsg: result.gradeLookupMsg
+          };
+
+          activityReport = filteredResult;
+
+          var fellowLabel = selectedFellow ? ' · Fellow: ' + selectedFellow : '';
           showStatus('actDateStatus', 'success',
-            '✅ Report ready! <strong>' + result.studentCount + '</strong> students × <strong>' +
-            result.dateCount + '</strong> days' +
+            '✅ Report ready! <strong>' + filteredResult.studentCount + '</strong> students × <strong>' +
+            filteredResult.dateCount + '</strong> days' + fellowLabel +
             (result.gradeLookupMsg ? ' · ' + result.gradeLookupMsg : ''));
 
           // Update title
           document.getElementById('actReportTitle').textContent =
-            'Activity Report · ' + result.dateRange.start + ' to ' + result.dateRange.end;
+            'Activity Report · ' + result.dateRange.start + ' to ' + result.dateRange.end +
+            (selectedFellow ? ' · ' + selectedFellow : '');
 
           // Render report
-          renderActivityReport(result);
+          renderActivityReport(filteredResult);
 
           document.getElementById('actReportSection').className = 'section-visible';
           document.getElementById('actReportSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2512,7 +2803,7 @@
         if (tardies > 3) {
           msg += ' You have ' + spellNumberClient(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
         } else if (absences > 0) {
-          msg += ' You have ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Please keep working hard on your assignments and participation to bring your grade up. You have the ability to do great things!';
+          msg += ' You have ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Please keep working hard on your participation to bring your grade up. You have the ability to do great things!';
         } else {
           msg += ' Your attendance is solid with zero tardies and zero absences. Please continue your hard work to improve your grade - you are capable of more!';
         }
