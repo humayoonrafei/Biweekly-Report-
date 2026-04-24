@@ -49,8 +49,24 @@
 
     .container { max-width: 960px; margin: 0 auto; padding: 24px 24px; }
 
-    /* ─── Header ─── */
-    .header { text-align: center; margin-bottom: 20px; }
+    /* ─── Header (hidden — content moved to footer) ─── */
+    .header { display: none; }
+
+    /* ─── Compact Footer ─── */
+    .app-footer {
+      text-align: center;
+      padding: 24px 16px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      line-height: 1.6;
+    }
+    .app-footer .footer-title {
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
 
     .header-badge {
       display: inline-flex;
@@ -1346,8 +1362,9 @@
         </div>
       </div>
 
-      <div class="footer" style="display:none;">
-        Blueprint Schools Tools · Activity Report · No data leaves Google Workspace
+      <div class="app-footer">
+        <div class="footer-title">Blueprint Schools Tools</div>
+        🔒 FERPA Compliant · No AI · Local Templates · No data leaves Google Workspace
       </div>
 
     </div> <!-- END modeActivity -->
@@ -1712,6 +1729,32 @@
               opt.textContent = name;
               sel.appendChild(opt);
             });
+
+            // Auto-select the grades sheet if it matches common patterns
+            if (selId === 'actGradesSheet') {
+              var gradePatterns = [
+                /grade\s*calculator/i,
+                /grade\s*calc/i,
+                /grades/i,
+                /grade\s*book/i,
+                /gradebook/i
+              ];
+              for (var p = 0; p < gradePatterns.length; p++) {
+                var matched = false;
+                for (var n = 0; n < result.names.length; n++) {
+                  if (gradePatterns[p].test(result.names[n])) {
+                    sel.value = result.names[n];
+                    matched = true;
+                    break;
+                  }
+                }
+                if (matched) {
+                  // Trigger header loading for the auto-selected grades sheet
+                  loadActGradesHeaders();
+                  break;
+                }
+              }
+            }
           });
         })
         .withFailureHandler(function (err) {
