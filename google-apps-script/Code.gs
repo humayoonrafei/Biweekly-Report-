@@ -94,10 +94,45 @@ function getSheetHeaders(spreadsheetId, sheetName, headerRow) {
       }
     }
 
+    // Also grab a small sample of data rows (up to 10) for smarter auto-detection
+    var lastRow = sheet.getLastRow();
+    var sampleRows = Math.min(10, lastRow - row);
+    var sampleData = {};
+    if (sampleRows > 0) {
+      var dataRange = sheet.getRange(row + 1, 1, sampleRows, lastCol).getValues();
+      for (var c = 0; c < headers.length; c++) {
+        var colIdx = headers[c].colIndex - 1;
+        var samples = [];
+        for (var r = 0; r < dataRange.length; r++) {
+          var val = String(dataRange[r][colIdx] || '').trim();
+          if (val) samples.push(val);
+        }
+        sampleData[headers[c].col] = samples.slice(0, 5); // max 5 samples per column
+      }
+    }
+
+    // Read Row 1 (top-level section headers like "Full Year", "Semester 2", etc.)
+    // These are typically merged cells, so we read the display values
+    var row1Values = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0];
+    // Build a map of colIndex -> topHeader. For merged cells, only the leftmost cell has text.
+    // We need to "fill forward" to cover the merged span.
+    var topHeaders = {};
+    var currentSection = '';
+    for (var i = 0; i < row1Values.length; i++) {
+      var val = String(row1Values[i] || '').trim();
+      if (val) currentSection = val;
+      topHeaders[indexToCol(i + 1)] = currentSection;
+    }
+
+    // Attach the top-level section header to each column header object
+    for (var h = 0; h < headers.length; h++) {
+      headers[h].topHeader = topHeaders[headers[h].col] || '';
+    }
+
     // Also detect the first row of data (row after header)
     var dataStartRow = row + 1;
 
-    return { success: true, headers: headers, headerRow: row, dataStartRow: dataStartRow };
+    return { success: true, headers: headers, headerRow: row, dataStartRow: dataStartRow, sampleData: sampleData, topHeaders: topHeaders };
   } catch (e) {
     return { error: 'Could not read headers: ' + e.message };
   }
