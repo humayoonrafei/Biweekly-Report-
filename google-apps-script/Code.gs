@@ -587,11 +587,11 @@ function generateParentComment(name, grade, tardies, absences) {
   if (grade === 'A' || grade === 'B') {
     var msg = firstName + ' is performing ' + (grade === 'A' ? 'exceptionally well' : 'well') + ' with ' + (grade === 'A' ? 'an' : 'a') + ' ' + grade + ' in the course.';
     if (tardies === 0 && absences === 0) {
-      msg += firstName +'has perfect attendance this period with no tardies or absences. Their commitment to education is exemplary and we are very proud of their consistent effort and performance.';
+      msg += firstName + ' has perfect attendance this period with no tardies or absences. Their commitment to education is exemplary and we are very proud of their consistent effort and performance.';
     } else if (tardies > 0) {
-      msg +=  firstname +'have ' + spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + ' this period. Improving punctuality would help make the most of class time. We appreciate your support in encouraging on-time arrival.';
+      msg += firstName + ' has ' + spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + ' this period. Improving punctuality would help make the most of class time. We appreciate your support in encouraging on-time arrival.';
     } else {
-      msg += firstName +'have zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. Their consistent work ethic and focus in class are commendable. We are very pleased with their academic progress.';
+      msg += firstName + ' has zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. Their consistent work ethic and focus in class are commendable. We are very pleased with their academic progress.';
     }
     return msg;
   }
