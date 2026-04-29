@@ -3080,19 +3080,19 @@
 
           var etHtml = (d.exitTicket !== '' && d.exitTicket != null && !isAbsent)
             ? '<span class="et-score">' + d.exitTicket + '</span>'
-            : '<span style="color:var(--text-muted);">' + (isAbsent ? '' : '—') + '</span>';
+            : '<span style="color:var(--text-muted);">—</span>';
 
           var etPctHtml = (d.exitTicketPct != null && !isAbsent)
             ? '<strong>' + d.exitTicketPct + '%</strong>'
-            : '<span style="color:var(--text-muted);">' + (isAbsent ? '' : '—') + '</span>';
+            : '<span style="color:var(--text-muted);">—</span>';
 
           var gradesHtml = (d.gradesStr !== '—' && !isAbsent)
             ? '<span class="grades-str">' + d.gradesStr + '</span>'
-            : '<span style="color:var(--text-muted);">' + (isAbsent ? '' : '—') + '</span>';
+            : '<span style="color:var(--text-muted);">—</span>';
 
           var partHtml = (d.participationPct != null && !isAbsent)
             ? '<strong>' + d.participationPct + '%</strong>'
-            : '<span style="color:var(--text-muted);">' + (isAbsent ? '' : '—') + '</span>';
+            : '<span style="color:var(--text-muted);">—</span>';
 
           table += '<tr>' +
             '<td>' + d.date + '</td>' +
@@ -3227,10 +3227,10 @@
           var ac = d.attendance.toLowerCase();
           var isAbsent = ac === 'absent';
           var acls = ac === 'present' ? 'att-p' : ac === 'tardy' ? 'att-t' : isAbsent ? 'att-a' : 'att-ns';
-          var et = (d.exitTicket !== '' && d.exitTicket != null && !isAbsent) ? '<strong>' + d.exitTicket + '</strong>' : (isAbsent ? '' : '\u2014');
-          var etPct = (d.exitTicketPct != null && !isAbsent) ? d.exitTicketPct + '%' : (isAbsent ? '' : '\u2014');
-          var gs = (d.gradesStr != null && d.gradesStr !== '\u2014' && d.gradesStr !== '' && !isAbsent) ? '<span class="grades-mono">' + d.gradesStr + '</span>' : (isAbsent ? '' : '\u2014');
-          var pp = (d.participationPct != null && !isAbsent) ? d.participationPct + '%' : (isAbsent ? '' : '\u2014');
+          var et = (d.exitTicket !== '' && d.exitTicket != null && !isAbsent) ? '<strong>' + d.exitTicket + '</strong>' : '\u2014';
+          var etPct = (d.exitTicketPct != null && !isAbsent) ? d.exitTicketPct + '%' : '\u2014';
+          var gs = (d.gradesStr != null && d.gradesStr !== '\u2014' && d.gradesStr !== '' && !isAbsent) ? '<span class="grades-mono">' + d.gradesStr + '</span>' : '\u2014';
+          var pp = (d.participationPct != null && !isAbsent) ? d.participationPct + '%' : '\u2014';
 
           html += '<tr>';
           html += '<td>' + d.date + '</td>';
