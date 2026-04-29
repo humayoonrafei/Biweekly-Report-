@@ -5,6 +5,7 @@ A powerful Google Apps Script web application designed to automate the generatio
 ## 🚀 Features
 - **Auto-Generation**: Creates personalized student and parent comments based on attendance, exit tickets, and participation data.
 - **Participation Logic**: Intelligent percentage calculation (base 6 slots, excused 'X' support).
+- **Absence Filtering**: Automatically ignores grades and exit tickets for days marked as "absent".
 - **Email Integration**: Sends formatted HTML progress reports directly to parents.
 - **Print Ready**: Generates printable biweekly progress report cards.
 - **Auto-Detection**: Automatically identifies columns for names, grades, and comments.

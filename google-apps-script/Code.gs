@@ -925,18 +925,20 @@ function getActivityReport(config, startDate, endDate) {
 
         // Attendance
         var attendance = attendanceRowIdx !== null ? String(data[attendanceRowIdx][colIdx] || '').trim() : '';
+        var attLower = attendance.toLowerCase();
+        var isAbsent = (attLower === 'absent');
 
-        // Exit Ticket
-        var etRaw = exitTicketRowIdx !== null ? data[exitTicketRowIdx][colIdx] : '';
+        // Exit Ticket (skip if absent)
+        var etRaw = (isAbsent || exitTicketRowIdx === null) ? '' : data[exitTicketRowIdx][colIdx];
         var etValue = parseFloat(etRaw);
         var etDisplay = isNaN(etValue) ? '' : etValue;
 
-        // GRADES string
-        var gradesStr = gradesRowIdx !== null ? String(data[gradesRowIdx][colIdx] || '').trim().toUpperCase() : '';
+        // GRADES string (skip if absent)
+        var gradesStr = (isAbsent || gradesRowIdx === null) ? '—' : String(data[gradesRowIdx][colIdx] || '').trim().toUpperCase();
 
-        // Calculate participation % from GRADES
+        // Calculate participation % from GRADES (skip if absent)
         var participationPct = null;
-        if (gradesStr && gradesStr !== '—') {
+        if (!isAbsent && gradesStr && gradesStr !== '—') {
           var pointsEarned = 0;
           var totalPossible = 6;
           for (var c = 0; c < gradesStr.length; c++) {
@@ -952,7 +954,6 @@ function getActivityReport(config, startDate, endDate) {
         }
 
         // Count attendance totals
-        var attLower = attendance.toLowerCase();
         if (attLower === 'present') totalPresent++;
         else if (attLower === 'tardy') totalTardy++;
         else if (attLower === 'absent') totalAbsent++;
