@@ -1218,19 +1218,15 @@
     <!-- Header -->
     <div class="header">
       <div class="header-badge">🔒 FERPA Compliant · No AI · Local Templates</div>
-      <!--<h1>Blueprint Schools Tools</h1>
-       <p>Generate biweekly comments, email parents, and view daily activity reports — all within Google Workspace.</p>
-    -->
+      <h1>Blueprint Schools Tools</h1>
+      <p>Generate biweekly comments, email parents, and view daily activity reports — all within Google Workspace.</p>
     </div>
 
     <!-- Mode Toggle -->
     <div class="mode-bar">
-
-      <button class="mode-btn" id="modeActivityBtn" onclick="switchMode('activity')">📊 Activity Report</button>
+      <button class="mode-btn active" id="modeActivityBtn" onclick="switchMode('activity')">📊 Activity Report</button>
+      <button class="mode-btn" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly Comments</button>
     </div>
-
-    <!-- <button class="mode-btn active" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly
-        Comments</button> -->
 
 
 
@@ -1370,7 +1366,7 @@
     </div> <!-- END modeActivity -->
 
     <!-- ═══════════════════════════════════════ -->
-    <!-- MODE: COMMENTS (HIDDEN TEMPORARILY) -->
+    <!-- MODE: COMMENTS -->
     <!-- ═══════════════════════════════════════ -->
     <div id="modeComments" style="display:none;">
 
