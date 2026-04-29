@@ -937,11 +937,18 @@ function getActivityReport(config, startDate, endDate) {
         // Calculate participation % from GRADES
         var participationPct = null;
         if (gradesStr && gradesStr !== '—') {
-          var validChars = 0;
+          var pointsEarned = 0;
+          var totalPossible = 6;
           for (var c = 0; c < gradesStr.length; c++) {
-            if (gradesStr[c] !== 'X') validChars++;
+            var char = gradesStr[c];
+            if (char === 'X') {
+              totalPossible--;
+            } else if (/[GRADES]/.test(char)) {
+              pointsEarned++;
+            }
           }
-          participationPct = Math.round((validChars / 6) * 100);
+          if (totalPossible < 0) totalPossible = 0;
+          participationPct = totalPossible > 0 ? Math.round((pointsEarned / totalPossible) * 100) : 100;
         }
 
         // Count attendance totals

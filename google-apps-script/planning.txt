@@ -21,5 +21,116 @@ The process of the user generating text and sending it to students
 
 
 
-Test : 
-    
+═══════════════════════════════════════════════════════════════
+                        TESTING GUIDE
+═══════════════════════════════════════════════════════════════
+
+Test Spreadsheet:
+  https://docs.google.com/spreadsheets/d/1FD4AzAhPr0XffnxgmcSkZ7J2AdsDsSq1xsBsf-3FYkc/edit?gid=1864340399#gid=1864340399
+
+───────────────────────────────────────────────────────────────
+TEST 1: Auto-Detection & Sheet Loading
+───────────────────────────────────────────────────────────────
+Steps:
+  1. Open the deployed web app
+  2. Paste the spreadsheet URL above into the "Spreadsheet ID" field
+  3. Wait for the Activity Sheet Tab and Grades Sheet Tab dropdowns to load
+
+Expected:
+  ✅ Activity Sheet Tab → populates with available sheet tabs
+  ✅ Grades Sheet Tab   → auto-selects "Grade Calculator" (or similar)
+  ✅ Status shows sheet names loaded successfully
+
+───────────────────────────────────────────────────────────────
+TEST 2: Grade Column Auto-Detection
+───────────────────────────────────────────────────────────────
+Steps:
+  1. After sheets load, expand "▶ Grade Lookup Columns"
+  2. Check the Name Column and Grade Column dropdowns
+
+Expected:
+  ✅ Name Column  → auto-selects the column containing student names (e.g. "B — Student Name")
+  ✅ Grade Column → auto-selects the "Letter Grade" column under "Full Year" section (e.g. "GO")
+  ✅ Status shows "✓ 2/2 auto-detected"
+
+───────────────────────────────────────────────────────────────
+TEST 3: Fellow Filter Persistence
+───────────────────────────────────────────────────────────────
+Steps:
+  1. Select a specific fellow from the "Fellow Filter" dropdown (e.g. "Myat")
+  2. Click "📅 Load Available Dates"
+  3. After dates load, check the Fellow Filter dropdown
+
+Expected:
+  ✅ Fellow Filter still shows "Myat" (NOT reset to "All Fellows")
+  ✅ Dates load correctly
+
+Steps (continued):
+  4. Select date range and click "📊 Generate Report"
+  5. In the confirmation popup, check the "Fellow" row
+
+Expected:
+  ✅ Popup shows "Myat" (NOT "All Fellows")
+  ✅ After report generates, Fellow Filter still shows "Myat"
+
+───────────────────────────────────────────────────────────────
+TEST 4: Report Content Verification
+───────────────────────────────────────────────────────────────
+Steps:
+  1. Generate a report with dates and a specific fellow selected
+  2. Look at any student report card in the output
+
+Expected:
+  ✅ Student NAME is displayed in the card header (e.g. "Chao, Hailey")
+  ✅ Letter GRADE badge appears (e.g. "B" pill in blue)
+  ✅ COMMENT section shows an auto-generated comment (e.g. "Hailey- you are doing a solid job...")
+  ✅ Attendance data table shows dates, Present/Tardy/Absent, exit tickets, etc.
+  ✅ Summary bar at bottom shows Present/Tardy/Absent/Days counts
+
+───────────────────────────────────────────────────────────────
+TEST 5: Editable Comments
+───────────────────────────────────────────────────────────────
+Steps:
+  1. After generating a report, click into a student's comment textarea
+  2. Edit the text (e.g. add "Great improvement this week!")
+  3. Click "🖨️ Print / Save as PDF"
+
+Expected:
+  ✅ Comment textarea is editable (can type, delete, modify)
+  ✅ Print popup window shows the EDITED comment text (not the original auto-generated one)
+  ✅ Other students' comments remain unchanged
+
+───────────────────────────────────────────────────────────────
+TEST 6: Print / Save as PDF
+───────────────────────────────────────────────────────────────
+Steps:
+  1. Generate a report
+  2. Click "🖨️ Print / Save as PDF"
+
+Expected:
+  ✅ New browser tab opens with formatted report cards
+  ✅ Each student gets their own page (page-break between cards)
+  ✅ Blueprint logo appears in the top-right header
+  ✅ Student name, period, fellow, grade, date range all display correctly
+  ✅ Data table shows all dates with attendance + exit tickets
+  ✅ Comment section shows on the right side of the data table
+  ✅ Footer summary shows Present/Tardy/Absent/Not Scheduled/Days
+
+───────────────────────────────────────────────────────────────
+TEST 7: UI / Visual Check
+───────────────────────────────────────────────────────────────
+Expected:
+  ✅ Background is a light gradient (not dark)
+  ✅ Cards are solid white with clear shadows
+  ✅ All dropdowns have thick borders and are easy to read
+  ✅ Focus on any input/dropdown shows a blue glow ring
+  ✅ Footer at bottom shows "Blueprint Schools Tools" + FERPA badge
+  ✅ Page loads without any console errors
+
+═══════════════════════════════════════════════════════════════
+                     KNOWN EDGE CASES
+═══════════════════════════════════════════════════════════════
+• Empty grade sheet    → Grade column should show "— select column —"
+• No dates in range    → Should show error "Please select start and end dates"
+• Pop-up blocked       → Should show alert about pop-up blocker
+• Fellow with 0 students → Should show "No students found for fellow..."

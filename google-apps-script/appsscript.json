@@ -5,6 +5,9 @@
     "executeAs": "USER_ACCESSING",
     "access": "DOMAIN"
   },
+  "executionApi": {
+    "access": "DOMAIN"
+  },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
 }
