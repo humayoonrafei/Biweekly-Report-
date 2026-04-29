@@ -954,6 +954,7 @@ function getActivityReport(config, startDate, endDate) {
         }
 
         // Count attendance totals
+
         if (attLower === 'present') totalPresent++;
         else if (attLower === 'tardy') totalTardy++;
         else if (attLower === 'absent') totalAbsent++;
