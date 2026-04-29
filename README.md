@@ -75,6 +75,23 @@ The project includes a comprehensive backend test suite in `Test.gs`.
 
 ---
 
+## 🛠️ Development & Testing Workflow
+
+To safely test changes without affecting the live version used by teachers:
+
+1. **Test Deployment (Dev URL)**:
+   - Run `npm run push` to upload your code to Google Apps Script.
+   - Run `npm run open:dev` to view your changes instantly. This URL ends in `/dev` and only you have access to it.
+2. **Deploying to Production**:
+   - Once tested, run `npm run deploy` to update the live version (`/exec`).
+   - **Password Protection**: The deployment script will prompt you for a password to prevent accidental overwrites. This password is securely stored in a `.env` file in the root directory:
+     ```env
+     DEPLOY_PASSWORD=sonic
+     ```
+     *(This file is ignored by Git, keeping your password out of version control.)*
+
+---
+
 ## ⚖️ Privacy & Security (FERPA)
 This tool is built with data privacy in mind:
 - **Execute as User**: The script runs under the account of the teacher using it.
