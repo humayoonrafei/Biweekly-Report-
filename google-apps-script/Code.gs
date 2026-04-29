@@ -640,10 +640,17 @@ function getActivityFellows(spreadsheetId, sheetName) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
     var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) return { fellows: [] };
+    if (!sheet) return { fellows: [], hasFellowColumn: false };
 
     var lastRow = sheet.getLastRow();
-    if (lastRow < 5) return { fellows: [] };
+    if (lastRow < 5) return { fellows: [], hasFellowColumn: false };
+
+    // Auto-detect if Fellow column is missing
+    var firstDataRow = sheet.getRange(5, 1, 1, 4).getValues()[0];
+    var colC = String(firstDataRow[2] || '').trim().toLowerCase();
+    if (colC === 'attendance' || colC === 'exit ticket' || colC === 'grades') {
+      return { fellows: [], hasFellowColumn: false };
+    }
 
     // Column C = column 3, start reading from row 5 (after headers)
     var data = sheet.getRange(5, 3, lastRow - 4, 1).getValues();
@@ -657,9 +664,9 @@ function getActivityFellows(spreadsheetId, sheetName) {
       }
     }
     fellows.sort();
-    return { fellows: fellows };
+    return { fellows: fellows, hasFellowColumn: true };
   } catch (e) {
-    return { fellows: [] };
+    return { fellows: [], hasFellowColumn: false };
   }
 }
 
@@ -732,20 +739,32 @@ function getActivityDates(config) {
     var lastRow = sheet.getLastRow();
     var dataStartRow = dateRow + 1;
     var fellows = [];
+    var hasFellowColumn = true;
+    
     if (lastRow >= dataStartRow) {
-      var fellowData = sheet.getRange(dataStartRow, FELLOW_COL + 1, lastRow - dataStartRow + 1, 1).getValues();
-      var fellowSet = {};
-      for (var f = 0; f < fellowData.length; f++) {
-        var name = String(fellowData[f][0] || '').trim();
-        if (name && !fellowSet[name]) {
-          fellowSet[name] = true;
-          fellows.push(name);
-        }
+      // Auto-detect if Fellow column is missing
+      var firstDataRow = sheet.getRange(dataStartRow, 1, 1, 4).getValues()[0];
+      var colC = String(firstDataRow[2] || '').trim().toLowerCase();
+      if (colC === 'attendance' || colC === 'exit ticket' || colC === 'grades') {
+        hasFellowColumn = false;
+        FELLOW_COL = null;
       }
-      fellows.sort();
+      
+      if (hasFellowColumn) {
+        var fellowData = sheet.getRange(dataStartRow, FELLOW_COL + 1, lastRow - dataStartRow + 1, 1).getValues();
+        var fellowSet = {};
+        for (var f = 0; f < fellowData.length; f++) {
+          var name = String(fellowData[f][0] || '').trim();
+          if (name && !fellowSet[name]) {
+            fellowSet[name] = true;
+            fellows.push(name);
+          }
+        }
+        fellows.sort();
+      }
     }
 
-    return { success: true, dates: dates, total: dates.length, fellows: fellows };
+    return { success: true, dates: dates, total: dates.length, fellows: fellows, hasFellowColumn: hasFellowColumn };
   } catch(e) {
     return { error: 'Could not load dates: ' + e.message };
   }
@@ -880,6 +899,16 @@ function getActivityReport(config, startDate, endDate) {
     var FELLOW_COL = 2;
     var COMPONENT_COL = 3;
 
+    // Auto-detect if Fellow column is missing
+    var firstDataRow = sheet.getRange(dataStartRow, 1, 1, 4).getValues()[0];
+    var colC = String(firstDataRow[2] || '').trim().toLowerCase();
+    var hasFellowColumn = true;
+    if (colC === 'attendance' || colC === 'exit ticket' || colC === 'grades') {
+      hasFellowColumn = false;
+      FELLOW_COL = null;
+      COMPONENT_COL = 2;
+    }
+
     // Build optional grade lookup
     var gradeLookup = buildGradeLookup(ss, config);
     var gradeMap = gradeLookup.map;
@@ -908,7 +937,7 @@ function getActivityReport(config, startDate, endDate) {
       }
 
       var period = String(data[i][PERIOD_COL] || '').trim();
-      var fellow = String(data[i][FELLOW_COL] || '').trim();
+      var fellow = FELLOW_COL !== null ? String(data[i][FELLOW_COL] || '').trim() : '';
 
       // Look up letter grade from the grades sheet
       var letterGrade = '';

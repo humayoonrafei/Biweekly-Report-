@@ -1267,7 +1267,7 @@
             <select id="actFellowFilter">
               <option value="">All Fellows</option>
             </select>
-            <span class="hint">Generate report for all or one fellow</span>
+            <span id="actFellowHint" class="hint">Generate report for all or one fellow</span>
           </div>
         </div>
 
@@ -1975,14 +1975,22 @@
 
       google.script.run
         .withSuccessHandler(function (result) {
-          sel.innerHTML = '<option value="">All Fellows</option>';
-          if (result.fellows && result.fellows.length > 0) {
-            result.fellows.forEach(function (f) {
-              var opt = document.createElement('option');
-              opt.value = f;
-              opt.textContent = f;
-              sel.appendChild(opt);
-            });
+          if (result.hasFellowColumn === false) {
+            sel.innerHTML = '<option value="">No Fellow Column identified</option>';
+            sel.disabled = true;
+            document.getElementById('actFellowHint').textContent = 'No Fellow column detected in the spreadsheet.';
+          } else {
+            sel.innerHTML = '<option value="">All Fellows</option>';
+            sel.disabled = false;
+            document.getElementById('actFellowHint').textContent = 'Generate report for all or one fellow';
+            if (result.fellows && result.fellows.length > 0) {
+              result.fellows.forEach(function (f) {
+                var opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                sel.appendChild(opt);
+              });
+            }
           }
         })
         .withFailureHandler(function () {
@@ -2777,18 +2785,27 @@
           endSel.selectedIndex = result.dates.length - 1;
 
           // Populate Fellow Filter dropdown (preserve current selection)
-          if (result.fellows && result.fellows.length > 0) {
-            var fellowSel = document.getElementById('actFellowFilter');
-            var previousFellow = fellowSel.value; // save current selection
+          var fellowSel = document.getElementById('actFellowFilter');
+          var previousFellow = fellowSel.value; // save current selection
+          
+          if (result.hasFellowColumn === false) {
+            fellowSel.innerHTML = '<option value="">No Fellow Column identified</option>';
+            fellowSel.disabled = true;
+            document.getElementById('actFellowHint').textContent = 'No Fellow column detected in the spreadsheet.';
+          } else {
             fellowSel.innerHTML = '<option value="">All Fellows</option>';
-            result.fellows.forEach(function (f) {
-              var opt = document.createElement('option');
-              opt.value = f;
-              opt.textContent = f;
-              fellowSel.appendChild(opt);
-            });
-            // Restore the previous selection if it still exists
-            if (previousFellow) fellowSel.value = previousFellow;
+            fellowSel.disabled = false;
+            document.getElementById('actFellowHint').textContent = 'Generate report for all or one fellow';
+            if (result.fellows && result.fellows.length > 0) {
+              result.fellows.forEach(function (f) {
+                var opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                fellowSel.appendChild(opt);
+              });
+              // Restore the previous selection if it still exists
+              if (previousFellow) fellowSel.value = previousFellow;
+            }
           }
 
           document.getElementById('actDateSection').className = 'section-visible';
@@ -2850,7 +2867,9 @@
 
         // Show confirmation modal
         var fellowFilter = document.getElementById('actFellowFilter');
-        var fellowDisplay = (fellowFilter && fellowFilter.value) ? fellowFilter.value : 'All Fellows';
+        var fellowDisplay = (fellowFilter && fellowFilter.disabled)
+          ? '<span style="color:var(--text-muted);">No Fellow Column identified</span>'
+          : (fellowFilter && fellowFilter.value) ? fellowFilter.value : 'All Fellows';
 
         showModal({
           icon: '📊',
@@ -3060,12 +3079,13 @@
           student.summary.totalAbsent
         );
 
+        var fellowHtml = student.fellow ? '<span>' + student.fellow + '</span>' : '';
         card.innerHTML =
           '<div class="src-header">' +
           '<span class="src-name">' + student.name + '</span>' +
           '<div class="src-meta">' +
           '<span>Period ' + student.period + '</span>' +
-          '<span>' + student.fellow + '</span>' +
+          fellowHtml +
           gradeHtml +
           '</div>' +
           '</div>';
@@ -3200,8 +3220,9 @@
 
         // Student Info
         html += '<div class="report-info">';
+        var fellowField = student.fellow ? 'Fellow: <span class="field-line">' + student.fellow + '</span> &nbsp;&nbsp; ' : '';
         html += '<div class="row">Student Name: <span class="field-line">' + student.name + '</span> &nbsp;&nbsp; Period <span class="field-line field-short">' + student.period + '</span></div>';
-        html += '<div class="row">Fellow: <span class="field-line">' + student.fellow + '</span> &nbsp;&nbsp; Current Grade <span class="field-line field-short">' + gp + '</span></div>';
+        html += '<div class="row">' + fellowField + 'Current Grade <span class="field-line field-short">' + gp + '</span></div>';
         html += '<div class="row">Date Range: <span class="field-line">' + r.dateRange.start + ' \u2013 ' + r.dateRange.end + '</span></div>';
         html += '</div>';
 
