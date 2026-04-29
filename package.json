@@ -12,7 +12,7 @@
     "deploy": "cd google-apps-script && npx -y @google/clasp push && node ../deploy-helper.js",
     "open": "open \"https://script.google.com/d/19Dh-6u88-zd19RISysk48kad5U4JMtxMdccwOqLXSPI4eEFWhd7p-AoW/edit\"",
     "open:web": "open \"https://script.google.com/a/macros/blueprintfellows.org/s/AKfycbwjAJntmuZ_DHYYrSVfOZ-WPGFO5m2mrxgZ9ydKDkh9_r_y86pQsU79eJPfv52nZZYy/exec\"",
-    "open:dev": "open \"https://script.google.com/a/macros/blueprintfellows.org/s/19Dh-6u88-zd19RISysk48kad5U4JMtxMdccwOqLXSPI4eEFWhd7p-AoW/dev\"",
+    "open:dev": "open \"https://script.google.com/a/macros/blueprintfellows.org/s/AKfycbxpw5SL6eK1LH1pc5v5LahlFcEULbqXl1UPDlzxeac/dev\"",
     "test": "cd google-apps-script && npx -y @google/clasp push && echo '✅ Test.gs pushed! Opening editor — select runAllTests and click ▶ Run' && cd .. && npm run open",
     "status": "cd google-apps-script && npx -y @google/clasp status",
     "logs": "cd google-apps-script && npx -y @google/clasp logs"
