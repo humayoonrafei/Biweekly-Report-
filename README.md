@@ -66,6 +66,7 @@ The project includes a comprehensive backend test suite in `Test.gs`.
 | `npm run push` | Uploads local `Code.gs` and `Index.html` to Google. |
 | `npm run deploy` | Pushes code and creates a new versioned deployment. |
 | `npm run test` | Pushes code and opens the test runner in your browser. |
+| `npm run open` | Opens the Apps Script editor in your browser. |
 | `npm run open:web` | Opens the currently deployed web app URL. |
 | `npm run status` | Shows which files will be pushed. |
 | `npm run logs` | Shows recent execution logs from Google Cloud. |
