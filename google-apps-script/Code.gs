@@ -1141,7 +1141,14 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
   try {
     // 1. Build Email Lookup
     var ss = SpreadsheetApp.openById(spreadsheetId);
-    var emailMap = buildEmailLookup(ss, emailConfig);
+    var mappedConfig = {
+      emailSheetName: emailConfig.sheetName,
+      emailSheetNameCol: emailConfig.nameCol,
+      emailSheetEmailCol: emailConfig.parentEmailCol,
+      emailSheetStudentEmailCol: emailConfig.studentEmailCol
+    };
+    var emailLookupResult = buildEmailLookup(ss, mappedConfig);
+    var emailMap = emailLookupResult.map;
 
     // 2. Loop through students and send emails
     for (var i = 0; i < payload.length; i++) {
