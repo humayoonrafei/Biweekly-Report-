@@ -2990,7 +2990,7 @@
     // ─── Email Modal & Sending ───
     var autoDetectedEmailConfig = null;
 
-    function openEmailModal() {
+    function openEmailModal(forceSheetName) {
       if (!activityReport || !activityReport.students || activityReport.students.length === 0) {
         alert('Please generate the activity report first.');
         return;
@@ -3003,27 +3003,38 @@
       }
 
       // Initial loading modal
+      var msg = forceSheetName ? 'Loading config for "' + forceSheetName + '"...' : 'Auto-detecting email sheet...';
       showModal({
         icon: '✉️',
         title: 'Send Emails to Parents',
-        body: '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Auto-detecting email sheet...</div>',
-        buttons: [
-          { label: 'Cancel', cls: 'btn-secondary' }
-        ]
+        body: '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> ' + msg + '</div>',
+        buttons: [{ label: 'Cancel', cls: 'btn-secondary' }]
       });
 
       google.script.run
         .withSuccessHandler(function (result) {
-          if (result.error) {
-            alert('Warning: Could not auto-detect email sheet (' + result.error + '). Please make sure an email sheet exists.');
-            closeModal();
-            return;
-          }
           autoDetectedEmailConfig = result;
           
-          var bodyHtml = '<div class="modal-details">' +
-            '<div class="detail-row"><span class="detail-label">Email Sheet</span><span class="detail-value">✅ Auto-detected: "' + result.sheetName + '"</span></div>' +
-            '<div class="detail-row"><span class="detail-label">Recipients</span><span class="detail-value">' + activityReport.students.length + ' students</span></div>' +
+          var sheetOptions = '';
+          if (result.allSheetNames) {
+            sheetOptions = result.allSheetNames.map(function(n) {
+              return '<option value="' + n + '"' + (n === result.sheetName ? ' selected' : '') + '>' + n + '</option>';
+            }).join('');
+          }
+          
+          var selectHtml = '<select id="modalEmailSheet" onchange="openEmailModal(this.value)">' +
+            (!result.sheetName ? '<option value="" disabled selected>— Select an Email Sheet —</option>' : '') +
+            sheetOptions +
+            '</select>';
+
+          var statusHtml = result.error 
+            ? '<span style="color:var(--danger); font-size:12px;">' + result.error + ' Please select manually.</span>'
+            : '<span style="color:var(--success); font-size:12px;">✅ Columns auto-detected successfully!</span>';
+
+          var bodyHtml = '<div class="modal-details" style="display:flex;flex-direction:column;gap:8px;">' +
+            '<div class="detail-row"><span class="detail-label">Email Sheet</span><span class="detail-value">' + selectHtml + '</span></div>' +
+            '<div style="text-align:right;">' + statusHtml + '</div>' +
+            '<div class="detail-row" style="margin-top:8px;"><span class="detail-label">Recipients</span><span class="detail-value">' + activityReport.students.length + ' students</span></div>' +
             '</div>' +
             '<div class="form-group" style="margin-top:16px;">' +
             '<label>Teacher Name</label>' +
@@ -3038,24 +3049,34 @@
             '<textarea id="modalCustomMessage" placeholder="Added after the comment..." style="min-height:60px;"></textarea>' +
             '</div>';
 
+          var sendBtn = { label: 'Confirm & Send Emails', cls: 'btn-purple', action: sendActivityEmailsClient };
+          if (!result.sheetName) {
+            sendBtn.disabled = true; // wait, custom modal doesn't easily support disabled btns, so we just check in the action
+          }
+
           showModal({
             icon: '✉️',
             title: 'Send Emails to Parents',
             body: bodyHtml,
             buttons: [
               { label: 'Cancel', cls: 'btn-secondary' },
-              { label: 'Confirm & Send Emails', cls: 'btn-purple', action: sendActivityEmailsClient }
+              sendBtn
             ]
           });
         })
         .withFailureHandler(function (err) {
-          alert('Error auto-detecting emails: ' + err.message);
+          alert('Error: ' + err.message);
           closeModal();
         })
-        .autoDetectEmailConfig(ssId);
+        .autoDetectEmailConfig(ssId, forceSheetName || null);
     }
 
     function sendActivityEmailsClient() {
+      if (!autoDetectedEmailConfig || !autoDetectedEmailConfig.sheetName) {
+        alert('Please select an email sheet from the dropdown first.');
+        return;
+      }
+
       var teacherName = document.getElementById('modalTeacherName').value.trim();
       var subject = document.getElementById('modalEmailSubject').value.trim();
       var customMessage = document.getElementById('modalCustomMessage').value.trim();

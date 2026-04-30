@@ -1057,22 +1057,34 @@ function getActivityReport(config, startDate, endDate) {
 
 
 // ─── Auto-Detect Email Config ───
-function autoDetectEmailConfig(spreadsheetId) {
+function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
   try {
     var ss = SpreadsheetApp.openById(spreadsheetId);
     var sheets = ss.getSheets();
     var emailSheet = null;
+    var allSheetNames = [];
     
-    // Look for a sheet that sounds like emails
+    // Collect all names and find the target sheet
     for (var i = 0; i < sheets.length; i++) {
-      var name = sheets[i].getName().toLowerCase();
-      if (name.indexOf('email') > -1 || name.indexOf('parent') > -1 || name.indexOf('contact') > -1) {
+      var name = sheets[i].getName();
+      allSheetNames.push(name);
+      
+      if (forceSheetName && name === forceSheetName) {
         emailSheet = sheets[i];
-        break;
+      } else if (!forceSheetName && !emailSheet) {
+        var lowerName = name.toLowerCase();
+        if (lowerName.indexOf('email') > -1 || lowerName.indexOf('parent') > -1 || lowerName.indexOf('contact') > -1) {
+          emailSheet = sheets[i];
+        }
       }
     }
     
-    if (!emailSheet) return { error: 'Could not auto-detect an Email sheet.' };
+    if (!emailSheet) {
+      return { 
+        error: 'Could not auto-detect an Email sheet.',
+        allSheetNames: allSheetNames
+      };
+    }
     
     var sheetName = emailSheet.getName();
     var headers = emailSheet.getRange(1, 1, 1, Math.min(emailSheet.getLastColumn(), 26)).getValues()[0];
@@ -1110,7 +1122,8 @@ function autoDetectEmailConfig(spreadsheetId) {
       sheetName: sheetName,
       nameCol: nameCol || 'A',
       parentEmailCol: parentEmailCol || 'B',
-      studentEmailCol: studentEmailCol || ''
+      studentEmailCol: studentEmailCol || '',
+      allSheetNames: allSheetNames
     };
     
   } catch (e) {
