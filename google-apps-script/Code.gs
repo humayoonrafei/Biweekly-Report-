@@ -1055,72 +1055,182 @@ function getActivityReport(config, startDate, endDate) {
 // ─── Generate Comments from Activity Data ───
 // ═══════════════════════════════════════════════════
 
-function getActivityCommentsAndEmails(config) {
+
+// ─── Auto-Detect Email Config ───
+function autoDetectEmailConfig(spreadsheetId) {
   try {
-    // 1. Get the Activity Report Data
-    var reportResult = getActivityReport(config);
-    if (reportResult.error) return { error: reportResult.error };
-
-    var ss = SpreadsheetApp.openById(config.spreadsheetId);
-
-    // 2. Get the Email Mapping
-    var emailResult = buildEmailLookup(ss, config);
-    var emailMap = emailResult.map;
-
-    var generatedStudents = [];
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var sheets = ss.getSheets();
+    var emailSheet = null;
     
-    // 3. Process each student and generate comments
-    for (var i = 0; i < reportResult.students.length; i++) {
-      var s = reportResult.students[i];
-      
-      var tardies = s.summary.totalTardy;
-      var absences = s.summary.totalAbsent;
-      var grade = s.letterGrade;
-      var name = s.name;
-
-      // Extract first name (last name, first name)
-      var firstName = name.indexOf(',') > -1 
-        ? (name.split(',')[1] || '').trim() 
-        : name.split(',')[0].trim();
-      if (!firstName) firstName = name;
-
-      var parentComment = buildParentComment(firstName, grade, tardies, absences);
-      var studentComment = buildStudentComment(firstName, grade, tardies, absences);
-
-      // Look up emails
-      var emails = lookupEmail(emailMap, name) || { parentEmail: '', studentEmail: '' };
-
-      generatedStudents.push({
-        rowNum: i + 1, // logical index
-        name: name,
-        grade: grade,
-        tardies: tardies,
-        absences: absences,
-        parentComment: parentComment,
-        studentComment: studentComment,
-        parentEmail: emails.parentEmail,
-        studentEmail: emails.studentEmail
-      });
+    // Look for a sheet that sounds like emails
+    for (var i = 0; i < sheets.length; i++) {
+      var name = sheets[i].getName().toLowerCase();
+      if (name.indexOf('email') > -1 || name.indexOf('parent') > -1 || name.indexOf('contact') > -1) {
+        emailSheet = sheets[i];
+        break;
+      }
     }
+    
+    if (!emailSheet) return { error: 'Could not auto-detect an Email sheet.' };
+    
+    var sheetName = emailSheet.getName();
+    var headers = emailSheet.getRange(1, 1, 1, Math.min(emailSheet.getLastColumn(), 26)).getValues()[0];
+    
+    var nameCol = '', parentEmailCol = '', studentEmailCol = '';
+    
+    for (var j = 0; j < headers.length; j++) {
+      var h = String(headers[j]).toLowerCase();
+      var colLetter = String.fromCharCode(65 + j); // A, B, C...
+      
+      if ((h.indexOf('name') > -1 || h.indexOf('student') > -1) && !nameCol && h.indexOf('email') === -1) {
+        nameCol = colLetter;
+      }
+      if ((h.indexOf('parent') > -1 || h.indexOf('guardian') > -1) && h.indexOf('email') > -1 && !parentEmailCol) {
+        parentEmailCol = colLetter;
+      }
+      if (h.indexOf('student') > -1 && h.indexOf('email') > -1 && !studentEmailCol) {
+        studentEmailCol = colLetter;
+      }
+    }
+    
+    // Fallbacks if columns not found explicitly
+    if (!parentEmailCol) {
+      for (var j = 0; j < headers.length; j++) {
+        var h = String(headers[j]).toLowerCase();
+        var colLetter = String.fromCharCode(65 + j);
+        if (h.indexOf('email') > -1 && colLetter !== studentEmailCol) {
+          parentEmailCol = colLetter;
+          break;
+        }
+      }
+    }
+    
+    return {
+      sheetName: sheetName,
+      nameCol: nameCol || 'A',
+      parentEmailCol: parentEmailCol || 'B',
+      studentEmailCol: studentEmailCol || ''
+    };
+    
+  } catch (e) {
+    return { error: e.message };
+  }
+}
 
-    // Build diagnostic info
-    var emailDiag = '';
-    if (config.emailSheetName) {
-      if (emailResult.sheetError) {
-        emailDiag = ' · ⚠️ ' + emailResult.sheetError;
-      } else if (emailResult.sheetFound) {
-        emailDiag = ' · ✅ Loaded ' + emailResult.rawNames.length + ' emails from "' + config.emailSheetName + '"';
+// ─── Send Activity Emails ───
+function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, subject, customMessage) {
+  var sent = 0;
+  var failed = 0;
+  var errors = [];
+  var teacherEmail = Session.getActiveUser().getEmail();
+
+  try {
+    // 1. Build Email Lookup
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var emailMap = buildEmailLookup(ss, emailConfig);
+
+    // 2. Loop through students and send emails
+    for (var i = 0; i < payload.length; i++) {
+      var s = payload[i];
+      var emails = lookupEmail(emailMap, s.name) || { parentEmail: '', studentEmail: '' };
+
+      if (!emails.parentEmail && !emails.studentEmail) {
+        failed++;
+        errors.push({ name: s.name, error: 'Missing email address' });
+        continue;
+      }
+
+      // Extract first name
+      var firstName = s.name.indexOf(',') > -1
+        ? (s.name.split(',')[1] || '').trim()
+        : s.name.split(',')[0].trim();
+      if (!firstName) firstName = s.name;
+
+      var emailSubject = subject.replace('{student}', firstName);
+
+      function buildHtml(recipientType, comment) {
+        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
+        var htmlBody = ''
+          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
+          + '<div style="background:#2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
+          + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+          + '<td style="color:#fff;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
+          + '<td style="text-align:right;">'
+          + '<span style="color:#6bb8c9;font-size:22px;font-weight:bold;">blueprint</span><br>'
+          + '<span style="color:#6bb8c9;font-size:11px;">schools network</span>'
+          + '</td></tr></table></div>'
+          + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
+          + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
+          + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
+          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
+          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + s.tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + s.absences + '</td></tr>'
+          + '</table></div>'
+          + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
+          + comment
+          + '</div>';
+
+        if (customMessage) {
+          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + customMessage.replace(/\n/g, '<br>') + '</p>';
+        }
+
+        htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
+          + '<p style="font-size:14px;margin-bottom:0;">Best regards,<br>'
+          + '<strong>' + teacherName + '</strong><br>'
+          + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
+          + '</div>'
+          + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
+          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
+          + '</div></div>';
+        return htmlBody;
+      }
+
+      function buildPlain(recipientType, comment) {
+        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
+        var body = greeting + comment + '\n\n';
+        if (customMessage) body += customMessage + '\n\n';
+        body += 'If you have any questions or concerns, please do not hesitate to reach out.\n\nBest regards,\n' + teacherName + '\n' + teacherEmail;
+        return body;
+      }
+
+      if (emails.parentEmail) {
+        MailApp.sendEmail({
+          to: emails.parentEmail,
+          subject: emailSubject,
+          body: buildPlain('parent', s.parentComment),
+          htmlBody: buildHtml('parent', s.parentComment),
+          name: teacherName || '',
+          replyTo: teacherEmail
+        });
+        sent++;
+      }
+
+      if (emails.studentEmail) {
+        MailApp.sendEmail({
+          to: emails.studentEmail,
+          subject: emailSubject,
+          body: buildPlain('student', s.studentComment),
+          htmlBody: buildHtml('student', s.studentComment),
+          name: teacherName || '',
+          replyTo: teacherEmail
+        });
+        sent++;
       }
     }
 
     return {
       success: true,
-      students: generatedStudents,
-      totalRows: generatedStudents.length,
-      sheetName: config.activitySheetName,
-      emailDiag: emailDiag
+      sent: sent,
+      failed: failed,
+      errors: errors,
+      remainingQuota: MailApp.getRemainingDailyQuota()
     };
-  } catch(e) {
-    return { error: 'Error generating comments: ' + e.message };
+
+  } catch (e) {
+    return { error: 'Failed to send emails: ' + e.message };
   }
 }

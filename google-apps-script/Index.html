@@ -1238,7 +1238,6 @@
     <!-- Mode Toggle -->
     <div class="mode-bar">
       <button class="mode-btn active" id="modeActivityBtn" onclick="switchMode('activity')">📊 Generate Cards </button>
-      <button class="mode-btn" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Email Reports </button>
     </div>
 
 
@@ -1366,6 +1365,9 @@
             <button class="btn btn-primary" onclick="printActivityReport()">
               🖨️ Print / Save as PDF
             </button>
+            <button class="btn btn-purple" style="margin-left: 12px;" onclick="openEmailModal()">
+              ✉️ Send Emails to Parents
+            </button>
           </div>
           <div id="actReportBody"></div>
         </div>
@@ -1377,307 +1379,6 @@
       </div>
 
     </div> <!-- END modeActivity -->
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- MODE: COMMENTS -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="modeComments" style="display:none;">
-
-      <!-- Steps -->
-      <div class="steps-bar">
-        <div class="step-pill active" id="step1pill">
-          <span class="step-num">1</span> Configure
-        </div>
-        <div class="step-pill" id="step2pill">
-          <span class="step-num">2</span> Select Dates
-        </div>
-        <div class="step-pill" id="step3pill">
-          <span class="step-num">3</span> Preview & Generate
-        </div>
-        <div class="step-pill" id="step4pill">
-          <span class="step-num">4</span> Email Parents
-        </div>
-      </div>
-
-      <!-- Step 1: Activity Config (for Comments) -->
-      <div class="card">
-        <div class="card-title">
-          <div class="icon blue">📊</div>
-          Activity Data Configuration
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Spreadsheet ID</label>
-            <input type="text" id="commSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
-              onchange="loadSheetNames('commSpreadsheetId')" onblur="loadSheetNames('commSpreadsheetId')">
-            <span class="hint">Same spreadsheet, different tab</span>
-          </div>
-          <div class="form-group">
-            <label>Activity Sheet Tab</label>
-            <select id="commSheetName" onchange="loadGradesSheetHeaders('comm'); loadActivityFellows('comm');">
-              <option value="" disabled selected>— enter Spreadsheet ID first —</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row single">
-          <div class="form-group">
-            <label>Fellow Filter</label>
-            <select id="commFellowFilter">
-              <option value="">All Fellows</option>
-            </select>
-            <span id="commFellowHint" class="hint">Generate emails for all or one fellow</span>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Grades Sheet Tab</label>
-            <select id="commGradesSheet" onchange="loadActGradesHeaders('comm')">
-              <option value="">— none —</option>
-            </select>
-            <span class="hint">Tab to look up letter grades</span>
-          </div>
-        </div>
-
-        <!-- Grades Column Mapping (collapsible) -->
-        <div class="columns-toggle" onclick="toggleGradesConfig('comm')">
-          <span class="arrow" id="commGradesArrow">▶</span>
-          Grade Lookup Columns <span id="commGradeColMapStatus"
-            style="font-size:11px;color:var(--success);margin-left:6px;"></span>
-        </div>
-
-        <div class="columns-grid" id="commGradesGrid" style="display:none;">
-          <div class="form-group">
-            <label>Name Column</label>
-            <select id="commGradesNameCol">
-              <option value="B">— select grades sheet —</option>
-            </select>
-            <span class="hint">Student name column</span>
-          </div>
-          <div class="form-group">
-            <label>Grade Column</label>
-            <select id="commGradesGradeCol">
-              <option value="E">— select grades sheet —</option>
-            </select>
-            <span class="hint">Letter grade column</span>
-          </div>
-          <div class="form-group">
-            <label>Data Start Row</label>
-            <input type="text" id="commGradesStartRow" value="4"
-              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
-            <span class="hint">First row of student data</span>
-          </div>
-        </div>
-
-        <!-- Email Sheet Config -->
-        <div class="columns-toggle" onclick="toggleEmailConfig()">
-          <span class="arrow" id="emailArrow">▶</span>
-          Parent & Student Email Sheet (if emails are on a separate tab)
-        </div>
-
-        <div class="columns-grid" id="emailGrid" style="display:none;">
-          <div class="form-group">
-            <label>Email Sheet Tab</label>
-            <select id="emailSheetName" onchange="loadEmailHeaders()">
-              <option value="">— none —</option>
-            </select>
-            <span class="hint">Tab name with emails</span>
-          </div>
-          <div class="form-group">
-            <label>Name Column</label>
-            <select id="emailSheetNameCol">
-              <option value="A">— select email sheet —</option>
-            </select>
-            <span class="hint">Student name column</span>
-          </div>
-          <div class="form-group">
-            <label>Parent Email Column</label>
-            <select id="emailSheetEmailCol">
-              <option value="B">— select email sheet —</option>
-            </select>
-            <span class="hint">Parent email column</span>
-          </div>
-          <div class="form-group">
-            <label>Student Email Column</label>
-            <select id="emailSheetStudentEmailCol">
-              <option value="">— select email sheet —</option>
-            </select>
-            <span class="hint">Student email column (Optional)</span>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-primary" id="commLoadDatesBtn" onclick="loadActivityDates('comm')">
-            📅 Load Available Dates
-          </button>
-        </div>
-        <div class="status" id="commConfigStatus"></div>
-      </div>
-
-      <!-- Step 2: Date Range -->
-      <div class="section-hidden" id="commDateSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon green">📅</div>
-            Select Date Range
-          </div>
-
-          <div class="date-picker-row">
-            <div class="form-group">
-              <label>Start Date</label>
-              <select id="commStartDate"></select>
-            </div>
-            <div class="form-group">
-              <label>End Date</label>
-              <select id="commEndDate"></select>
-            </div>
-            <div class="form-group">
-              <button class="btn btn-success" id="genCommentsBtn" onclick="generateEmailReports()">
-                📊 Preview & Generate
-              </button>
-            </div>
-          </div>
-          <div class="status" id="commDateStatus"></div>
-        </div>
-      </div>
-
-      <!-- Step 2: Preview Section -->
-      <div class="section-hidden" id="previewSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon green">👁️</div>
-            Student Preview
-          </div>
-
-          <div class="preview-header">
-            <h3 id="previewTitle">Students Found</h3>
-            <span class="preview-count" id="previewCount"></span>
-          </div>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Row</th>
-                  <th>Student Name</th>
-                  <th>Grade</th>
-                  <th>Tardies</th>
-                  <th>Absences</th>
-                  <th>Student Comment</th>
-                  <th>Parent Comment</th>
-                  <th>Parent Email</th>
-                </tr>
-              </thead>
-              <tbody id="previewBody"></tbody>
-            </table>
-          </div>
-
-          <div class="checkbox-row">
-            <input type="checkbox" id="overwrite">
-            <label for="overwrite">Overwrite existing comments (only generates for blank cells by default)</label>
-          </div>
-
-          <div class="btn-row" style="margin-top: 16px;">
-            <button class="btn btn-success" id="generateBtn" onclick="generateComments()">
-              ✏️ Generate &amp; Write Comments
-            </button>
-            <button class="btn btn-secondary" onclick="previewData()">
-              🔄 Refresh
-            </button>
-          </div>
-
-          <div class="status" id="generateStatus"></div>
-        </div>
-      </div>
-
-      <!-- Print Reports Section -->
-      <div class="section-hidden" id="printSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon orange">🖨️</div>
-            Print Report Cards
-          </div>
-          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
-            Print individual Blueprint Progress Report cards for each student, or a class summary table. Each student
-            gets their own page.
-          </p>
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="openPrintView('individual')">
-              🖨️ Print Student Report Cards
-            </button>
-            <button class="btn btn-secondary" onclick="openPrintView('summary')">
-              📊 Print Class Summary
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 3 & 4: Email Section -->
-      <div class="section-hidden" id="emailSection">
-        <div class="card">
-          <div class="card-title">
-            <div class="icon purple">✉️</div>
-            Email Parent Comments
-          </div>
-
-          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">
-            Review each parent comment below. Check the ones you want to email, customize the subject and message, then
-            send.
-            Emails will come from <strong id="teacherEmailDisplay">your Google account</strong>.
-          </p>
-
-          <!-- Email Settings -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Your Name (appears in the email)</label>
-              <input type="text" id="teacherName" placeholder="e.g. Mr. Johnson">
-            </div>
-            <div class="form-group">
-              <label>Email Subject</label>
-              <input type="text" id="emailSubject" value="Biweekly Progress Report — {student}">
-              <span class="hint">Use {student} to insert the student's first name</span>
-            </div>
-          </div>
-
-          <div class="form-row single">
-            <div class="form-group">
-              <label>Additional Message (optional — added after the comment)</label>
-              <textarea id="customMessage"
-                placeholder="e.g. Parent-teacher conferences are next week on Thursday. Please sign up at..."></textarea>
-            </div>
-          </div>
-
-          <!-- Select All Bar -->
-          <div class="select-bar">
-            <div class="select-bar-left">
-              <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" checked>
-              <label for="selectAll">Select All</label>
-            </div>
-            <span class="select-count" id="selectCount">0 selected</span>
-          </div>
-
-          <!-- Email Cards -->
-          <div id="emailCards"></div>
-
-          <div class="btn-row" style="margin-top: 16px;">
-            <button class="btn btn-purple" id="sendBtn" onclick="sendEmails()">
-              ✉️ Send Selected Emails
-            </button>
-          </div>
-
-          <div class="status" id="emailStatus"></div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        Blueprint Schools Tools · Template-based · No AI · No data leaves Google Workspace
-      </div>
-
-
-    </div> <!-- END modeComments -->
 
 
   </div>
@@ -3285,6 +2986,144 @@
       html += '</body></html>';
       w.document.write(html);
       w.document.close();
+    }
+    // ─── Email Modal & Sending ───
+    var autoDetectedEmailConfig = null;
+
+    function openEmailModal() {
+      if (!activityReport || !activityReport.students || activityReport.students.length === 0) {
+        alert('Please generate the activity report first.');
+        return;
+      }
+
+      var ssId = document.getElementById('actSpreadsheetId').value;
+      if (!ssId) {
+        alert('Missing Spreadsheet ID');
+        return;
+      }
+
+      // Initial loading modal
+      showModal({
+        icon: '✉️',
+        title: 'Send Emails to Parents',
+        body: '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Auto-detecting email sheet...</div>',
+        buttons: [
+          { label: 'Cancel', cls: 'btn-secondary' }
+        ]
+      });
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          if (result.error) {
+            alert('Warning: Could not auto-detect email sheet (' + result.error + '). Please make sure an email sheet exists.');
+            closeModal();
+            return;
+          }
+          autoDetectedEmailConfig = result;
+          
+          var bodyHtml = '<div class="modal-details">' +
+            '<div class="detail-row"><span class="detail-label">Email Sheet</span><span class="detail-value">✅ Auto-detected: "' + result.sheetName + '"</span></div>' +
+            '<div class="detail-row"><span class="detail-label">Recipients</span><span class="detail-value">' + activityReport.students.length + ' students</span></div>' +
+            '</div>' +
+            '<div class="form-group" style="margin-top:16px;">' +
+            '<label>Teacher Name</label>' +
+            '<input type="text" id="modalTeacherName" placeholder="e.g. Mr. Johnson" value="' + teacherEmail + '">' +
+            '</div>' +
+            '<div class="form-group" style="margin-top:12px;">' +
+            '<label>Email Subject</label>' +
+            '<input type="text" id="modalEmailSubject" value="Biweekly Progress Report — {student}">' +
+            '</div>' +
+            '<div class="form-group" style="margin-top:12px;">' +
+            '<label>Additional Message (optional)</label>' +
+            '<textarea id="modalCustomMessage" placeholder="Added after the comment..." style="min-height:60px;"></textarea>' +
+            '</div>';
+
+          showModal({
+            icon: '✉️',
+            title: 'Send Emails to Parents',
+            body: bodyHtml,
+            buttons: [
+              { label: 'Cancel', cls: 'btn-secondary' },
+              { label: 'Confirm & Send Emails', cls: 'btn-purple', action: sendActivityEmailsClient }
+            ]
+          });
+        })
+        .withFailureHandler(function (err) {
+          alert('Error auto-detecting emails: ' + err.message);
+          closeModal();
+        })
+        .autoDetectEmailConfig(ssId);
+    }
+
+    function sendActivityEmailsClient() {
+      var teacherName = document.getElementById('modalTeacherName').value.trim();
+      var subject = document.getElementById('modalEmailSubject').value.trim();
+      var customMessage = document.getElementById('modalCustomMessage').value.trim();
+
+      if (!subject) {
+        alert('Please enter an email subject.');
+        return;
+      }
+
+      // Build payload by generating comments for everyone
+      var payload = [];
+      activityReport.students.forEach(function (r) {
+        var pComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, 'parent');
+        var sComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, 'student');
+        
+        payload.push({
+          name: r.name,
+          grade: r.letterGrade || '',
+          tardies: r.summary.totalTardy || 0,
+          absences: r.summary.totalAbsent || 0,
+          parentComment: pComment,
+          studentComment: sComment
+        });
+      });
+
+      var ssId = document.getElementById('actSpreadsheetId').value;
+      
+      showModal({
+        icon: '✉️',
+        title: 'Sending Emails',
+        body: '<div style="text-align:center; padding: 20px;"><span class="spinner"></span> Dispatching ' + payload.length + ' emails...</div>',
+        buttons: [] // No buttons while sending
+      });
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res.error) {
+            showModal({
+              icon: '❌',
+              title: 'Error Sending Emails',
+              body: '<p style="color:var(--danger)">' + res.error + '</p>',
+              buttons: [{ label: 'Close', cls: 'btn-secondary' }]
+            });
+            return;
+          }
+          
+          var msg = '<p><strong>' + res.sent + '</strong> emails sent successfully!</p>';
+          if (res.failed > 0) {
+            msg += '<p style="color:var(--danger)">' + res.failed + ' failed (missing addresses).</p>';
+          }
+          msg += '<p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Remaining daily quota: ' + res.remainingQuota + '</p>';
+          
+          showModal({
+            icon: '✅',
+            title: 'Emails Sent',
+            body: msg,
+            buttons: [{ label: 'Done', cls: 'btn-primary' }]
+          });
+        })
+        .withFailureHandler(function (err) {
+          showModal({
+            icon: '❌',
+            title: 'Error Sending Emails',
+            body: '<p style="color:var(--danger)">' + err.message + '</p>',
+            buttons: [{ label: 'Close', cls: 'btn-secondary' }]
+          });
+        })
+        .sendActivityEmails(ssId, autoDetectedEmailConfig, payload, teacherName, subject, customMessage);
     }
   </script>
 </body>
