@@ -47,10 +47,16 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 960px; margin: 0 auto; padding: 24px 24px; }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 24px;
+    }
 
     /* ─── Header (hidden — content moved to footer) ─── */
-    .header { display: none; }
+    .header {
+      display: none;
+    }
 
     /* ─── Compact Footer ─── */
     .app-footer {
@@ -61,6 +67,7 @@
       letter-spacing: 0.02em;
       line-height: 1.6;
     }
+
     .app-footer .footer-title {
       font-weight: 700;
       color: var(--text-secondary);
@@ -107,7 +114,13 @@
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
     }
 
-    .steps-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .steps-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
 
     .step-pill {
       display: flex;
@@ -1224,8 +1237,8 @@
 
     <!-- Mode Toggle -->
     <div class="mode-bar">
-      <button class="mode-btn active" id="modeActivityBtn" onclick="switchMode('activity')">📊 Activity Report</button>
-      <button class="mode-btn" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Biweekly Comments</button>
+      <button class="mode-btn active" id="modeActivityBtn" onclick="switchMode('activity')">📊 Generate Cards </button>
+      <button class="mode-btn" id="modeCommentsBtn" onclick="switchMode('comments')">📝 Email Reports </button>
     </div>
 
 
@@ -1376,104 +1389,92 @@
           <span class="step-num">1</span> Configure
         </div>
         <div class="step-pill" id="step2pill">
-          <span class="step-num">2</span> Preview
+          <span class="step-num">2</span> Select Dates
         </div>
         <div class="step-pill" id="step3pill">
-          <span class="step-num">3</span> Generate
+          <span class="step-num">3</span> Preview & Generate
         </div>
         <div class="step-pill" id="step4pill">
           <span class="step-num">4</span> Email Parents
         </div>
       </div>
 
-      <!-- Step 1: Spreadsheet Config -->
+      <!-- Step 1: Activity Config (for Comments) -->
       <div class="card">
         <div class="card-title">
-          <div class="icon blue">📋</div>
-          Spreadsheet Configuration
+          <div class="icon blue">📊</div>
+          Activity Data Configuration
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Spreadsheet ID</label>
-            <input type="text" id="spreadsheetId" placeholder="Paste spreadsheet URL or ID here"
-              onchange="loadSheetNames('spreadsheetId')" onblur="loadSheetNames('spreadsheetId')">
-            <span class="hint">Paste the full URL or just the ID — we'll extract it automatically</span>
+            <input type="text" id="commSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
+              onchange="loadSheetNames('commSpreadsheetId')" onblur="loadSheetNames('commSpreadsheetId')">
+            <span class="hint">Same spreadsheet, different tab</span>
           </div>
           <div class="form-group">
-            <label>Sheet Tab Name</label>
-            <select id="sheetName" onchange="loadColumnHeaders()">
+            <label>Activity Sheet Tab</label>
+            <select id="commSheetName" onchange="loadGradesSheetHeaders('comm'); loadActivityFellows('comm');">
               <option value="" disabled selected>— enter Spreadsheet ID first —</option>
             </select>
-            <span class="hint">Select a tab to auto-detect columns</span>
           </div>
         </div>
 
-        <!-- Header Row Config -->
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Fellow Filter</label>
+            <select id="commFellowFilter">
+              <option value="">All Fellows</option>
+            </select>
+            <span id="commFellowHint" class="hint">Generate emails for all or one fellow</span>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label>Header Row</label>
-            <input type="text" id="headerRow" value="3" onchange="loadColumnHeaders()"
-              style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
-            <span class="hint">Row number with column headers</span>
+            <label>Grades Sheet Tab</label>
+            <select id="commGradesSheet" onchange="loadActGradesHeaders('comm')">
+              <option value="">— none —</option>
+            </select>
+            <span class="hint">Tab to look up letter grades</span>
+          </div>
+        </div>
+
+        <!-- Grades Column Mapping (collapsible) -->
+        <div class="columns-toggle" onclick="toggleGradesConfig('comm')">
+          <span class="arrow" id="commGradesArrow">▶</span>
+          Grade Lookup Columns <span id="commGradeColMapStatus"
+            style="font-size:11px;color:var(--success);margin-left:6px;"></span>
+        </div>
+
+        <div class="columns-grid" id="commGradesGrid" style="display:none;">
+          <div class="form-group">
+            <label>Name Column</label>
+            <select id="commGradesNameCol">
+              <option value="B">— select grades sheet —</option>
+            </select>
+            <span class="hint">Student name column</span>
+          </div>
+          <div class="form-group">
+            <label>Grade Column</label>
+            <select id="commGradesGradeCol">
+              <option value="E">— select grades sheet —</option>
+            </select>
+            <span class="hint">Letter grade column</span>
           </div>
           <div class="form-group">
             <label>Data Start Row</label>
-            <input type="text" id="dataStartRow" value="4"
+            <input type="text" id="commGradesStartRow" value="4"
               style="font-family:'SF Mono','Fira Code',monospace;text-align:center;max-width:80px;">
             <span class="hint">First row of student data</span>
-          </div>
-        </div>
-
-        <!-- Column Mapping (collapsible) -->
-        <div class="columns-toggle" onclick="toggleColumns()">
-          <span class="arrow" id="colArrow">▶</span>
-          Column Mapping <span id="colMapStatus" style="font-size:11px;color:var(--success);margin-left:6px;"></span>
-        </div>
-
-        <div class="columns-grid" id="columnsGrid">
-          <div class="form-group">
-            <label>Student Name</label>
-            <select id="studentNameCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Comment to Student</label>
-            <select id="studentCommentCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Comment to Parents</label>
-            <select id="parentCommentCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Grade</label>
-            <select id="gradeCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tardies</label>
-            <select id="tardiesCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Absences</label>
-            <select id="absencesCol">
-              <option value="" disabled selected>— select sheet first —</option>
-            </select>
           </div>
         </div>
 
         <!-- Email Sheet Config -->
         <div class="columns-toggle" onclick="toggleEmailConfig()">
           <span class="arrow" id="emailArrow">▶</span>
-          Parent Email Sheet (if emails are on a separate tab)
+          Parent & Student Email Sheet (if emails are on a separate tab)
         </div>
 
         <div class="columns-grid" id="emailGrid" style="display:none;">
@@ -1482,7 +1483,7 @@
             <select id="emailSheetName" onchange="loadEmailHeaders()">
               <option value="">— none —</option>
             </select>
-            <span class="hint">Tab name with parent emails</span>
+            <span class="hint">Tab name with emails</span>
           </div>
           <div class="form-group">
             <label>Name Column</label>
@@ -1492,21 +1493,54 @@
             <span class="hint">Student name column</span>
           </div>
           <div class="form-group">
-            <label>Email Column</label>
+            <label>Parent Email Column</label>
             <select id="emailSheetEmailCol">
               <option value="B">— select email sheet —</option>
             </select>
             <span class="hint">Parent email column</span>
           </div>
+          <div class="form-group">
+            <label>Student Email Column</label>
+            <select id="emailSheetStudentEmailCol">
+              <option value="">— select email sheet —</option>
+            </select>
+            <span class="hint">Student email column (Optional)</span>
+          </div>
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-primary" id="previewBtn" onclick="previewData()">
-            Preview Students
+          <button class="btn btn-primary" id="commLoadDatesBtn" onclick="loadActivityDates('comm')">
+            📅 Load Available Dates
           </button>
         </div>
+        <div class="status" id="commConfigStatus"></div>
+      </div>
 
-        <div class="status" id="previewStatus"></div>
+      <!-- Step 2: Date Range -->
+      <div class="section-hidden" id="commDateSection">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon green">📅</div>
+            Select Date Range
+          </div>
+
+          <div class="date-picker-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <select id="commStartDate"></select>
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <select id="commEndDate"></select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-success" id="genCommentsBtn" onclick="generateEmailReports()">
+                📊 Preview & Generate
+              </button>
+            </div>
+          </div>
+          <div class="status" id="commDateStatus"></div>
+        </div>
       </div>
 
       <!-- Step 2: Preview Section -->
@@ -2219,124 +2253,80 @@
       return '<span class="badge ' + cls + '">' + grade + '</span>';
     }
 
-    // ─── Preview ───
-    function previewData() {
-      var config = getConfig();
-      if (!config.spreadsheetId) {
-        showStatus('previewStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+    // ─── Generate Email Reports ───
+    function generateEmailReports() {
+      var config = getActivityConfig('comm');
+      
+      // Get Email Sheet Config
+      config.emailSheetName = document.getElementById('emailSheetName').value.trim();
+      config.emailSheetNameCol = document.getElementById('emailSheetNameCol').value.trim().toUpperCase() || 'A';
+      config.emailSheetEmailCol = document.getElementById('emailSheetEmailCol').value.trim().toUpperCase() || 'B';
+      config.emailSheetStudentEmailCol = document.getElementById('emailSheetStudentEmailCol').value.trim().toUpperCase() || '';
+      
+      var startSel = document.getElementById('commStartDate');
+      var endSel = document.getElementById('commEndDate');
+      
+      if (!startSel.value || !endSel.value) {
+        showStatus('commDateStatus', 'error', '⚠️ Please load and select dates first.');
         return;
       }
 
-      var btn = document.getElementById('previewBtn');
+      config.startDate = startSel.options[startSel.selectedIndex].text;
+      config.endDate = endSel.options[endSel.selectedIndex].text;
+      config.fellowFilter = document.getElementById('commFellowFilter').value;
+
+      var btn = document.getElementById('genCommentsBtn');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Loading...';
-      hideStatus('previewStatus');
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+      hideStatus('commDateStatus');
 
       google.script.run
         .withSuccessHandler(function (result) {
           btn.disabled = false;
-          btn.innerHTML = 'Preview Students';
+          btn.innerHTML = '📊 Preview & Generate';
 
           if (result.error) {
-            showStatus('previewStatus', 'error', '❌ ' + result.error);
-            document.getElementById('previewSection').className = 'section-hidden';
+            showStatus('commDateStatus', 'error', '❌ ' + result.error);
             return;
           }
 
-          var emailCount = result.students.filter(function (s) { return s.parentEmail; }).length;
-
-          var statusMsg = '✅ Connected! Found <strong>' + result.totalRows + '</strong> students in "' + result.sheetName + '"';
+          var emailCount = result.students.filter(function (s) { return s.parentEmail || s.studentEmail; }).length;
+          
+          var statusMsg = '✅ Done! Generated reports for <strong>' + result.totalRows + '</strong> students.';
           if (emailCount > 0) {
-            statusMsg += ' · <strong>' + emailCount + '</strong> have parent emails';
+            statusMsg += ' (<strong>' + emailCount + '</strong> have email addresses)';
           }
           if (result.emailDiag) {
             statusMsg += '<br><span style="font-size:12px;opacity:0.85;">' + result.emailDiag + '</span>';
           }
-          showStatus('previewStatus', emailCount > 0 || !result.emailDiag ? 'success' : 'warning', statusMsg);
+          
+          showStatus('commDateStatus', emailCount > 0 || !result.emailDiag ? 'success' : 'warning', statusMsg);
 
-          setStep(2);
+          // Store globally for sending
+          generatedResults = result.students;
+          showEmailSection(result.students);
 
-          // Populate table
-          var body = document.getElementById('previewBody');
-          body.innerHTML = '';
-
-          result.students.forEach(function (s) {
-            var tr = document.createElement('tr');
-            tr.innerHTML =
-              '<td>' + s.rowNum + '</td>' +
-              '<td>' + s.name + '</td>' +
-              '<td>' + gradeBadge(s.grade) + '</td>' +
-              '<td>' + s.tardies + '</td>' +
-              '<td>' + s.absences + '</td>' +
-              '<td>' + (s.existingComment ? '<span class="has-comment">✓ Has comment</span>' : '<span class="no-comment">Empty</span>') + '</td>' +
-              '<td>' + (s.existingParent ? '<span class="has-comment">✓ Has comment</span>' : '<span class="no-comment">Empty</span>') + '</td>' +
-              '<td>' + (s.parentEmail ? '<span class="email-present">✉ ' + s.parentEmail + '</span>' : '<span class="email-missing">—</span>') + '</td>';
-            body.appendChild(tr);
-          });
-
-          document.getElementById('previewCount').textContent = result.totalRows + ' students';
-          document.getElementById('previewSection').className = 'section-visible';
-          document.getElementById('emailSection').className = 'section-hidden';
-        })
-        .withFailureHandler(function (err) {
-          btn.disabled = false;
-          btn.innerHTML = 'Preview Students';
-          showStatus('previewStatus', 'error', '❌ Error: ' + err.message);
-        })
-        .getStudentData(config);
-    }
-
-    // ─── Generate Comments ───
-    function generateComments() {
-      var config = getConfig();
-      var overwrite = document.getElementById('overwrite').checked;
-
-      var btn = document.getElementById('generateBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Generating...';
-      hideStatus('generateStatus');
-
-      google.script.run
-        .withSuccessHandler(function (result) {
-          btn.disabled = false;
-          btn.innerHTML = '✏️ Generate & Write Comments';
-
-          if (result.error) {
-            showStatus('generateStatus', 'error', '❌ ' + result.error);
-            return;
-          }
-
-          showStatus('generateStatus', 'success',
-            '✅ Done! Generated comments for <strong>' + result.generated + '</strong> students. ' +
-            (result.skipped > 0 ? '<strong>' + result.skipped + '</strong> skipped (already had comments).' : ''));
-
-          setStep(3);
-
-          // Store results and show print/email sections
-          generatedResults = result.results;
-
-          // Always show print section
-          document.getElementById('printSection').className = 'section-visible';
-
-          // Always show email section
-          var hasEmails = result.results.some(function (r) { return r.parentEmail; });
-          showEmailSection(result.results);
-
-          if (!hasEmails) {
+          if (emailCount === 0) {
             showStatus('emailStatus', 'warning',
-              '⚠️ No parent emails found. To send emails, expand <strong>"Parent Email Sheet"</strong> above and enter the tab name where parent emails are stored. ' +
-              'Make sure student names match between both sheets.');
+              '⚠️ No email addresses found. Expand <strong>"Parent & Student Email Sheet"</strong> in step 1 to configure your email columns.');
           }
 
-          // Scroll to print section
-          document.getElementById('printSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Get teacher info for email sender display
+          google.script.run
+            .withSuccessHandler(function (info) {
+              teacherEmail = info.email;
+              document.getElementById('teacherEmailDisplay').textContent = info.email;
+            })
+            .getTeacherInfo();
+
         })
         .withFailureHandler(function (err) {
           btn.disabled = false;
-          btn.innerHTML = '✏️ Generate & Write Comments';
-          showStatus('generateStatus', 'error', '❌ Error: ' + err.message);
+          btn.innerHTML = '📊 Preview & Generate';
+          showStatus('commDateStatus', 'error', '❌ Error: ' + err.message);
         })
-        .generateAndWriteComments(config, { overwrite: overwrite });
+        .getActivityCommentsAndEmails(config);
+    }
 
       // Get teacher info
       google.script.run
@@ -2349,19 +2339,24 @@
 
     // ─── Email Section ───
     function showEmailSection(results) {
-      setStep(4);
+      setStep(3);
       var container = document.getElementById('emailCards');
       container.innerHTML = '';
 
       var selectableCount = 0;
 
       results.forEach(function (r, idx) {
-        var hasEmail = !!r.parentEmail;
+        var hasEmail = !!(r.parentEmail || r.studentEmail);
         if (hasEmail) selectableCount++;
 
         var card = document.createElement('div');
         card.className = 'email-card' + (hasEmail ? ' selected' : ' no-email');
         card.id = 'emailCard' + idx;
+
+        var emailDisplay = '';
+        if (r.parentEmail) emailDisplay += '<div>Parent: ✉ ' + r.parentEmail + '</div>';
+        if (r.studentEmail) emailDisplay += '<div style="margin-top:2px;">Student: ✉ ' + r.studentEmail + '</div>';
+        if (!hasEmail) emailDisplay = '⚠ No email addresses';
 
         card.innerHTML =
           '<div class="email-card-header">' +
@@ -2369,16 +2364,18 @@
           (hasEmail ? 'checked' : 'disabled') +
           ' onchange="updateSelectCount()" data-idx="' + idx + '">' +
           '<div class="email-card-info">' +
-          '<div class="email-card-name">Row ' + r.rowNum + ' — ' + r.name + '</div>' +
+          '<div class="email-card-name">' + r.name + '</div>' +
           '<div class="email-card-email ' + (hasEmail ? '' : 'missing') + '">' +
-          (hasEmail ? '✉ ' + r.parentEmail : '⚠ No email address') +
+          emailDisplay +
           '</div>' +
           '</div>' +
           '<div class="email-card-grade">' + gradeBadge(r.grade) + '</div>' +
           '</div>' +
           '<div class="email-card-body">' +
-          '<div class="email-card-label">Parent Comment (will be emailed)</div>' +
-          '<div class="email-card-text">' + r.parentComment + '</div>' +
+          '<div class="form-group"><label>Parent Comment (Emailed to parent)</label>' +
+          '<textarea id="parentCommentText' + idx + '" style="min-height:80px;">' + r.parentComment + '</textarea></div>' +
+          '<div class="form-group" style="margin-top: 10px;"><label>Student Comment (Emailed to student)</label>' +
+          '<textarea id="studentCommentText' + idx + '" style="min-height:80px;">' + r.studentComment + '</textarea></div>' +
           '</div>';
 
         container.appendChild(card);
@@ -2424,11 +2421,16 @@
       var selected = [];
       generatedResults.forEach(function (r, idx) {
         var cb = document.getElementById('emailCheck' + idx);
-        if (cb && cb.checked && r.parentEmail) {
+        if (cb && cb.checked && (r.parentEmail || r.studentEmail)) {
+          var pTextArea = document.getElementById('parentCommentText' + idx);
+          var sTextArea = document.getElementById('studentCommentText' + idx);
+          
           selected.push({
             name: r.name,
             parentEmail: r.parentEmail,
-            parentComment: r.parentComment,
+            studentEmail: r.studentEmail,
+            parentComment: pTextArea ? pTextArea.value : r.parentComment,
+            studentComment: sTextArea ? sTextArea.value : r.studentComment,
             grade: r.grade || '',
             tardies: r.tardies || 0,
             absences: r.absences || 0
@@ -2710,37 +2712,40 @@
     var activityDates = [];
     var activityReport = null;
 
-    function getActivityConfig() {
-      var rawId = document.getElementById('actSpreadsheetId').value.trim();
+    function getActivityConfig(prefix) {
+      var p = prefix || 'act';
+      var rawId = document.getElementById(p + 'SpreadsheetId').value.trim();
       var cleanId = extractSpreadsheetId(rawId);
       if (cleanId !== rawId) {
-        document.getElementById('actSpreadsheetId').value = cleanId;
+        document.getElementById(p + 'SpreadsheetId').value = cleanId;
       }
       return {
         spreadsheetId: cleanId,
-        activitySheetName: document.getElementById('actSheetName').value.trim(),
-        gradesSheetName: document.getElementById('actGradesSheet').value.trim(),
-        gradesNameCol: document.getElementById('actGradesNameCol').value.trim().toUpperCase() || 'B',
-        gradesGradeCol: document.getElementById('actGradesGradeCol').value.trim().toUpperCase() || 'E',
-        gradesStartRow: document.getElementById('actGradesStartRow').value.trim() || '4'
+        activitySheetName: document.getElementById(p + 'SheetName').value.trim(),
+        gradesSheetName: document.getElementById(p + 'GradesSheet').value.trim(),
+        gradesNameCol: document.getElementById(p + 'GradesNameCol').value.trim().toUpperCase() || 'B',
+        gradesGradeCol: document.getElementById(p + 'GradesGradeCol').value.trim().toUpperCase() || 'E',
+        gradesStartRow: document.getElementById(p + 'GradesStartRow').value.trim() || '4'
       };
     }
 
-    function loadActivityDates() {
-      var config = getActivityConfig();
+    function loadActivityDates(prefix) {
+      var p = prefix || 'act';
+      var config = getActivityConfig(p);
       if (!config.spreadsheetId) {
-        showStatus('actConfigStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
         return;
       }
       if (!config.activitySheetName) {
-        showStatus('actConfigStatus', 'error', '⚠️ Please enter the Activity Sheet Tab name.');
+        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter the Activity Sheet Tab name.');
         return;
       }
 
-      var btn = document.getElementById('loadDatesBtn');
+      var btnId = p === 'act' ? 'loadDatesBtn' : p + 'LoadDatesBtn';
+      var btn = document.getElementById(btnId);
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Loading dates...';
-      hideStatus('actConfigStatus');
+      hideStatus(p + 'ConfigStatus');
 
       google.script.run
         .withSuccessHandler(function (result) {
@@ -2748,17 +2753,17 @@
           btn.innerHTML = '📅 Load Available Dates';
 
           if (result.error) {
-            showStatus('actConfigStatus', 'error', '❌ ' + result.error);
+            showStatus(p + 'ConfigStatus', 'error', '❌ ' + result.error);
             return;
           }
 
           activityDates = result.dates;
-          showStatus('actConfigStatus', 'success',
+          showStatus(p + 'ConfigStatus', 'success',
             '✅ Found <strong>' + result.total + '</strong> dates in the sheet.');
 
           // Populate date dropdowns
-          var startSel = document.getElementById('actStartDate');
-          var endSel = document.getElementById('actEndDate');
+          var startSel = document.getElementById(p + 'StartDate');
+          var endSel = document.getElementById(p + 'EndDate');
           startSel.innerHTML = '';
           endSel.innerHTML = '';
 
@@ -2781,17 +2786,17 @@
           endSel.selectedIndex = result.dates.length - 1;
 
           // Populate Fellow Filter dropdown (preserve current selection)
-          var fellowSel = document.getElementById('actFellowFilter');
+          var fellowSel = document.getElementById(p + 'FellowFilter');
           var previousFellow = fellowSel.value; // save current selection
-          
+
           if (result.hasFellowColumn === false) {
             fellowSel.innerHTML = '<option value="">No Fellow Column identified</option>';
             fellowSel.disabled = true;
-            document.getElementById('actFellowHint').textContent = 'No Fellow column detected in the spreadsheet.';
+            document.getElementById(p + 'FellowHint').textContent = 'No Fellow column detected in the spreadsheet.';
           } else {
             fellowSel.innerHTML = '<option value="">All Fellows</option>';
             fellowSel.disabled = false;
-            document.getElementById('actFellowHint').textContent = 'Generate report for all or one fellow';
+            document.getElementById(p + 'FellowHint').textContent = 'Generate report for all or one fellow';
             if (result.fellows && result.fellows.length > 0) {
               result.fellows.forEach(function (f) {
                 var opt = document.createElement('option');
@@ -2804,13 +2809,13 @@
             }
           }
 
-          document.getElementById('actDateSection').className = 'section-visible';
-          document.getElementById('actDateSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.getElementById(p + 'DateSection').className = 'section-visible';
+          document.getElementById(p + 'DateSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         })
         .withFailureHandler(function (err) {
           btn.disabled = false;
           btn.innerHTML = '📅 Load Available Dates';
-          showStatus('actConfigStatus', 'error', '❌ Error: ' + err.message);
+          showStatus(p + 'ConfigStatus', 'error', '❌ Error: ' + err.message);
         })
         .getActivityDates(config);
     }
