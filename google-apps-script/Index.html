@@ -3209,6 +3209,13 @@
           var msg = '<p><strong>' + res.sent + '</strong> emails sent successfully!</p>';
           if (res.failed > 0) {
             msg += '<p style="color:var(--danger)">' + res.failed + ' failed (missing addresses).</p>';
+            if (res.errors && res.errors.length > 0) {
+              msg += '<ul style="color:var(--danger); font-size:12px; margin-top:8px; padding-left:20px; text-align:left; max-height:120px; overflow-y:auto;">';
+              for (var k = 0; k < res.errors.length; k++) {
+                msg += '<li>' + res.errors[k].name + '</li>';
+              }
+              msg += '</ul>';
+            }
           }
           msg += '<p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Remaining daily quota: ' + res.remainingQuota + '</p>';
           
