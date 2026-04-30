@@ -2328,14 +2328,6 @@
         .getActivityCommentsAndEmails(config);
     }
 
-      // Get teacher info
-      google.script.run
-        .withSuccessHandler(function (info) {
-          teacherEmail = info.email;
-          document.getElementById('teacherEmailDisplay').textContent = info.email;
-        })
-        .getTeacherInfo();
-    }
 
     // ─── Email Section ───
     function showEmailSection(results) {
