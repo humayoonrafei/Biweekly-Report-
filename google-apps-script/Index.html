@@ -2697,11 +2697,16 @@
       return n <= 10 ? words[n] : String(n);
     }
 
-    function generateStudentCommentClient(name, grade, tardies, absences) {
+    function generateStudentCommentClient(name, grade, tardies, absences, present) {
       var firstName = name.indexOf(',') > -1
         ? (name.split(',')[1] || '').trim()
         : name.split(',')[0].trim();
       if (!firstName) firstName = name;
+
+      // Handle no data
+      if (present === 0 && tardies === 0 && absences === 0) {
+        return firstName + '- you do not have any recorded attendance for this biweekly period yet. Please check in with me so we can ensure you are on track.';
+      }
 
       if (!grade && absences >= 5) {
         return firstName + '- you have ' + spellNumberClient(absences) + ' absences this biweekly period which is making it very difficult to keep up with the lessons. Please make sure to attend every class so we can help you succeed. Check in with me to find out what assignments you have missed.';
@@ -2727,6 +2732,8 @@
           msg += ' You have ' + spellNumberClient(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
         } else if (absences > 0) {
           msg += ' You have ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Please keep working hard on your participation to bring your grade up. You have the ability to do great things!';
+        } else if (tardies > 0) {
+          msg += ' You have ' + spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies') + ' this period. Please try to arrive on time so you can start class strong. Continue working hard to improve your grade!';
         } else {
           msg += ' Your attendance is solid with zero tardies and zero absences. Please continue your hard work to improve your grade - you are capable of more!';
         }
@@ -2772,7 +2779,8 @@
           student.name,
           student.letterGrade || '',
           student.summary.totalTardy,
-          student.summary.totalAbsent
+          student.summary.totalAbsent,
+          student.summary.totalPresent
         );
 
         var fellowHtml = student.fellow ? '<span>' + student.fellow + '</span>' : '';
@@ -3089,8 +3097,8 @@
       // Build payload by generating comments for everyone
       var payload = [];
       activityReport.students.forEach(function (r) {
-        var pComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, 'parent');
-        var sComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, 'student');
+        var pComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, r.summary.totalPresent);
+        var sComment = generateStudentCommentClient(r.name, r.letterGrade || '', r.summary.totalTardy, r.summary.totalAbsent, r.summary.totalPresent);
         
         payload.push({
           name: r.name,
