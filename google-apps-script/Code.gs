@@ -179,9 +179,12 @@ function buildEmailLookup(ss, config) {
   
   var maxCol = Math.max(nameCol, parentEmailCol, studentEmailCol);
   var lastRow = emailSheet.getLastRow();
-  if (lastRow < 2) return { map: lookup, rawNames: [], sheetFound: true };
+  var headerRow = config.emailSheetHeaderRow || 1;
+  var startRow = headerRow + 1;
+  
+  if (lastRow < startRow) return { map: lookup, rawNames: [], sheetFound: true };
 
-  var data = emailSheet.getRange(2, 1, lastRow - 1, maxCol).getValues();
+  var data = emailSheet.getRange(startRow, 1, lastRow - startRow + 1, maxCol).getValues();
   var rawNames = [];
 
   for (var i = 0; i < data.length; i++) {
@@ -1086,30 +1089,58 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
       };
     }
     
-    var sheetName = emailSheet.getName();
-    var headers = emailSheet.getRange(1, 1, 1, Math.min(emailSheet.getLastColumn(), 26)).getValues()[0];
+    var maxSearchRows = Math.min(emailSheet.getLastRow(), 5);
+    if (maxSearchRows < 1) maxSearchRows = 1;
+    var allHeaders = emailSheet.getRange(1, 1, maxSearchRows, Math.min(emailSheet.getLastColumn(), 26)).getValues();
     
     var nameCol = '', parentEmailCol = '', studentEmailCol = '';
+    var headerRow = 1;
+    var foundHeaders = [];
+
+    // Find which row looks most like a header row
+    for (var r = 0; r < allHeaders.length; r++) {
+      var rowHeaders = allHeaders[r];
+      var hasEmailWord = false;
+      var hasNameWord = false;
+      
+      for (var j = 0; j < rowHeaders.length; j++) {
+         var h = String(rowHeaders[j]).toLowerCase();
+         if (h.indexOf('email') > -1 || h.indexOf('e-mail') > -1) hasEmailWord = true;
+         if (h.indexOf('name') > -1 || h.indexOf('student') > -1 || h.indexOf('fellow') > -1) hasNameWord = true;
+      }
+      
+      if (hasEmailWord && hasNameWord) {
+        foundHeaders = rowHeaders;
+        headerRow = r + 1; // 1-indexed
+        break;
+      }
+    }
     
-    for (var j = 0; j < headers.length; j++) {
-      var h = String(headers[j]).toLowerCase();
+    if (foundHeaders.length === 0) {
+      foundHeaders = allHeaders[0];
+      headerRow = 1;
+    }
+    
+    for (var j = 0; j < foundHeaders.length; j++) {
+      var rawH = String(foundHeaders[j]).toLowerCase();
+      var h = rawH.replace(/[^a-z0-9]/g, ''); // strip spaces and special chars
       var colLetter = String.fromCharCode(65 + j); // A, B, C...
       
-      if ((h.indexOf('name') > -1 || h.indexOf('student') > -1) && !nameCol && h.indexOf('email') === -1) {
+      if ((h.indexOf('name') > -1 || h.indexOf('student') > -1 || h.indexOf('fellow') > -1) && !nameCol && h.indexOf('email') === -1) {
         nameCol = colLetter;
       }
-      if ((h.indexOf('parent') > -1 || h.indexOf('guardian') > -1) && h.indexOf('email') > -1 && !parentEmailCol) {
+      if (h.indexOf('email') > -1 && (h.indexOf('parent') > -1 || h.indexOf('guardian') > -1 || h.indexOf('mother') > -1 || h.indexOf('father') > -1 || h.indexOf('contact') > -1 || h.indexOf('pemail') > -1) && !parentEmailCol) {
         parentEmailCol = colLetter;
       }
-      if (h.indexOf('student') > -1 && h.indexOf('email') > -1 && !studentEmailCol) {
+      if (h.indexOf('email') > -1 && (h.indexOf('student') > -1 || h.indexOf('semail') > -1) && !studentEmailCol) {
         studentEmailCol = colLetter;
       }
     }
     
     // Fallbacks if columns not found explicitly
     if (!parentEmailCol) {
-      for (var j = 0; j < headers.length; j++) {
-        var h = String(headers[j]).toLowerCase();
+      for (var j = 0; j < foundHeaders.length; j++) {
+        var h = String(foundHeaders[j]).toLowerCase();
         var colLetter = String.fromCharCode(65 + j);
         if (h.indexOf('email') > -1 && colLetter !== studentEmailCol) {
           parentEmailCol = colLetter;
@@ -1119,7 +1150,8 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
     }
     
     return {
-      sheetName: sheetName,
+      sheetName: emailSheet.getName(),
+      headerRow: headerRow,
       nameCol: nameCol || 'A',
       parentEmailCol: parentEmailCol || 'B',
       studentEmailCol: studentEmailCol || '',
@@ -1145,7 +1177,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       emailSheetName: emailConfig.sheetName,
       emailSheetNameCol: emailConfig.nameCol,
       emailSheetEmailCol: emailConfig.parentEmailCol,
-      emailSheetStudentEmailCol: emailConfig.studentEmailCol
+      emailSheetStudentEmailCol: emailConfig.studentEmailCol,
+      emailSheetHeaderRow: emailConfig.headerRow
     };
     var emailLookupResult = buildEmailLookup(ss, mappedConfig);
     var emailMap = emailLookupResult.map;
