@@ -1084,7 +1084,7 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
     
     if (!emailSheet) {
       return { 
-        error: 'Could not auto-detect an Email sheet.',
+        error: "Could not auto-detect an Email sheet. If you don't have one, please create a new sheet tab and copy student names exactly as they appear in the data sheet. Add columns for 'Student Email' and 'Parent Email' to enable automated reporting.",
         allSheetNames: allSheetNames
       };
     }
@@ -1149,11 +1149,45 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
       }
     }
     
+    // If we found a name but NO emails, it's likely the wrong sheet
+    if (!parentEmailCol && !studentEmailCol) {
+      return { 
+        error: "We found student names but no email columns in this sheet. Please make sure your sheet has columns for 'Student Email' and 'Parent Email'.",
+        allSheetNames: allSheetNames
+      };
+    }
+
+    // NEW: Validate that the detected columns actually contain email-looking data
+    var hasActualEmails = false;
+    var lastRow = emailSheet.getLastRow();
+    if (lastRow > headerRow) {
+       // Check first 10 rows of data for at least one '@' symbol in the email columns
+       var checkRows = Math.min(lastRow - headerRow, 10);
+       var checkData = emailSheet.getRange(headerRow + 1, 1, checkRows, Math.min(emailSheet.getLastColumn(), 26)).getValues();
+       for (var r = 0; r < checkData.length; r++) {
+          if (parentEmailCol) {
+             var pIdx = colToIndex(parentEmailCol) - 1;
+             if (pIdx < checkData[r].length && String(checkData[r][pIdx]).indexOf('@') > -1) { hasActualEmails = true; break; }
+          }
+          if (studentEmailCol) {
+             var sIdx = colToIndex(studentEmailCol) - 1;
+             if (sIdx < checkData[r].length && String(checkData[r][sIdx]).indexOf('@') > -1) { hasActualEmails = true; break; }
+          }
+       }
+    }
+
+    if (!hasActualEmails) {
+      return { 
+        error: "We identified columns that might be for emails, but we couldn't find any actual email addresses (no '@' symbols) in the data rows. Please make sure you have selected the correct sheet.",
+        allSheetNames: allSheetNames
+      };
+    }
+    
     return {
       sheetName: emailSheet.getName(),
       headerRow: headerRow,
       nameCol: nameCol || 'A',
-      parentEmailCol: parentEmailCol || 'B',
+      parentEmailCol: parentEmailCol || '',
       studentEmailCol: studentEmailCol || '',
       allSheetNames: allSheetNames
     };
