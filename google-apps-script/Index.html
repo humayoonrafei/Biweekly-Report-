@@ -2897,6 +2897,12 @@
       window.currentStudentIndex = 0;
       window.totalStudents = report.students.length;
 
+      // Add Search Bar to top of sidebar
+      var searchDiv = document.createElement('div');
+      searchDiv.style = 'padding: 12px; border-bottom: 1px solid var(--border); background: #fcfcfc; position: sticky; top: 0; z-index: 5;';
+      searchDiv.innerHTML = '<input type="text" id="studentSearch" placeholder="🔍 Search student..." onkeyup="filterStudents(this.value)" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid var(--border); font-size:13px; outline:none; background:white;">';
+      sidebar.appendChild(searchDiv);
+
       // Add Select All to top of sidebar
       var selectAllDiv = document.createElement('div');
       selectAllDiv.style = 'padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13px; color: var(--text-secondary); cursor: pointer;';
@@ -3065,6 +3071,19 @@
 
     function prevStudent() {
       selectStudent(window.currentStudentIndex - 1);
+    }
+
+    function filterStudents(query) {
+      query = query.toLowerCase();
+      var items = document.querySelectorAll('.app-sidebar-item');
+      items.forEach(function(item) {
+        var name = item.querySelector('.si-name').innerText.toLowerCase();
+        if (name.indexOf(query) > -1) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
     }
 
     function toggleAllStudents(checked) {
