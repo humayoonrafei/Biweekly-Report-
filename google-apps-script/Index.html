@@ -48,7 +48,7 @@
     }
 
     .container {
-      max-width: 960px;
+      max-width: 1440px;
       margin: 0 auto;
       padding: 24px 24px;
     }
@@ -2897,6 +2897,12 @@
       window.currentStudentIndex = 0;
       window.totalStudents = report.students.length;
 
+      // Add Select All to top of sidebar
+      var selectAllDiv = document.createElement('div');
+      selectAllDiv.style = 'padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13px; color: var(--text-secondary); cursor: pointer;';
+      selectAllDiv.innerHTML = '<input type="checkbox" id="selectAllStudents" checked onclick="toggleAllStudents(this.checked); event.stopPropagation();"> <label for="selectAllStudents" style="cursor:pointer; margin-bottom:0;">Select All Students</label>';
+      sidebar.appendChild(selectAllDiv);
+
       report.students.forEach(function (student, index) {
         // --- 1. Create Sidebar Item ---
         var sidebarItem = document.createElement('div');
@@ -2906,8 +2912,13 @@
         
         var gpText = student.letterGrade ? student.letterGrade : 'No Grade';
         sidebarItem.innerHTML = 
+          '<div style="display:flex; align-items:center; gap:12px;">' +
+          '<input type="checkbox" class="student-select-checkbox" data-index="' + index + '" checked onclick="event.stopPropagation();">' +
+          '<div style="flex:1;">' +
           '<div class="si-name">' + student.name + '</div>' +
-          '<div class="si-meta">Grade: ' + gpText + ' &bull; Absences: ' + student.summary.totalAbsent + '</div>';
+          '<div class="si-meta">Grade: ' + gpText + ' &bull; Absences: ' + student.summary.totalAbsent + '</div>' +
+          '</div>' +
+          '</div>';
         
         sidebar.appendChild(sidebarItem);
 
@@ -3056,11 +3067,26 @@
       selectStudent(window.currentStudentIndex - 1);
     }
 
+    function toggleAllStudents(checked) {
+      var checkboxes = document.querySelectorAll('.student-select-checkbox');
+      checkboxes.forEach(function(cb) { cb.checked = checked; });
+    }
+
     function printActivityReport() {
       if (!activityReport) {
         alert('No report to print. Generate a report first.');
         return;
       }
+
+      // Filter selected students
+      var selectedCheckboxes = document.querySelectorAll('.student-select-checkbox:checked');
+      var selectedIndices = Array.from(selectedCheckboxes).map(function(cb) { return parseInt(cb.getAttribute('data-index')); });
+      
+      if (selectedIndices.length === 0) {
+        alert('Please select at least one student to print.');
+        return;
+      }
+
       var w = window.open('', '_blank');
       if (!w) { alert('Pop-up blocked! Allow pop-ups and try again.'); return; }
 
@@ -3106,10 +3132,11 @@
       html += '<title>Blueprint Activity Report</title>';
       html += '<style>' + css + '</style></head><body>';
       html += '<div class="no-print"><strong>Blueprint Activity Reports</strong> \u2014 ' +
-        r.dateRange.start + ' to ' + r.dateRange.end + ' \u00b7 ' + r.studentCount + ' students &nbsp;';
+        r.dateRange.start + ' to ' + r.dateRange.end + ' \u00b7 ' + selectedIndices.length + ' students selected &nbsp;';
       html += '<button onclick="window.print()">\ud83d\udda8\ufe0f Print / Save as PDF</button></div>';
 
-      r.students.forEach(function (student) {
+      selectedIndices.forEach(function (studentIndex) {
+        var student = r.students[studentIndex];
         var gc = gradeClass(student.letterGrade);
         var gp = student.letterGrade ? '<span class="grade-pill ' + gc + '">' + student.letterGrade + '</span>' : '';
 
@@ -3242,10 +3269,12 @@
               '</div>'
             : '<div style="color:var(--success); font-size:13px; font-weight:500; text-align:center;">✅ Columns auto-detected successfully!</div>';
 
+          var selectedCount = document.querySelectorAll('.student-select-checkbox:checked').length;
+          
           var bodyHtml = '<div class="modal-details" style="display:flex;flex-direction:column;gap:8px;">' +
             '<div class="detail-row"><span class="detail-label">Email Sheet</span><span class="detail-value">' + selectHtml + '</span></div>' +
             statusHtml +
-            '<div class="detail-row" style="margin-top:8px;"><span class="detail-label">Recipients</span><span class="detail-value">' + activityReport.students.length + ' students</span></div>' +
+            '<div class="detail-row" style="margin-top:8px;"><span class="detail-label">Recipients</span><span class="detail-value">' + selectedCount + ' students selected</span></div>' +
             '</div>' +
             '<div class="form-group" style="margin-top:16px;">' +
             '<label>Teacher Name</label>' +
@@ -3299,7 +3328,16 @@
 
       // Build payload by gathering edited comments and parent notes from the UI
       var payload = [];
-      activityReport.students.forEach(function (r, index) {
+      var selectedCheckboxes = document.querySelectorAll('.student-select-checkbox:checked');
+      var selectedIndices = Array.from(selectedCheckboxes).map(function(cb) { return parseInt(cb.getAttribute('data-index')); });
+
+      if (selectedIndices.length === 0) {
+        alert('Please select at least one student in the sidebar first.');
+        return;
+      }
+
+      selectedIndices.forEach(function (index) {
+        var r = activityReport.students[index];
         var studentCommentBox = document.querySelector('.src-comment-textarea[data-student-index="' + index + '"]');
         var parentNoteBox = document.querySelector('.src-parent-note[data-student-index="' + index + '"]');
         
