@@ -1106,6 +1106,61 @@
       }
     }
 
+    /* ─── App Layout (Master-Detail) ─── */
+    .app-layout {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      align-items: flex-start;
+    }
+    .app-sidebar {
+      flex: 0 0 260px;
+      background: var(--bg-body);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      height: 600px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .app-sidebar-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .app-sidebar-item:hover {
+      background: rgba(15, 23, 42, 0.03);
+    }
+    .app-sidebar-item.active {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+    .app-sidebar-item .si-name {
+      font-weight: 600;
+      color: var(--text-dark);
+      font-size: 14px;
+    }
+    .app-sidebar-item .si-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .app-main {
+      flex: 1;
+      min-width: 0;
+    }
+    .app-pagination {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
     /* ─── Premium Modal / Popup ─── */
     .modal-overlay {
       display: none;
@@ -1361,7 +1416,7 @@
             <div class="icon purple">📝</div>
             <span id="actReportTitle">Activity Report</span>
           </div>
-          <div class="btn-row" style="margin-bottom: 16px;">
+          <div class="btn-row" style="margin-bottom: 16px; position: sticky; top: 0; background: var(--bg-card); z-index: 10; padding: 12px 0 16px; border-bottom: 1px solid var(--border);">
             <button class="btn btn-primary" onclick="printActivityReport()">
               🖨️ Print / Save as PDF
             </button>
@@ -1369,7 +1424,13 @@
               ✉️ Send Emails to Parents
             </button>
           </div>
-          <div id="actReportBody"></div>
+          <div class="app-layout" id="actAppLayout">
+            <div class="app-sidebar" id="actAppSidebar"></div>
+            <div class="app-main">
+              <div id="actReportBody"></div>
+              <div class="app-pagination" id="actAppPagination"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2823,12 +2884,38 @@
     }
 
     function renderActivityReport(report) {
+      var sidebar = document.getElementById('actAppSidebar');
       var body = document.getElementById('actReportBody');
+      var pagination = document.getElementById('actAppPagination');
+      
+      if (!sidebar || !body || !pagination) return; // fail safe
+      
+      sidebar.innerHTML = '';
       body.innerHTML = '';
+      pagination.innerHTML = '';
 
-      report.students.forEach(function (student) {
+      window.currentStudentIndex = 0;
+      window.totalStudents = report.students.length;
+
+      report.students.forEach(function (student, index) {
+        // --- 1. Create Sidebar Item ---
+        var sidebarItem = document.createElement('div');
+        sidebarItem.className = 'app-sidebar-item';
+        sidebarItem.id = 'sidebar-item-' + index;
+        sidebarItem.onclick = function() { selectStudent(index); };
+        
+        var gpText = student.letterGrade ? student.letterGrade : 'No Grade';
+        sidebarItem.innerHTML = 
+          '<div class="si-name">' + student.name + '</div>' +
+          '<div class="si-meta">Grade: ' + gpText + ' &bull; Absences: ' + student.summary.totalAbsent + '</div>';
+        
+        sidebar.appendChild(sidebarItem);
+
+        // --- 2. Create Report Card ---
         var card = document.createElement('div');
         card.className = 'student-report-card';
+        card.id = 'report-card-' + index;
+        card.style.display = 'none'; // Hidden by default
 
         // Header
         var gradeHtml = '';
@@ -2918,6 +3005,55 @@
 
         body.appendChild(card);
       });
+
+      // --- 3. Render Pagination ---
+      pagination.innerHTML = 
+        '<button class="btn btn-secondary" id="btnPrevStudent" onclick="prevStudent()">← Previous</button>' +
+        '<span id="paginationText" style="font-weight:bold; color:var(--text-muted); padding-top:8px;"></span>' +
+        '<button class="btn btn-secondary" id="btnNextStudent" onclick="nextStudent()">Next →</button>';
+
+      // --- 4. Select First Student ---
+      if (window.totalStudents > 0) {
+        selectStudent(0);
+      }
+    }
+
+    // ─── Master-Detail Navigation Logic ───
+    function selectStudent(index) {
+      if (index < 0 || index >= window.totalStudents) return;
+      
+      // Hide all cards, deselect all sidebar items
+      for (var i = 0; i < window.totalStudents; i++) {
+        var card = document.getElementById('report-card-' + i);
+        var item = document.getElementById('sidebar-item-' + i);
+        if (card) card.style.display = 'none';
+        if (item) item.classList.remove('active');
+      }
+
+      // Show selected card, select sidebar item
+      var activeCard = document.getElementById('report-card-' + index);
+      var activeItem = document.getElementById('sidebar-item-' + index);
+      if (activeCard) activeCard.style.display = 'block';
+      if (activeItem) activeItem.classList.add('active');
+      
+      // Scroll sidebar so active item is visible
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      // Update Pagination state
+      window.currentStudentIndex = index;
+      document.getElementById('paginationText').innerText = (index + 1) + ' of ' + window.totalStudents;
+      document.getElementById('btnPrevStudent').disabled = (index === 0);
+      document.getElementById('btnNextStudent').disabled = (index === window.totalStudents - 1);
+    }
+
+    function nextStudent() {
+      selectStudent(window.currentStudentIndex + 1);
+    }
+
+    function prevStudent() {
+      selectStudent(window.currentStudentIndex - 1);
     }
 
     function printActivityReport() {
