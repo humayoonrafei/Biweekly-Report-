@@ -1780,6 +1780,8 @@
 
     // ─── Handle Paste on Spreadsheet ID fields ───
     function handleSpreadsheetPaste(inputId) {
+      // Clear the dedup cache immediately on manual paste to guarantee a connection trigger!
+      delete _lastLoadedSheetId[inputId];
       // Delay so the pasted value is committed to the input before we read it
       setTimeout(function () { loadSheetNames(inputId); }, 150);
     }
@@ -1847,6 +1849,8 @@
         .withSuccessHandler(function (result) {
           hideLoading();
           if (!result || result.error) {
+            // Clear dedup cache on error so they can retry
+            delete _lastLoadedSheetId[inputId];
             ['actSheetName', 'actGradesSheet', 'actEmailSheetName'].forEach(function (id) {
               var s = document.getElementById(id);
               if (s) s.innerHTML = '<option value="" disabled selected>⚠️ ' + (result ? result.error : 'Failed') + '</option>';
@@ -2005,9 +2009,11 @@
         })
         .withFailureHandler(function (err) {
           hideLoading();
+          // Clear dedup cache on failure so they can retry
+          delete _lastLoadedSheetId[inputId];
           showStatus('actConfigStatus', 'error', '❌ ' + err.message);
         })
-        .initializeSpreadsheet(ssId);
+        .initializeSpreadsheet(cleanId);
     }
 
     // Legacy fallback for non-activity inputs (Comm tab etc.)
