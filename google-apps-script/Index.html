@@ -1786,6 +1786,10 @@
 
     // ─── Load Sheet Names into Dropdowns ───
     function loadSheetNames(inputId) {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        setTimeout(function () { loadSheetNames(inputId); }, 200);
+        return;
+      }
       var rawId = document.getElementById(inputId).value.trim();
 
       // If the field was cleared, reset the dedup cache so the next paste re-triggers
@@ -3032,6 +3036,10 @@
     }
 
     function loadActivityDates(prefix) {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        setTimeout(function () { loadActivityDates(prefix); }, 200);
+        return;
+      }
       var p = prefix || 'act';
       var config = getActivityConfig(p);
       if (!config.spreadsheetId) {
