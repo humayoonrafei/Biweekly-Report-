@@ -3203,23 +3203,78 @@
 
     function autoLoadConfig() {
       // Step A: Load instantly from browser localStorage for zero-latency pre-fill
+      var hasCached = false;
       try {
         var cached = localStorage.getItem('activity_config');
         if (cached) {
           var config = JSON.parse(cached);
-          applyLoadedConfig(config);
+          if (config && config.spreadsheetId) {
+            hasCached = true;
+            // Freeze screen immediately because we are connecting to a spreadsheet
+            showLoading([
+              '🔗 Connecting to spreadsheet…',
+              '📋 Reading sheet tabs…',
+              '👥 Loading student fellows…',
+              '⏳ Almost done…'
+            ]);
+            applyLoadedConfig(config);
+          }
         }
       } catch (e) {
         console.warn('localStorage read failed', e);
       }
 
       // Step B: Fetch latest master copy from Google cloud properties service to sync
-      google.script.run
-        .withSuccessHandler(function (config) {
-          if (!config) return;
-          applyLoadedConfig(config);
-        })
-        .loadUserPreference('activity_config');
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (config) {
+            if (config && config.spreadsheetId) {
+              if (!hasCached) {
+                showLoading([
+                  '🔗 Connecting to spreadsheet…',
+                  '📋 Reading sheet tabs…',
+                  '👥 Loading student fellows…',
+                  '⏳ Almost done…'
+                ]);
+              }
+              applyLoadedConfig(config);
+            } else {
+              if (!hasCached) hideLoading();
+            }
+          })
+          .withFailureHandler(function() {
+            if (!hasCached) hideLoading();
+          })
+          .loadUserPreference('activity_config');
+      } else {
+        // Fallback retry if Google script runner isn't fully ready yet on page load
+        setTimeout(function() {
+          if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+              .withSuccessHandler(function (config) {
+                if (config && config.spreadsheetId) {
+                  if (!hasCached) {
+                    showLoading([
+                      '🔗 Connecting to spreadsheet…',
+                      '📋 Reading sheet tabs…',
+                      '👥 Loading student fellows…',
+                      '⏳ Almost done…'
+                    ]);
+                  }
+                  applyLoadedConfig(config);
+                } else {
+                  if (!hasCached) hideLoading();
+                }
+              })
+              .withFailureHandler(function() {
+                if (!hasCached) hideLoading();
+              })
+              .loadUserPreference('activity_config');
+          } else {
+            if (!hasCached) hideLoading();
+          }
+        }, 300);
+      }
 
       // Step C: Support loading via URL query parameters (e.g., ?spreadsheetId=... or ?id=...)
       try {
@@ -3229,9 +3284,35 @@
             var urlId = params.spreadsheetId || params.id;
             if (urlId) {
               var cleanUrlId = extractSpreadsheetId(urlId);
+              showLoading([
+                '🔗 Connecting to spreadsheet…',
+                '📋 Reading sheet tabs…',
+                '👥 Loading student fellows…',
+                '⏳ Almost done…'
+              ]);
               applyLoadedConfig({ spreadsheetId: cleanUrlId });
             }
           });
+        } else {
+          // Fallback retry if URL API isn't fully ready yet on page load
+          setTimeout(function() {
+            if (typeof google !== 'undefined' && google.script && google.script.url) {
+              google.script.url.getLocation(function (location) {
+                var params = location.parameter || {};
+                var urlId = params.spreadsheetId || params.id;
+                if (urlId) {
+                  var cleanUrlId = extractSpreadsheetId(urlId);
+                  showLoading([
+                    '🔗 Connecting to spreadsheet…',
+                    '📋 Reading sheet tabs…',
+                    '👥 Loading student fellows…',
+                    '⏳ Almost done…'
+                  ]);
+                  applyLoadedConfig({ spreadsheetId: cleanUrlId });
+                }
+              });
+            }
+          }, 300);
         }
       } catch (e) {
         console.warn('Failed to retrieve URL location parameters', e);
