@@ -71,7 +71,8 @@
 
     .app-footer .footer-title {
       font-weight: 800;
-      color: #0f172a; /* Deep visible navy */
+      color: #0f172a;
+      /* Deep visible navy */
       font-size: 13px;
       margin-bottom: 2px;
       text-transform: uppercase;
@@ -1044,7 +1045,8 @@
       flex: 1;
     }
 
-    .src-comment-textarea, .src-parent-textarea {
+    .src-comment-textarea,
+    .src-parent-textarea {
       font-size: 13px;
       line-height: 1.65;
       color: var(--text-primary);
@@ -1062,7 +1064,8 @@
       margin-bottom: 8px;
     }
 
-    .src-comment-textarea:focus, .src-parent-textarea:focus {
+    .src-comment-textarea:focus,
+    .src-parent-textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
@@ -1129,7 +1132,8 @@
       display: flex;
       gap: 16px;
       margin-top: 16px;
-      align-items: stretch; /* Match sidebar height to main content */
+      align-items: stretch;
+      /* Match sidebar height to main content */
     }
 
     .app-sidebar {
@@ -1226,8 +1230,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* ─── Premium Loading Overlay ─── */
@@ -1255,8 +1266,13 @@
     }
 
     @keyframes overlayIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .loading-logo-box {
@@ -1307,16 +1323,23 @@
     }
 
     @keyframes circulateSwirl {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     /* ─── Background Ripple (Synchronized) ─── */
-    .loading-logo-box::before, .loading-logo-box::after {
+    .loading-logo-box::before,
+    .loading-logo-box::after {
       content: '';
       position: absolute;
       top: 50%;
-      left: 45px; /* Center of the swirl */
+      left: 45px;
+      /* Center of the swirl */
       width: 40px;
       height: 40px;
       background: rgba(107, 184, 201, 0.15);
@@ -1331,8 +1354,15 @@
     }
 
     @keyframes blueRipple {
-      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
-      100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+      0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.6;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(5);
+        opacity: 0;
+      }
     }
 
     .loading-text {
@@ -1340,7 +1370,7 @@
       font-size: 18px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .loading-spinner-ring {
@@ -1427,9 +1457,11 @@
     .modal-body::-webkit-scrollbar {
       width: 6px;
     }
+
     .modal-body::-webkit-scrollbar-track {
       background: transparent;
     }
+
     .modal-body::-webkit-scrollbar-thumb {
       background: rgba(0, 0, 0, 0.15);
       border-radius: 3px;
@@ -1507,46 +1539,56 @@
         <div id="dashboardHeader" style="margin-bottom: 0;">
           <div id="actConfigContent" style="transition: all 0.3s ease; padding: 20px 24px; position: relative;">
             <!-- Subtle Branded Logo Embed -->
-            <div class="logo-container" style="position: absolute; top: 25px; right: 40px; transform: scale(0.5); transform-origin: top right; opacity: 0.7; pointer-events: none;">
-               <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" class="logo-base" alt="Blueprint Logo">
-               <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" class="logo-swirl" alt="Rotating Swirl">
+            <div class="logo-container"
+              style="position: absolute; top: 25px; right: 40px; transform: scale(0.5); transform-origin: top right; opacity: 0.7; pointer-events: none;">
+              <img
+                src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png"
+                class="logo-base" alt="Blueprint Logo">
+              <img
+                src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png"
+                class="logo-swirl" alt="Rotating Swirl">
             </div>
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-               <div class="icon blue" style="width: 32px; height: 32px; font-size: 16px;">📊</div>
-               <span style="font-weight: 800; font-size: 16px;">Report Configuration</span>
+              <div class="icon blue" style="width: 32px; height: 32px; font-size: 16px;">📊</div>
+              <span style="font-weight: 800; font-size: 16px;">Report Configuration</span>
             </div>
             <div class="form-row" style="grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px;">
               <div class="form-group">
                 <label style="font-size: 11px;">Tutor Name (Email Signature)</label>
-                <input type="text" id="actTutorName" placeholder="e.g. Mr. Smith" 
-                  onchange="autoSaveConfig()" style="height: 38px;">
+                <input type="text" id="actTutorName" placeholder="e.g. Mr. Smith" onchange="autoSaveConfig()"
+                  style="height: 38px;">
                 <input type="hidden" id="actClassName"> <!-- Hidden but preserved for logic -->
               </div>
             </div>
 
-            <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-row">
               <div class="form-group">
-                <label style="font-size: 11px;">Spreadsheet ID</label>
+                <label>Spreadsheet ID</label>
                 <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
-                  oninput="loadSheetNames('actSpreadsheetId')" onpaste="setTimeout(function(){loadSheetNames('actSpreadsheetId')},50)" 
-                  onchange="autoSaveConfig()" style="height: 38px;">
+                  onpaste="handleSpreadsheetPaste('actSpreadsheetId')" oninput="loadSheetNames('actSpreadsheetId')"
+                  onblur="loadSheetNames('actSpreadsheetId')">
+                <span class="hint">Same spreadsheet, different tab</span>
               </div>
               <div class="form-group">
-                <label style="font-size: 11px;">Activity Sheet Tab</label>
-                <select id="actSheetName" onchange="loadActGradesHeaders(); loadActivityFellows(); autoSaveConfig(); loadActivityDates('act');" style="height: 38px;">
-                  <option value="" disabled selected>— select —</option>
+                <label>Activity Sheet Tab</label>
+                <select id="actSheetName" onchange="loadGradesSheetHeaders(); loadActivityFellows();">
+                  <option value="" disabled selected>— enter Spreadsheet ID first —</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label style="font-size: 11px;">Email Sheet Tab</label>
-                <select id="actEmailSheetName" onchange="loadEmailConfig(); autoSaveConfig();" style="height: 38px;">
-                  <option value="" disabled selected>— select —</option>
-                </select>
-                <div id="emailConfigStatus" style="font-size: 10px; margin-top: 2px; font-weight: 600;"></div>
               </div>
             </div>
 
-            <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: flex-end;">
+            <div class="form-row single">
+              <div class="form-group">
+                <label>Fellow Filter</label>
+                <select id="actFellowFilter">
+                  <option value="">All Fellows</option>
+                </select>
+                <span id="actFellowHint" class="hint">Generate report for all or one fellow</span>
+              </div>
+            </div>
+
+            <div class="form-row"
+              style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: flex-end;">
               <div class="form-group" style="display: none;">
                 <label style="font-size: 11px;">Fellow Filter</label>
                 <select id="actFellowFilter" onchange="autoSaveConfig()" style="height: 38px;">
@@ -1560,20 +1602,23 @@
                 </select>
               </div>
               <div class="form-group">
-                <button class="btn btn-primary" id="loadDatesBtn" onclick="loadActivityDates()" style="height: 38px; width: 100%; font-size: 13px; padding: 0;">
+                <button class="btn btn-primary" id="loadDatesBtn" onclick="loadActivityDates()"
+                  style="height: 38px; width: 100%; font-size: 13px; padding: 0;">
                   📅 Load Available Dates
                 </button>
               </div>
             </div>
 
             <!-- Grades Column Mapping (collapsible) -->
-            <div class="columns-toggle" id="gradesToggleRow" onclick="toggleGradesConfig()" style="margin-top: 4px; font-size: 13px; display: none;">
+            <div class="columns-toggle" id="gradesToggleRow" onclick="toggleGradesConfig()"
+              style="margin-top: 4px; font-size: 13px; display: none;">
               <span class="arrow" id="gradesArrow">▶</span>
               Advanced Column Mapping <span id="gradeColMapStatus"
                 style="font-size:10px;color:var(--success);margin-left:6px;"></span>
             </div>
 
-            <div class="columns-grid" id="gradesGrid" style="display:none; border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #f8fafc; margin-top: 8px; gap: 12px;">
+            <div class="columns-grid" id="gradesGrid"
+              style="display:none; border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #f8fafc; margin-top: 8px; gap: 12px;">
               <div class="form-group">
                 <label style="font-size: 11px;">Student Name Column</label>
                 <select id="actGradesNameCol" style="height: 34px; font-size: 12px;">
@@ -1598,12 +1643,15 @@
         </div>
 
         <!-- ─── Dashboard Section: Date Range ─── -->
-        <div class="section-hidden" id="actDateSection" style="padding: 24px 0; border-bottom: 1px solid var(--border); background: rgba(248, 250, 252, 0.5);">
-          <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <div class="section-hidden" id="actDateSection"
+          style="padding: 24px 0; border-bottom: 1px solid var(--border); background: rgba(248, 250, 252, 0.5);">
+          <div
+            style="font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
             <div class="icon green" style="width: 32px; height: 32px; font-size: 16px;">📅</div>
             Step 2: Select Date Range
           </div>
-          <div class="date-picker-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: flex-end;">
+          <div class="date-picker-row"
+            style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: flex-end;">
             <div class="form-group">
               <label>Start Date</label>
               <select id="actStartDate" style="height: 48px;"></select>
@@ -1613,7 +1661,8 @@
               <select id="actEndDate" style="height: 48px;"></select>
             </div>
             <div class="form-group">
-              <button class="btn btn-success" id="genReportBtn" onclick="generateActivityReport()" style="height: 48px; padding: 0 40px;">
+              <button class="btn btn-success" id="genReportBtn" onclick="generateActivityReport()"
+                style="height: 48px; padding: 0 40px;">
                 📊 2. Generate Report
               </button>
             </div>
@@ -1624,49 +1673,63 @@
         <!-- ─── Dashboard Section: Report Results ─── -->
         <div class="section-hidden" id="actReportSection" style="padding-top: 12px; position: relative;">
           <!-- Consolidated Header & Action Bar -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 10px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 10px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-               <div class="icon purple" style="width: 28px; height: 28px; font-size: 14px;">📝</div>
-               <span id="actReportTitle" style="font-weight: 800; font-size: 15px;">Activity Report Results</span>
-               
-               <div style="display: flex; gap: 6px; margin-left: 12px;">
-                 <button class="btn btn-purple btn-sm" onclick="printActivityReport()" style="font-size: 11px; padding: 4px 10px;">
-                   🖨️ Print PDF
-                 </button>
-                 <span style="font-size: 10px; color: var(--text-secondary); font-weight: 700; margin-left: 10px; text-transform: uppercase; white-space: nowrap;">Send To:</span>
-                  <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('both')" style="font-size: 11px; padding: 4px 12px;">
-                   ✉️ Both
-                 </button>
-                 <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('parents')" style="font-size: 11px; padding: 4px 8px;">
-                   👨‍👩‍👧 Parents
-                 </button>
-                 <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('students')" style="font-size: 11px; padding: 4px 8px;">
-                   🎓 Students
-                 </button>
-               </div>
+              <div class="icon purple" style="width: 28px; height: 28px; font-size: 14px;">📝</div>
+              <span id="actReportTitle" style="font-weight: 800; font-size: 15px;">Activity Report Results</span>
+
+              <div style="display: flex; gap: 6px; margin-left: 12px;">
+                <button class="btn btn-purple btn-sm" onclick="printActivityReport()"
+                  style="font-size: 11px; padding: 4px 10px;">
+                  🖨️ Print PDF
+                </button>
+                <span
+                  style="font-size: 10px; color: var(--text-secondary); font-weight: 700; margin-left: 10px; text-transform: uppercase; white-space: nowrap;">Send
+                  To:</span>
+                <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('both')"
+                  style="font-size: 11px; padding: 4px 12px;">
+                  ✉️ Both
+                </button>
+                <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('parents')"
+                  style="font-size: 11px; padding: 4px 8px;">
+                  👨‍👩‍👧 Parents
+                </button>
+                <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('students')"
+                  style="font-size: 11px; padding: 4px 8px;">
+                  🎓 Students
+                </button>
+              </div>
             </div>
-            
-            <button class="btn btn-sm btn-secondary" id="btnToggleConfig" onclick="toggleDashboardConfig()" style="font-size: 11px; border-radius: 20px; display: none;">
+
+            <button class="btn btn-sm btn-secondary" id="btnToggleConfig" onclick="toggleDashboardConfig()"
+              style="font-size: 11px; border-radius: 20px; display: none;">
               ⚙️ Edit Settings
             </button>
           </div>
 
           <!-- Global Class Message (Collapsible) -->
-          <details id="actGlobalSettings" style="margin-bottom: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 0; overflow: hidden; display: none;">
-            <summary style="padding: 10px 16px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); list-style: none; display: flex; align-items: center; gap: 8px;">
-               <span style="transition: transform 0.2s;" class="details-arrow">▶</span>
-               📧 Add Global Email Note for entire class (Optional)
+          <details id="actGlobalSettings"
+            style="margin-bottom: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 0; overflow: hidden; display: none;">
+            <summary
+              style="padding: 10px 16px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); list-style: none; display: flex; align-items: center; gap: 8px;">
+              <span style="transition: transform 0.2s;" class="details-arrow">▶</span>
+              📧 Add Global Email Note for entire class (Optional)
             </summary>
             <div style="padding: 0 16px 12px;">
-              <textarea id="actGlobalMessage" placeholder="Type a message here that belongs to this entire class..." style="min-height: 60px; border-radius: 8px; padding: 10px; font-size: 13px; border: 1px solid var(--border); width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
+              <textarea id="actGlobalMessage" placeholder="Type a message here that belongs to this entire class..."
+                style="min-height: 60px; border-radius: 8px; padding: 10px; font-size: 13px; border: 1px solid var(--border); width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
             </div>
           </details>
 
-          <div class="app-layout" id="actAppLayout" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: white;">
-            <div class="app-sidebar" id="actAppSidebar" style="border: none; border-right: 1px solid var(--border); border-radius: 0; background: #fcfcfc;"></div>
+          <div class="app-layout" id="actAppLayout"
+            style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: white;">
+            <div class="app-sidebar" id="actAppSidebar"
+              style="border: none; border-right: 1px solid var(--border); border-radius: 0; background: #fcfcfc;"></div>
             <div class="app-main" style="padding: 0;">
               <div id="actReportBody" style="padding: 16px;"></div>
-              <div class="app-pagination" id="actAppPagination" style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid var(--border);"></div>
+              <div class="app-pagination" id="actAppPagination"
+                style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid var(--border);"></div>
             </div>
           </div>
         </div>
@@ -1698,9 +1761,11 @@
     <div class="loading-logo-box">
       <div class="logo-container">
         <!-- Static Base Logo -->
-        <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" class="logo-base" alt="Blueprint Logo">
+        <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png"
+          class="logo-base" alt="Blueprint Logo">
         <!-- Rotating Swirl Only -->
-        <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png" class="logo-swirl" alt="Rotating Swirl">
+        <img src="https://blueprintschools.org/wp-content/uploads/2017/09/Blueprint-Horizontal-Logo-Large-768x244.png"
+          class="logo-swirl" alt="Rotating Swirl">
       </div>
     </div>
     <div class="loading-spinner-ring"></div>
@@ -1711,43 +1776,50 @@
     // ─── State ───
     var generatedResults = [];
     var teacherEmail = '';
-    var _savedStudentLangs = {};
+    var _lastLoadedSheetId = {};  // track per input so we don't re-fetch the same ID
 
-    function getSavedLang(student) {
-      var email = student.email || student.parentEmail || student.studentEmail || '';
-      return _savedStudentLangs[email] || 'en';
+    // ─── Handle Paste on Spreadsheet ID fields ───
+    function handleSpreadsheetPaste(inputId) {
+      // Delay so the pasted value is committed to the input before we read it
+      setTimeout(function () { loadSheetNames(inputId); }, 150);
     }
 
-    function updateStudentLang(email, lang) {
-      if (!email) return;
-      _savedStudentLangs[email] = lang;
-      google.script.run.saveStudentLanguage(email, lang);
-    }
-    // ─── ONE-SHOT Spreadsheet Initialization (debounced) ───
-    var _initTimer = null;
+    // ─── Load Sheet Names into Dropdowns ───
     function loadSheetNames(inputId) {
-      clearTimeout(_initTimer);
-      _initTimer = setTimeout(function() { _doInit(inputId); }, 500);
-    }
+      var rawId = document.getElementById(inputId).value.trim();
 
-    function _doInit(inputId) {
-      var input = document.getElementById(inputId);
-      if (!input) return;
-      var rawVal = input.value.trim();
-      var ssId = extractSpreadsheetId(rawVal);
-      if (!ssId) return;
+      // If the field was cleared, reset the dedup cache so the next paste re-triggers
+      if (!rawId) {
+        delete _lastLoadedSheetId[inputId];
+        return;
+      }
 
-      // Visual Snap: clean URL to bare ID immediately
-      if (rawVal.includes('/d/')) input.value = ssId;
+      var cleanId = extractSpreadsheetId(rawId);
+      if (!cleanId) return;
 
-      // Only handle actSpreadsheetId for now (other modes keep old behavior)
-      if (inputId !== 'actSpreadsheetId') {
-        _legacyLoadSheetNames(inputId, ssId);
+      // Update the field to show the clean ID
+      if (cleanId !== rawId) {
+        document.getElementById(inputId).value = cleanId;
+      }
+
+      // Don't re-fetch if we already loaded this ID for this input
+      if (_lastLoadedSheetId[inputId] === cleanId) return;
+      _lastLoadedSheetId[inputId] = cleanId;
+
+      // Determine which set of dropdowns to populate
+      var dropdowns;
+      if (inputId === 'spreadsheetId') {
+        dropdowns = ['sheetName', 'emailSheetName'];
+      } else if (inputId === 'actSpreadsheetId') {
+        dropdowns = ['actSheetName', 'actGradesSheet'];
+      } else if (inputId === 'commSpreadsheetId') {
+        dropdowns = ['commSheetName', 'commGradesSheet', 'emailSheetName'];
+      } else {
         return;
       }
 
       // Show loading state across all three dropdowns
-      ['actSheetName', 'actGradesSheet', 'actEmailSheetName'].forEach(function(id) {
+      ['actSheetName', 'actGradesSheet', 'actEmailSheetName'].forEach(function (id) {
         var sel = document.getElementById(id);
         if (sel) sel.innerHTML = '<option value="" disabled selected>⏳ Loading...</option>';
       });
@@ -1762,16 +1834,16 @@
 
 
       google.script.run
-        .withSuccessHandler(function(langs) {
-           _savedStudentLangs = langs || {};
+        .withSuccessHandler(function (langs) {
+          _savedStudentLangs = langs || {};
         })
         .getSavedStudentLanguages();
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           hideLoading();
           if (!result || result.error) {
-            ['actSheetName','actGradesSheet','actEmailSheetName'].forEach(function(id){
+            ['actSheetName', 'actGradesSheet', 'actEmailSheetName'].forEach(function (id) {
               var s = document.getElementById(id);
               if (s) s.innerHTML = '<option value="" disabled selected>⚠️ ' + (result ? result.error : 'Failed') + '</option>';
             });
@@ -1780,32 +1852,32 @@
 
           // ── 1. Populate all tab dropdowns ──
           var dropdowns = {
-            actSheetName:      { optional: false, detect: function(n){ return n.includes('activity') || n.includes('data'); } },
-            actGradesSheet:    { optional: true,  detect: function(n){ return n.includes('grade') || n.includes('score'); } },
-            actEmailSheetName: { optional: true,  detect: function(n){ return n.includes('email') || n.includes('contact') || n.includes('parent') || n.includes('directory') || n.includes('roster') || n.includes('student'); } }
+            actSheetName: { optional: false, detect: function (n) { return n.includes('activity') || n.includes('data'); } },
+            actGradesSheet: { optional: true, detect: function (n) { return n.includes('grade') || n.includes('score'); } },
+            actEmailSheetName: { optional: true, detect: function (n) { return n.includes('email') || n.includes('contact') || n.includes('parent') || n.includes('directory') || n.includes('roster') || n.includes('student'); } }
           };
-          Object.keys(dropdowns).forEach(function(selId) {
+          Object.keys(dropdowns).forEach(function (selId) {
             var sel = document.getElementById(selId);
             if (!sel) return;
             var cfg = dropdowns[selId];
             var opts = '<option value="" ' + (cfg.optional ? '' : 'disabled') + ' selected>' + (cfg.optional ? '— none —' : '— select —') + '</option>';
-            result.names.forEach(function(name) { opts += '<option value="' + name + '">' + name + '</option>'; });
+            result.names.forEach(function (name) { opts += '<option value="' + name + '">' + name + '</option>'; });
             sel.innerHTML = opts;
             // Auto-select detected tab
-            result.names.forEach(function(name) { if (cfg.detect(name.toLowerCase())) sel.value = name; });
+            result.names.forEach(function (name) { if (cfg.detect(name.toLowerCase())) sel.value = name; });
           });
 
           // ── 2. Apply detected values from backend ──
-          if (result.detectedActivity) document.getElementById('actSheetName').value      = result.detectedActivity;
-          if (result.detectedGrades)   document.getElementById('actGradesSheet').value    = result.detectedGrades;
-          if (result.detectedEmail)    document.getElementById('actEmailSheetName').value = result.detectedEmail;
+          if (result.detectedActivity) document.getElementById('actSheetName').value = result.detectedActivity;
+          if (result.detectedGrades) document.getElementById('actGradesSheet').value = result.detectedGrades;
+          if (result.detectedEmail) document.getElementById('actEmailSheetName').value = result.detectedEmail;
 
           // ── 2b. Override with Saved Config if exists (User Preference) ──
           if (window._savedConfig) {
             var sc = window._savedConfig;
-            if (sc.activitySheet) document.getElementById('actSheetName').value      = sc.activitySheet;
-            if (sc.gradesSheet)   document.getElementById('actGradesSheet').value    = sc.gradesSheet;
-            if (sc.emailSheet)    document.getElementById('actEmailSheetName').value = sc.emailSheet;
+            if (sc.activitySheet) document.getElementById('actSheetName').value = sc.activitySheet;
+            if (sc.gradesSheet) document.getElementById('actGradesSheet').value = sc.gradesSheet;
+            if (sc.emailSheet) document.getElementById('actEmailSheetName').value = sc.emailSheet;
           }
 
           // ── 3. Populate Fellows dropdown ──
@@ -1817,7 +1889,7 @@
             var prevFellow = fellowSel.value;
             fellowSel.disabled = false;
             fellowSel.innerHTML = '<option value="">All Fellows</option>';
-            (result.fellows || []).forEach(function(f) {
+            (result.fellows || []).forEach(function (f) {
               fellowSel.innerHTML += '<option value="' + f + '">' + f + '</option>';
             });
             if (prevFellow) fellowSel.value = prevFellow;
@@ -1850,10 +1922,10 @@
             // Sample data fallbacks
             if (!nameCol) {
               var bestScore = 0;
-              gradeHeaders.forEach(function(hd) {
+              gradeHeaders.forEach(function (hd) {
                 var samples = gradeSampleData[hd.col] || [];
                 var score = 0;
-                samples.forEach(function(val) {
+                samples.forEach(function (val) {
                   if (/,/.test(val) && /[a-zA-Z]/.test(val)) score += 3;
                   else if (/\s/.test(val) && /^[a-zA-Z\s\-']+$/.test(val)) score += 2;
                   else if (/^[a-zA-Z\-']+$/.test(val) && val.length > 2) score += 1;
@@ -1869,7 +1941,7 @@
             // Grade dropdown
             var gradeSel = document.getElementById('actGradesGradeCol');
             gradeSel.innerHTML = '<option value="">— select period —</option>';
-            gradeHeaders.forEach(function(hd) {
+            gradeHeaders.forEach(function (hd) {
               var txt = hd.header.toLowerCase();
               if (/letter\s*grade/i.test(txt) || /\bgrade\b/.test(txt)) {
                 var opt = document.createElement('option');
@@ -1879,7 +1951,7 @@
               }
             });
             if (gradeSel.options.length === 1) { // fallback: show all
-              gradeHeaders.forEach(function(hd) {
+              gradeHeaders.forEach(function (hd) {
                 var opt = document.createElement('option');
                 opt.value = hd.col;
                 opt.textContent = hd.topHeader ? hd.topHeader + ' – ' + hd.header : hd.header;
@@ -1897,7 +1969,7 @@
             document.getElementById('gradesToggleRow').style.display = 'flex';
             document.getElementById('gradeColMapStatus').textContent =
               (nameDetected && gradeDetected) ? '✓ 2/2 auto-detected' :
-              (nameDetected || gradeDetected) ? '✓ 1/2 auto-detected' : '⚠ select manually';
+                (nameDetected || gradeDetected) ? '✓ 1/2 auto-detected' : '⚠ select manually';
           }
 
           // ── 5. Email Config ──
@@ -1914,7 +1986,7 @@
           }
 
           showStatus('actConfigStatus', 'success', '✅ Spreadsheet connected — all settings loaded.');
-          
+
           // Save the configuration so it's persisted immediately
           autoSaveConfig();
 
@@ -1927,7 +1999,7 @@
             loadActivityDates('act');
           }
         })
-        .withFailureHandler(function(err) {
+        .withFailureHandler(function (err) {
           hideLoading();
           showStatus('actConfigStatus', 'error', '❌ ' + err.message);
         })
@@ -1939,25 +2011,25 @@
       var dropdowns;
       if (inputId === 'commSpreadsheetId') dropdowns = ['commSheetName', 'commGradesSheet', 'commEmailSheetName'];
       else dropdowns = ['sheetName', 'emailSheetName'];
-      dropdowns.forEach(function(selId) {
+      dropdowns.forEach(function (selId) {
         var sel = document.getElementById(selId);
         if (sel) sel.innerHTML = '<option value="" disabled selected>Loading...</option>';
       });
       showLoading('Fetching tabs…');
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           hideLoading();
           if (!result || result.error) return;
-          dropdowns.forEach(function(selId) {
+          dropdowns.forEach(function (selId) {
             var sel = document.getElementById(selId);
             if (!sel) return;
             var isOpt = (selId === 'emailSheetName' || selId === 'commGradesSheet' || selId === 'commEmailSheetName');
             var opts = '<option value="" ' + (isOpt ? '' : 'disabled') + ' selected>' + (isOpt ? '— none —' : '— select —') + '</option>';
-            result.names.forEach(function(name) { opts += '<option value="' + name + '">' + name + '</option>'; });
+            result.names.forEach(function (name) { opts += '<option value="' + name + '">' + name + '</option>'; });
             sel.innerHTML = opts;
           });
         })
-        .withFailureHandler(function(err) { hideLoading(); })
+        .withFailureHandler(function (err) { hideLoading(); })
         .getSheetNames(ssId);
     }
 
@@ -2122,7 +2194,7 @@
       statusDiv.style.color = 'var(--text-muted)';
 
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           autoDetectedEmailConfig = result;
           if (result.error) {
             statusDiv.textContent = '⚠️ Columns missing';
@@ -2323,14 +2395,14 @@
           }
 
           populateHeaderSelect('actGradesNameCol', result.headers, nameCol);
-          
+
           // Custom population for Grade Column -> Reporting Period
           // Each option is labelled with its topHeader (section) for clarity
           var gradeSel = document.getElementById('actGradesGradeCol');
           gradeSel.innerHTML = '<option value="">— select period —</option>';
           var addedPeriods = {};
           var gradeColsList = [];
-          
+
           for (var k = 0; k < result.headers.length; k++) {
             var hd = result.headers[k];
             var txt = hd.header.toLowerCase();
@@ -2338,9 +2410,9 @@
               gradeColsList.push(hd);
             }
           }
-          
+
           if (gradeColsList.length === 0) gradeColsList = result.headers; // fallback: show all columns
-          
+
           gradeColsList.forEach(function (h) {
             var opt = document.createElement('option');
             opt.value = h.col;
@@ -2363,7 +2435,7 @@
             }
             // If no match (period label mismatch), add and select it explicitly
             if (!matched) {
-              var fallbackHdr = result.headers.find ? result.headers.find(function(hh) { return hh.col === gradeCol; }) : null;
+              var fallbackHdr = result.headers.find ? result.headers.find(function (hh) { return hh.col === gradeCol; }) : null;
               if (fallbackHdr) {
                 var opt2 = document.createElement('option');
                 opt2.value = fallbackHdr.col;
@@ -2378,10 +2450,10 @@
           var nameColVal = document.getElementById('actGradesNameCol').value;
           var gradeColVal = document.getElementById('actGradesGradeCol').value;
           var detectedCount = (nameColVal ? 1 : 0) + (gradeColVal ? 1 : 0);
-          
+
           // Always show the Advanced Mapping toggle when a grades sheet is configured
           document.getElementById('gradesToggleRow').style.display = 'flex';
-          
+
           if (detectedCount > 0) {
             document.getElementById('gradeColMapStatus').textContent = '✓ ' + detectedCount + '/2 auto-detected';
           } else {
@@ -2907,10 +2979,10 @@
       var content = document.getElementById('actConfigContent');
       var dateSection = document.getElementById('actDateSection');
       var btn = document.getElementById('btnToggleConfig');
-      
+
       // If forceHide is true, we always hide settings
       var isHidden = forceHide !== undefined ? !forceHide : content.style.display === 'none';
-      
+
       if (isHidden) {
         content.style.display = 'block';
         if (dateSection.classList.contains('section-visible')) {
@@ -3110,9 +3182,9 @@
         var classInput = document.getElementById('actClassName');
         if (classInput) classInput.value = config.className;
       }
-      
+
       // Keep configuration reference to apply dropdown selections when sheets load
-      window._savedConfig = config; 
+      window._savedConfig = config;
     }
 
     function autoLoadConfig() {
@@ -3129,7 +3201,7 @@
 
       // Step B: Fetch latest master copy from Google cloud properties service to sync
       google.script.run
-        .withSuccessHandler(function(config) {
+        .withSuccessHandler(function (config) {
           if (!config) return;
           applyLoadedConfig(config);
         })
@@ -3138,7 +3210,7 @@
       // Step C: Support loading via URL query parameters (e.g., ?spreadsheetId=... or ?id=...)
       try {
         if (typeof google !== 'undefined' && google.script && google.script.url) {
-          google.script.url.getLocation(function(location) {
+          google.script.url.getLocation(function (location) {
             var params = location.parameter || {};
             var urlId = params.spreadsheetId || params.id;
             if (urlId) {
@@ -3198,7 +3270,7 @@
         var steps = textOrSteps;
         var idx = 0;
         if (textEl) textEl.textContent = steps[0];
-        _stepTimer = setInterval(function() {
+        _stepTimer = setInterval(function () {
           idx = (idx + 1) % steps.length;
           if (textEl) textEl.textContent = steps[idx];
         }, 2000);
@@ -3298,13 +3370,13 @@
           showStatus('actDateStatus', 'success', '✅ Activity report generated successfully.');
           autoSaveConfig(); // Save configuration on success
           hideLoading();
-          
+
           // Show the floating settings button now that report is generated
           var configBtn = document.getElementById('btnToggleConfig');
           if (configBtn) configBtn.style.display = 'inline-flex';
-          
+
           // Automatically hide settings to show report
-          toggleDashboardConfig(true); 
+          toggleDashboardConfig(true);
 
           // Preserve the fellow filter selection — do NOT rebuild the dropdown
           var fellowSel = document.getElementById('actFellowFilter');
@@ -3361,7 +3433,7 @@
 
           // Show report section first
           document.getElementById('actReportSection').className = 'section-visible';
-          
+
           // Render report
           renderActivityReport(filteredResult);
 
@@ -3379,7 +3451,7 @@
     function preFetchEmailConfig() {
       var ssId = document.getElementById('actSpreadsheetId').value;
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           autoDetectedEmailConfig = result;
         })
         .autoDetectEmailSheet(ssId);
@@ -3464,21 +3536,21 @@
         : name.split(',')[0].trim();
       if (!firstName) firstName = name;
 
-        return msg;
-      }
+      return msg;
+    }
 
-      if (grade === 'F') {
-        var msg = firstName + ' is struggling with an F grade ' + inClassStr + ' at this time.';
-        if (tardies > 0 || absences > 0) {
-          var parts = [];
-          if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
-          if (absences > 0) parts.push(spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
-          msg += ' ' + firstName + ' has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
-        } else {
-          msg += ' Their attendance is fine, but we need to see more effort and engagement with the coursework to bring this grade up.';
-        }
-        return msg;
+    if (grade === 'F') {
+      var msg = firstName + ' is struggling with an F grade ' + inClassStr + ' at this time.';
+      if (tardies > 0 || absences > 0) {
+        var parts = [];
+        if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
+        if (absences > 0) parts.push(spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
+        msg += ' ' + firstName + ' has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
+      } else {
+        msg += ' Their attendance is fine, but we need to see more effort and engagement with the coursework to bring this grade up.';
       }
+      return msg;
+    }
 
     function generateParentCommentClient(name, grade, tardies, absences, present, periodName) {
       var firstName = name.indexOf(',') > -1
@@ -3531,7 +3603,7 @@
       // Create a sticky header wrapper for Search and Select All
       var sidebarHeader = document.createElement('div');
       sidebarHeader.style.cssText = 'position: sticky; top: -8px; z-index: 10; background: #fcfcfc; margin: -8px -8px 8px -8px; border-bottom: 1px solid var(--border); border-top-left-radius: 12px; border-top-right-radius: 12px;';
-      
+
       // 1. Search Bar
       var searchDiv = document.createElement('div');
       searchDiv.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border);';
@@ -3543,7 +3615,7 @@
       selectAllDiv.style.cssText = 'padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13px; color: var(--text-secondary); cursor: pointer;';
       selectAllDiv.innerHTML = '<input type="checkbox" id="selectAllStudents" checked onclick="toggleAllStudents(this.checked); event.stopPropagation();"> <label for="selectAllStudents" style="cursor:pointer; margin-bottom:0;">Select All Students</label>';
       sidebarHeader.appendChild(selectAllDiv);
-      
+
       sidebar.appendChild(sidebarHeader);
 
       report.students.forEach(function (student, index) {
@@ -3897,8 +3969,8 @@
         return;
       }
 
-      var selectedIndices = Array.from(document.querySelectorAll('.student-select-checkbox:checked')).map(function(cb) { 
-        return parseInt(cb.getAttribute('data-index')); 
+      var selectedIndices = Array.from(document.querySelectorAll('.student-select-checkbox:checked')).map(function (cb) {
+        return parseInt(cb.getAttribute('data-index'));
       });
 
       if (selectedIndices.length === 0) {
@@ -3916,7 +3988,7 @@
           icon: '⚠️',
           title: 'Email Sheet Not Configured',
           body: '<p>Please select an <strong>Email Sheet Tab</strong> in the configuration section before sending emails.</p>',
-          buttons: [{ label: 'Settings', cls: 'btn-primary', action: function() { toggleDashboardConfig(true); } }]
+          buttons: [{ label: 'Settings', cls: 'btn-primary', action: function () { toggleDashboardConfig(true); } }]
         });
         return;
       }
@@ -3940,32 +4012,32 @@
 
       var statusColor = result.error ? 'var(--danger)' : 'var(--success)';
       var statusText = result.error ? '⚠️ ' + result.error : '✅ Email columns detected';
-      
-      var bodyHtml = 
+
+      var bodyHtml =
         '<div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 16px;">' +
-          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-            '<span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Recipients</span>' +
-            '<span style="font-size:13px; font-weight:700; color:var(--purple);">' + selectedIndices.length + ' Students (' + (recipientType === 'both' ? 'All' : recipientType) + ')</span>' +
-          '</div>' +
-          '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">' +
-            '<span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Source</span>' +
-            '<span style="font-size:12px; font-weight:600; color:var(--text-secondary);">Sheet: ' + result.sheetName + '</span>' +
-          '</div>' +
+        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+        '<span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Recipients</span>' +
+        '<span style="font-size:13px; font-weight:700; color:var(--purple);">' + selectedIndices.length + ' Students (' + (recipientType === 'both' ? 'All' : recipientType) + ')</span>' +
+        '</div>' +
+        '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">' +
+        '<span style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Source</span>' +
+        '<span style="font-size:12px; font-weight:600; color:var(--text-secondary);">Sheet: ' + result.sheetName + '</span>' +
+        '</div>' +
         '</div>' +
 
         '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">' +
-          '<div class="form-group">' +
-            '<label style="font-size:12px; margin-bottom:4px;">Class Name</label>' +
-            '<input type="text" id="modalClassName" placeholder="e.g. Algebra 1" value="" style="padding:8px 10px; font-size:13px; height:38px;">' +
-          '</div>' +
-          '<div class="form-group">' +
-            '<label style="font-size:12px; margin-bottom:4px;">Teacher Name</label>' +
-            '<input type="text" id="modalTeacherName" placeholder="Name" value="' + (teacherEmail || '') + '" style="padding:8px 10px; font-size:13px; height:38px;">' +
-          '</div>' +
+        '<div class="form-group">' +
+        '<label style="font-size:12px; margin-bottom:4px;">Class Name</label>' +
+        '<input type="text" id="modalClassName" placeholder="e.g. Algebra 1" value="" style="padding:8px 10px; font-size:13px; height:38px;">' +
+        '</div>' +
+        '<div class="form-group">' +
+        '<label style="font-size:12px; margin-bottom:4px;">Teacher Name</label>' +
+        '<input type="text" id="modalTeacherName" placeholder="Name" value="' + (teacherEmail || '') + '" style="padding:8px 10px; font-size:13px; height:38px;">' +
+        '</div>' +
         '</div>' +
         '<div class="form-group" style="margin-bottom:12px;">' +
-          '<label style="font-size:12px; margin-bottom:4px;">Email Subject</label>' +
-          '<input type="text" id="modalEmailSubject" value="Biweekly Progress Report — {student}" style="padding:8px 10px; font-size:13px; height:38px; width:100%;">' +
+        '<label style="font-size:12px; margin-bottom:4px;">Email Subject</label>' +
+        '<input type="text" id="modalEmailSubject" value="Biweekly Progress Report — {student}" style="padding:8px 10px; font-size:13px; height:38px; width:100%;">' +
         '</div>' +
         '<div id="modalEmailStatus" style="font-size:11px; color:' + statusColor + '; text-align:center; margin-top:4px; font-weight:600;">' + statusText + '</div>' +
         '<p style="font-size:11px; color:var(--text-secondary); text-align:center; margin-top:8px;"><em>Note: The class-wide message from the main screen will be included.</em></p>';
@@ -3976,7 +4048,7 @@
         body: bodyHtml,
         buttons: [
           { label: 'Cancel', cls: 'btn-secondary' },
-          { label: 'Confirm & Send', cls: 'btn-purple', disabled: !!result.error, action: function() { performFinalDispatch(recipientType, selectedIndices); } }
+          { label: 'Confirm & Send', cls: 'btn-purple', disabled: !!result.error, action: function () { performFinalDispatch(recipientType, selectedIndices); } }
         ]
       });
     }
@@ -3986,9 +4058,9 @@
       var statusDiv = document.getElementById('modalEmailStatus');
       statusDiv.innerHTML = '<span class="spinner" style="width:10px; height:10px;"></span> Checking sheet...';
       statusDiv.style.color = 'var(--text-muted)';
-      
+
       google.script.run
-        .withSuccessHandler(function(result) {
+        .withSuccessHandler(function (result) {
           autoDetectedEmailConfig = result;
           renderEmailConfirmModal(recipientType, selectedIndices);
         })
@@ -4041,13 +4113,13 @@
       google.script.run
         .withSuccessHandler(function (result) {
           hideLoading();
-          
+
           if (result.error) {
             showModal({
               icon: '⚠️',
               title: 'Dispatch Failed',
               body: '<p style="color:var(--danger); font-weight:600;">' + result.error + '</p><p style="font-size:12px; margin-top:8px;">No emails were sent. Please check your email sheet configuration and matching.</p>',
-              buttons: [{ label: 'Check Settings', cls: 'btn-secondary', action: function() { toggleDashboardConfig(true); } }]
+              buttons: [{ label: 'Check Settings', cls: 'btn-secondary', action: function () { toggleDashboardConfig(true); } }]
             });
             return;
           }
@@ -4055,19 +4127,19 @@
           var icon = result.sent > 0 ? '✅' : '⚠️';
           var title = result.sent > 0 ? 'Emails Sent' : 'No Emails Sent';
           var bodyHtml = '<p>Successfully dispatched <strong>' + (result.sent || 0) + '</strong> emails.</p>';
-          
+
           if (result.failed > 0) {
             bodyHtml += '<div style="margin-top:12px; padding:10px; background:var(--danger-bg); border-radius:8px; border:1px solid var(--danger);">';
             bodyHtml += '<p style="color:var(--danger); font-weight:700; font-size:13px; margin-bottom:8px;">⚠️ ' + result.failed + ' student(s) skipped:</p>';
             bodyHtml += '<ul style="font-size:11px; text-align:left; color:var(--text-secondary); margin-left:20px;">';
             if (result.errors) {
-              result.errors.slice(0, 10).forEach(function(e) {
+              result.errors.slice(0, 10).forEach(function (e) {
                 bodyHtml += '<li><strong>' + e.name + '</strong>: ' + e.error + '</li>';
               });
               if (result.errors.length > 10) bodyHtml += '<li>...and ' + (result.errors.length - 10) + ' more</li>';
             }
             bodyHtml += '</ul></div>';
-            
+
             if (result.sent === 0) {
               bodyHtml += '<p style="font-size:12px; color:var(--text-muted); margin-top:12px;">This usually happens when student names in your data sheet don\'t match names in your email sheet, or if the email columns are empty.</p>';
             }

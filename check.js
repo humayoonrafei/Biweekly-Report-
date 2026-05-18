@@ -3,9 +3,22 @@
     var teacherEmail = '';
     var _lastLoadedSheetId = {};  // track per input so we don't re-fetch the same ID
 
+    // ─── Handle Paste on Spreadsheet ID fields ───
+    function handleSpreadsheetPaste(inputId) {
+      // Delay so the pasted value is committed to the input before we read it
+      setTimeout(function () { loadSheetNames(inputId); }, 150);
+    }
+
     // ─── Load Sheet Names into Dropdowns ───
     function loadSheetNames(inputId) {
       var rawId = document.getElementById(inputId).value.trim();
+
+      // If the field was cleared, reset the dedup cache so the next paste re-triggers
+      if (!rawId) {
+        delete _lastLoadedSheetId[inputId];
+        return;
+      }
+
       var cleanId = extractSpreadsheetId(rawId);
       if (!cleanId) return;
 
