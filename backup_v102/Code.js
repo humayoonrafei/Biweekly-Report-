@@ -11,20 +11,15 @@
  * No external APIs, no AI, no third-party services.
  */
 
-// ═══════════════════════════════════════════════════
-// ─── Persistence Helpers ───
-// ═══════════════════════════════════════════════════
-
-function saveUserPreference(key, value) {
-  var props = PropertiesService.getUserProperties();
-  props.setProperty(key, JSON.stringify(value));
-  return true;
-}
-
-function getUserPreferences() {
-  var props = PropertiesService.getUserProperties();
-  var saved = props.getProperty('activity_config');
-  return saved ? JSON.parse(saved) : {};
+// ─── User Preference Memory (FERPA Compliant / Private to User) ───
+function saveUserPreference(key, data) {
+  try {
+    var props = PropertiesService.getUserProperties();
+    props.setProperty(key, JSON.stringify(data));
+    return { success: true };
+  } catch (e) {
+    return { error: e.message };
+  }
 }
 
 function loadUserPreference(key) {
@@ -35,22 +30,6 @@ function loadUserPreference(key) {
   } catch (e) {
     return null;
   }
-}
-
-function saveStudentLanguage(email, lang) {
-  if (!email) return false;
-  var props = PropertiesService.getUserProperties();
-  var saved = props.getProperty('student_langs');
-  var langs = saved ? JSON.parse(saved) : {};
-  langs[email] = lang;
-  props.setProperty('student_langs', JSON.stringify(langs));
-  return true;
-}
-
-function getSavedStudentLanguages() {
-  var props = PropertiesService.getUserProperties();
-  var saved = props.getProperty('student_langs');
-  return saved ? JSON.parse(saved) : {};
 }
 
 // ─── Web App Entry Point ───
@@ -1052,33 +1031,6 @@ function buildGradeLookup(ss, config, endDate) {
 function getActivityReport(config, startDate, endDate) {
   try {
     var ss = SpreadsheetApp.openById(config.spreadsheetId);
-    
-    // --- Grade Lookup Initialization ---
-    var gradeMap = {};
-    var gradeLookup = { error: null };
-    if (config.gradesSheetName) {
-       gradeLookup = buildGradeLookup(ss, config, endDate);
-       if (!gradeLookup.error) {
-         gradeMap = gradeLookup.map;
-       }
-    }
-
-    // --- Email Lookup Initialization (for language persistence) ---
-    var emailMap = {};
-    if (config.emailSheetName) {
-      var mappedEmailConfig = {
-        emailSheetName: config.emailSheetName,
-        emailSheetNameCol: config.emailNameCol,
-        emailSheetEmailCol: config.emailParentCol,
-        emailSheetStudentEmailCol: config.emailStudentCol,
-        emailSheetHeaderRow: 1
-      };
-      var emailLookupResult = buildEmailLookup(ss, mappedEmailConfig);
-      if (!emailLookupResult.error) {
-        emailMap = emailLookupResult.map;
-      }
-    }
-    
     var sheet = ss.getSheetByName(config.activitySheetName);
     if (!sheet) return { error: 'Sheet tab "' + config.activitySheetName + '" not found.' };
 
@@ -1229,12 +1181,8 @@ function getActivityReport(config, startDate, endDate) {
         });
       }
 
-      var sEmailInfo = lookupEmail(emailMap, name) || { studentEmail: '', parentEmail: '' };
-      var primaryEmail = sEmailInfo.studentEmail || sEmailInfo.parentEmail || '';
-
       students.push({
         name: name,
-        email: primaryEmail,
         period: period,
         fellow: fellow,
         letterGrade: letterGrade,
@@ -1408,15 +1356,6 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
   }
 }
 
-function processPlainMarkers(text) {
-  if (!text) return "";
-  var out = text;
-  out = out.replace(/\[PERFECT\]/g, '🏆 <span style="font-weight:bold;color:#059669;">[Perfect Attendance]</span>');
-  out = out.replace(/\[STREAK\]/g, '🔥 <span style="font-weight:bold;color:#8b5cf6;">[Streak]</span>');
-  out = out.replace(/\[TIP\]/g, '💡 <span style="font-weight:bold;color:#d97706;">[Teacher Tip]</span>');
-  return out;
-}
-
 // ─── Send Activity Emails ───
 function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, subject, customMessage, periodName, dateRange, recipientSelection, className) {
   var sent = 0;
@@ -1455,10 +1394,7 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       return { error: 'No email addresses found in sheet "' + mappedConfig.emailSheetName + '". Please check the column mapping.' };
     }
 
-    // 2. Load Language Preferences
-    var studentLangs = getSavedStudentLanguages();
-
-    // 3. Loop through students and send emails
+    // 2. Loop through students and send emails
     for (var i = 0; i < payload.length; i++) {
       var s = payload[i];
       var emails = lookupEmail(emailMap, s.name) || { parentEmail: '', studentEmail: '' };
@@ -1469,9 +1405,6 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         continue;
       }
 
-      var primaryEmail = emails.studentEmail || emails.parentEmail || "";
-      var studentLang = studentLangs[primaryEmail] || 'en';
-
       // Extract first name
       var firstName = s.name.indexOf(',') > -1
         ? (s.name.split(',')[1] || '').trim()
@@ -1480,62 +1413,93 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
       var emailSubject = subject.replace('{student}', firstName);
 
-      function buildHtml(recipientType, comment, lang) {
-        var greeting;
-        if (lang === 'es') {
-            greeting = recipientType === 'parent' ? 'Estimado padre/tutor de ' + firstName + ',' : 'Hola ' + firstName + ',';
-        } else if (lang === 'ar') {
-            greeting = recipientType === 'parent' ? 'عزيزي ولي أمر ' + firstName + '،' : 'مرحباً ' + firstName + '،';
-        } else {
-            greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
-        }
-
-        var processedComment = processPlainMarkers(comment);
+      function buildHtml(recipientType, comment) {
+        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
         var htmlBody = ''
-          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (lang === 'ar' ? 'direction:rtl;text-align:right;' : '') + '">'
+          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
           + '<div style="background:#ffffff;border-bottom:3px solid #2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-          + '<td style="color:#2c3e50;font-size:18px;font-weight:bold;">' + (lang === 'es' ? 'Informe de progreso' : lang === 'ar' ? 'تقرير التقدم' : 'Biweekly Progress Report') + '</td>'
+          + '<td style="color:#2c3e50;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
           + '<td style="text-align:right;">'
           + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools Network" style="height: 36px; width: auto; display: inline-block;">' : '<strong>Blueprint Schools Network</strong>')
           + '</td></tr></table></div>'
           + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
           + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
           + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">' + (lang === 'es' ? 'Resumen del estudiante' : lang === 'ar' ? 'ملخص الطالب' : 'Student Summary') + '</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;' + (lang === 'ar' ? 'direction:rtl;text-align:right;' : '') + '">'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">' + (lang === 'es' ? 'Estudiante' : lang === 'ar' ? 'الطالب' : 'Student') + '</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
-          + (className && className.trim() !== '' ? '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + (lang === 'es' ? 'Clase' : lang === 'ar' ? 'الفصل' : 'Class') + '</td><td style="font-weight:bold;">' + className.trim() + '</td></tr>' : '')
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + (lang === 'es' ? 'Fechas' : lang === 'ar' ? 'التواريخ' : 'Dates') + '</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + (lang === 'es' ? 'Calificación' : lang === 'ar' ? 'الدرجة' : 'Grade') + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
+          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
+          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
+          + (className && className.trim() !== '' ? '<tr><td style="padding:4px 16px 4px 0;color:#666;">Class</td><td style="font-weight:bold;">' + className.trim() + '</td></tr>' : '')
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Dates</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + s.tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + s.absences + '</td></tr>'
           + '</table></div>'
           + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
-          + processedComment
+          + comment
           + '</div>';
+
+        // Add Detailed Daily Activity Table if available
+        if (s.dates && s.dates.length > 0) {
+          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 20px;overflow:hidden;">'
+            + '<div style="background:#2c3e50;padding:12px 16px;color:#fff;font-weight:bold;font-size:14px;">Daily Activity Log</div>'
+            + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;">'
+            + '<thead style="background:#f8f9fa;border-bottom:2px solid #e2e8f0;"><tr>'
+            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Date</th>'
+            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Attendance</th>'
+            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Participation</th>'
+            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Exit Ticket</th>'
+            + '</tr></thead><tbody>';
+
+          for (var d = 0; d < s.dates.length; d++) {
+            var day = s.dates[d];
+            var attColor = day.attendance.toLowerCase() === 'absent' ? '#dc2626' : (day.attendance.toLowerCase() === 'tardy' ? '#d97706' : '#333');
+            var bg = d % 2 === 0 ? '#ffffff' : '#f8fafc';
+            
+            var partStr = day.gradesStr;
+            if (day.participationPct !== null && day.participationPct !== undefined) {
+               if (partStr && partStr !== '—') partStr += ' (' + day.participationPct + '%)';
+               else partStr = day.participationPct + '%';
+            }
+            if (!partStr) partStr = '—';
+            
+            var etStr = day.exitTicket;
+            if (day.exitTicketPct !== null && day.exitTicketPct !== undefined) {
+               if (etStr && String(etStr).trim() !== '') etStr += ' (' + day.exitTicketPct + '%)';
+               else etStr = day.exitTicketPct + '%';
+            }
+            if (!etStr || String(etStr).trim() === '') etStr = '—';
+
+            htmlBody += '<tr style="background:' + bg + ';border-bottom:1px solid #f1f5f9;">'
+              + '<td style="padding:10px 16px;color:#334155;white-space:nowrap;">' + day.date + '</td>'
+              + '<td style="padding:10px 16px;color:' + attColor + ';font-weight:500;">' + day.attendance + '</td>'
+              + '<td style="padding:10px 16px;color:#334155;">' + (partStr || '—') + '</td>'
+              + '<td style="padding:10px 16px;color:#334155;">' + (etStr || '—') + '</td>'
+              + '</tr>';
+          }
+          htmlBody += '</tbody></table></div></div>';
+        }
 
         if (customMessage) {
           htmlBody += '<p style="font-size:14px;line-height:1.6;">' + customMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;">' + (lang === 'es' ? 'Si tiene alguna pregunta, no dude en contactarme.' : lang === 'ar' ? 'إذا كان لديك أي أسئلة، فلا تتردد في الاتصال بي.' : 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
-          + '<p style="font-size:14px;margin-bottom:0;">' + (lang === 'es' ? 'Saludos cordiales,' : lang === 'ar' ? 'مع أطيب التحيات،' : 'Best regards,') + '<br>'
+        htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
+          + '<p style="font-size:14px;margin-bottom:0;">Best regards,<br>'
           + '<strong>' + teacherName + '</strong><br>'
           + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
           + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
-          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network</span>'
+          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
           + '</div></div>';
         return htmlBody;
       }
 
-      function buildPlain(recipientType, comment, lang) {
+      function buildPlain(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
-        if (lang === 'es') greeting = recipientType === 'parent' ? 'Estimado padre/tutor de ' + firstName + ',\n\n' : 'Hola ' + firstName + ',\n\n';
-        if (lang === 'ar') greeting = recipientType === 'parent' ? 'عزيزي ولي أمر ' + firstName + '،\n\n' : 'مرحباً ' + firstName + '،\n\n';
-        
         var body = greeting + comment + '\n\n';
         if (customMessage) body += customMessage + '\n\n';
-        body += 'Best regards,\n' + teacherName + '\n' + teacherEmail;
+        body += 'If you have any questions or concerns, please do not hesitate to reach out.\n\nBest regards,\n' + teacherName + '\n' + teacherEmail;
         return body;
       }
 
@@ -1543,19 +1507,10 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       var sendToStudent = (recipientSelection === 'both' || recipientSelection === 'students') && emails.studentEmail;
 
       if (sendToParent) {
-        var parentComment = s.parentComment;
-        if (studentLang !== 'en') {
-          try {
-             parentComment = LanguageApp.translate(parentComment, 'en', studentLang);
-          } catch (e) {
-             // Fallback to English if translation fails
-          }
-        }
-
         var mailOptions = {
           subject: emailSubject,
-          body: buildPlain('parent', parentComment, studentLang),
-          htmlBody: buildHtml('parent', parentComment, studentLang),
+          body: buildPlain('parent', s.parentComment),
+          htmlBody: buildHtml('parent', s.parentComment),
           name: teacherName || '',
           replyTo: teacherEmail
         };
@@ -1567,8 +1522,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       if (sendToStudent) {
         var mailOptions = {
           subject: emailSubject,
-          body: buildPlain('student', s.studentComment, 'en'),
-          htmlBody: buildHtml('student', s.studentComment, 'en'),
+          body: buildPlain('student', s.studentComment),
+          htmlBody: buildHtml('student', s.studentComment),
           name: teacherName || '',
           replyTo: teacherEmail
         };
@@ -1582,7 +1537,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       success: true,
       sent: sent,
       failed: failed,
-      remainingQuota: MailApp.getRemainingDailyQuota()
+      errors: errors,
+      remainingQuota: 999
     };
 
   } catch (e) {

@@ -1533,7 +1533,7 @@
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Activity Sheet Tab</label>
-                <select id="actSheetName" onchange="loadActGradesHeaders(); loadActivityFellows(); autoSaveConfig(); loadActivityDates('act');" style="height: 38px;">
+                <select id="actSheetName" onchange="loadActGradesHeaders(); loadActivityFellows(); autoSaveConfig();" style="height: 38px;">
                   <option value="" disabled selected>— select —</option>
                 </select>
               </div>
@@ -1711,18 +1711,6 @@
     // ─── State ───
     var generatedResults = [];
     var teacherEmail = '';
-    var _savedStudentLangs = {};
-
-    function getSavedLang(student) {
-      var email = student.email || student.parentEmail || student.studentEmail || '';
-      return _savedStudentLangs[email] || 'en';
-    }
-
-    function updateStudentLang(email, lang) {
-      if (!email) return;
-      _savedStudentLangs[email] = lang;
-      google.script.run.saveStudentLanguage(email, lang);
-    }
     // ─── ONE-SHOT Spreadsheet Initialization (debounced) ───
     var _initTimer = null;
     function loadSheetNames(inputId) {
@@ -1759,13 +1747,6 @@
         '📧 Detecting email configuration…',
         '⏳ Almost done…'
       ]);
-
-
-      google.script.run
-        .withSuccessHandler(function(langs) {
-           _savedStudentLangs = langs || {};
-        })
-        .getSavedStudentLanguages();
 
       google.script.run
         .withSuccessHandler(function(result) {
@@ -1914,18 +1895,8 @@
           }
 
           showStatus('actConfigStatus', 'success', '✅ Spreadsheet connected — all settings loaded.');
-          
-          // Save the configuration so it's persisted immediately
-          autoSaveConfig();
-
           // Final clear of saved config
           window._savedConfig = null;
-
-          // Automatically start the program by fetching dates if a tab was selected
-          var currentSheet = document.getElementById('actSheetName').value;
-          if (currentSheet) {
-            loadActivityDates('act');
-          }
         })
         .withFailureHandler(function(err) {
           hideLoading();
@@ -3066,13 +3037,10 @@
         .getActivityDates(config);
     }
 
-    // ─── User Preference Sync (Double-Redundant) ───
+    // ─── User Preference Sync ───
     function autoSaveConfig() {
-      var ssId = document.getElementById('actSpreadsheetId').value.trim();
-      if (!ssId) return; // Do not save empty spreadsheet ID to prevent wiping out preferences
-
       var config = {
-        spreadsheetId: ssId,
+        spreadsheetId: document.getElementById('actSpreadsheetId').value,
         activitySheet: document.getElementById('actSheetName').value,
         gradesSheet: document.getElementById('actGradesSheet').value,
         emailSheet: document.getElementById('actEmailSheetName').value,
@@ -3080,84 +3048,30 @@
         tutorName: document.getElementById('actTutorName').value,
         className: document.getElementById('actClassName').value
       };
-
-      // 1. Save to Google Apps Script PropertiesService (Cloud master copy)
       google.script.run.saveUserPreference('activity_config', config);
-
-      // 2. Save to Browser localStorage (Local instant-load cache)
-      try {
-        localStorage.setItem('activity_config', JSON.stringify(config));
-      } catch (e) {
-        console.warn('localStorage save failed', e);
-      }
-    }
-
-    function applyLoadedConfig(config) {
-      if (!config) return;
-      if (config.spreadsheetId) {
-        var input = document.getElementById('actSpreadsheetId');
-        if (input && input.value !== config.spreadsheetId) {
-          input.value = config.spreadsheetId;
-          // Trigger load to fill dropdowns
-          loadSheetNames('actSpreadsheetId');
-        }
-      }
-      if (config.tutorName) {
-        var tutorInput = document.getElementById('actTutorName');
-        if (tutorInput) tutorInput.value = config.tutorName;
-      }
-      if (config.className) {
-        var classInput = document.getElementById('actClassName');
-        if (classInput) classInput.value = config.className;
-      }
-      
-      // Keep configuration reference to apply dropdown selections when sheets load
-      window._savedConfig = config; 
     }
 
     function autoLoadConfig() {
-      // Step A: Load instantly from browser localStorage for zero-latency pre-fill
-      try {
-        var cached = localStorage.getItem('activity_config');
-        if (cached) {
-          var config = JSON.parse(cached);
-          applyLoadedConfig(config);
-        }
-      } catch (e) {
-        console.warn('localStorage read failed', e);
-      }
-
-      // Step B: Fetch latest master copy from Google cloud properties service to sync
       google.script.run
         .withSuccessHandler(function(config) {
           if (!config) return;
-          applyLoadedConfig(config);
+          if (config.spreadsheetId) {
+            document.getElementById('actSpreadsheetId').value = config.spreadsheetId;
+            // Trigger load to fill dropdowns
+            loadSheetNames('actSpreadsheetId');
+          }
+          if (config.tutorName) document.getElementById('actTutorName').value = config.tutorName;
+          if (config.className) document.getElementById('actClassName').value = config.className;
+          
+          // These will be applied AFTER the sheets are loaded in loadSheetNames success handler
+          window._savedConfig = config; 
         })
         .loadUserPreference('activity_config');
-
-      // Step C: Support loading via URL query parameters (e.g., ?spreadsheetId=... or ?id=...)
-      try {
-        if (typeof google !== 'undefined' && google.script && google.script.url) {
-          google.script.url.getLocation(function(location) {
-            var params = location.parameter || {};
-            var urlId = params.spreadsheetId || params.id;
-            if (urlId) {
-              var cleanUrlId = extractSpreadsheetId(urlId);
-              applyLoadedConfig({ spreadsheetId: cleanUrlId });
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('Failed to retrieve URL location parameters', e);
-      }
     }
 
-    // Trigger auto-load immediately when DOM is parsed and ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', autoLoadConfig);
-    } else {
+    window.onload = function() {
       autoLoadConfig();
-    }
+    };
 
     // ─── Modal Helpers ───
     function showModal(opts) {
@@ -3430,31 +3344,61 @@
         return firstName + '- you do not have any recorded attendance for this biweekly period yet. Please check in with me so we can ensure you are on track.';
       }
 
+      if (!grade && absences >= 5) {
+        return firstName + '- you have ' + spellNumberClient(absences) + ' absences this biweekly period which is making it very difficult to keep up with the lessons. Please make sure to attend every class so we can help you succeed. Check in with me to find out what assignments you have missed.';
+      }
+
       var inClassStr = 'in the class';
       if (periodName && !/year|final/i.test(periodName)) {
         inClassStr = 'for ' + periodName;
       }
 
-      var msg = '';
       if (grade === 'A' || grade === 'B') {
-        msg = firstName + '- you are doing a really strong job ' + inClassStr + ' with a ' + grade + '.';
+        var msg = firstName + '- you are doing ' + (grade === 'A' ? 'an excellent' : 'a solid') + ' job ' + inClassStr + ' with ' + (grade === 'A' ? 'an' : 'a') + ' ' + grade + '.';
         if (tardies === 0 && absences === 0) {
-          msg += ' [PERFECT] Your hard work and effort really show!';
-        } else if (present >= 5) {
-          msg += ' [STREAK] Great job showing up every day - you have ' + present + ' days present this period!';
-        }
-      } else if (grade === 'C' || grade === 'D') {
-        msg = firstName + '- you currently have a ' + grade + ' ' + inClassStr + '.';
-        if (absences > 2) {
-          msg += ' [TIP] With ' + absences + ' absences, it\'s getting tough to stay caught up. Let\'s focus on attending every day!';
+          msg += ' You have perfect attendance with zero tardies and zero absences. Your dedication and hard work are truly impressive. Keep it up!';
+        } else if (tardies > 0 && absences === 0) {
+          msg += ' You have ' + spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' this period - please try to arrive on time so you can start class strong. Keep up the great work!';
+        } else if (tardies === 0 && absences > 0) {
+          msg += ' You have zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period which shows great dedication. Keep up the outstanding work and maintain this consistency.';
         } else {
-          msg += ' [TIP] Your hard work is paying off, let\'s keep pushing to bring that ' + grade + ' even higher!';
+          msg += ' Watch out for those ' + spellNumberClient(tardies) + ' tardies and ' + spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences') + ' - arriving on time will help you stay at the top. Keep pushing!';
         }
-      } else {
-        msg = firstName + '- please check in with me about your standing ' + inClassStr + '. [TIP] I want to make sure you have what you need to succeed.';
+        return msg;
       }
 
-      return msg;
+      if (grade === 'C' || grade === 'D') {
+        var msg = firstName + '- you currently have a ' + grade + ' ' + inClassStr + '.';
+        if (tardies > 3) {
+          msg += ' You have ' + spellNumberClient(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
+        } else if (absences > 0) {
+          msg += ' You have ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Please keep working hard on your participation to bring your grade up. You have the ability to do great things!';
+        } else if (tardies > 0) {
+          msg += ' You have ' + spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies') + ' this period. Please try to arrive on time so you can start class strong. Continue working hard to improve your grade!';
+        } else {
+          msg += ' Your attendance is solid with zero tardies and zero absences. Please continue your hard work to improve your grade - you are capable of more!';
+        }
+        return msg;
+      }
+
+      if (grade === 'F') {
+        var msg = firstName + '- I need to see more from you - your grade ' + inClassStr + ' is an F right now.';
+        if (tardies > 0 || absences > 0) {
+          var parts = [];
+          if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
+          if (absences > 0) parts.push(spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
+          msg += ' You have been ' + parts.join(' and ') + ' this period which makes it difficult to stay caught up. Please see me during office hours so we can make a plan for your success.';
+        } else {
+          msg += ' Your attendance is fine but I need to see more effort and engagement. Lets set a goal together to bring this grade up.';
+        }
+        return msg;
+      }
+
+      // Fallback: no grade
+      if (absences >= 3) {
+        return firstName + '- you have ' + spellNumberClient(absences) + ' absences this biweekly period which is making it very difficult to keep up with the lessons. Please make sure to attend every class so we can help you succeed. Check in with me to find out what assignments you have missed.';
+      }
+      return firstName + '- please check in with me about your current standing in the class. I want to make sure you are on track and have what you need to succeed.';
     }
 
     // ─── Client-side Parent Comment Generator (3rd Person) ───
@@ -3464,6 +3408,44 @@
         : name.split(',')[0].trim();
       if (!firstName) firstName = name;
 
+      if (present === 0 && tardies === 0 && absences === 0) {
+        return firstName + ' does not have any recorded attendance for this biweekly period yet. We want to ensure they are on track, so please let me know if you have any questions.';
+      }
+
+      if (!grade && absences >= 5) {
+        return firstName + ' has accumulated ' + spellNumberClient(absences) + ' absences this period which is significantly impacting their ability to keep up with coursework. We are concerned about attendance and would like to work with you to ensure they are present in class.';
+      }
+
+      var inClassStr = 'in the course';
+      if (periodName && !/year|final/i.test(periodName)) {
+        inClassStr = 'for ' + periodName;
+      }
+
+      if (grade === 'A' || grade === 'B') {
+        var msg = firstName + ' is performing ' + (grade === 'A' ? 'exceptionally well' : 'well') + ' with ' + (grade === 'A' ? 'an' : 'a') + ' ' + grade + ' ' + inClassStr + '.';
+        if (tardies === 0 && absences === 0) {
+          msg += ' ' + firstName + ' has perfect attendance this period with no tardies or absences. Their commitment to education is exemplary and we are very proud of their consistent effort and performance.';
+        } else if (tardies > 0 && absences === 0) {
+          msg += ' ' + firstName + ' has ' + spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and zero absences this period. Improving punctuality would help make the most of class time. We appreciate your support in encouraging on-time arrival.';
+        } else if (tardies === 0 && absences > 0) {
+          msg += ' ' + firstName + ' has zero tardies and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. Their consistent work ethic and focus in class are commendable.';
+        } else {
+          msg += ' ' + firstName + ' has ' + spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' and ' + spellNumberClient(absences) + ' ' + (absences === 1 ? 'absence' : 'absences') + ' this period. Improving attendance and punctuality would help make the most of class time.';
+        }
+        return msg;
+      }
+
+      if (grade === 'C' || grade === 'D') {
+        var msg = firstName + ' is maintaining a ' + grade + ' grade ' + inClassStr + '.';
+        if (tardies > 3) {
+          msg += ' ' + firstName + ' has ' + spellNumberClient(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumberClient(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing.';
+        } else if (absences > 0) {
+          msg += ' ' + firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumberClient(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumberClient(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
+        } else if (tardies > 0) {
+          msg += ' ' + firstName + ' has ' + spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies') + ' this period. Improving punctuality will help ensure they do not miss important instructions.';
+        } else {
+          msg += ' Their attendance is solid with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
+        }
         return msg;
       }
 
@@ -3480,38 +3462,10 @@
         return msg;
       }
 
-    function generateParentCommentClient(name, grade, tardies, absences, present, periodName) {
-      var firstName = name.indexOf(',') > -1
-        ? (name.split(',')[1] || '').trim()
-        : name.split(',')[0].trim();
-      if (!firstName) firstName = name;
-
-      var inClassStr = 'in the class';
-      if (periodName && !/year|final/i.test(periodName)) {
-        inClassStr = 'for ' + periodName;
+      if (absences >= 3) {
+        return firstName + ' has accumulated ' + spellNumberClient(absences) + ' absences this period which is impacting their ability to follow the curriculum. Please contact me so we can discuss a plan for academic success.';
       }
-
-      var msg = '';
-      if (grade === 'A' || grade === 'B') {
-        msg = firstName + ' is doing a great job ' + inClassStr + ' with a ' + grade + '.';
-        if (tardies === 0 && absences === 0) {
-          msg += ' [PERFECT] They have perfect attendance this period with zero tardies and zero absences!';
-        } else if (present >= 5) {
-          msg += ' [STREAK] ' + firstName + ' has a ' + present + '-day streak of being present in class!';
-        }
-      } else if (grade === 'C' || grade === 'D') {
-        msg = firstName + ' currently has a ' + grade + ' ' + inClassStr + '.';
-        if (absences > 1) {
-          msg += ' [TIP] We are focusing on improving ' + firstName + '\'s attendance and participation to help bring this grade up.';
-        } else {
-          msg += ' [TIP] With consistent effort and attendance, we are confident ' + firstName + ' can raise their grade even further.';
-        }
-      } else {
-        msg = firstName + ' is working through the material ' + inClassStr + '.';
-        msg += ' [TIP] We are monitoring their progress closely to ensure they have the support needed to succeed.';
-      }
-
-      return msg;
+      return firstName + ' is currently making progress. Please contact me if you have any questions regarding their standing in the class.';
     }
 
     function renderActivityReport(report) {
@@ -3560,11 +3514,6 @@
           '<div style="flex:1;">' +
           '<div class="si-name">' + student.name + '</div>' +
           '<div class="si-meta">Grade: ' + gpText + ' &bull; Absences: ' + student.summary.totalAbsent + '</div>' +
-          '<div style="font-size:10px; margin-top:6px; color:var(--text-secondary);">' +
-          '<label style="margin-right:8px;cursor:pointer;"><input type="radio" name="sidebar_lang_' + index + '" value="en" ' + (getSavedLang(student) === 'en' ? 'checked' : '') + ' onchange="updateStudentLang(\'' + (student.email || '') + '\', \'en\')"> EN</label>' +
-          '<label style="margin-right:8px;cursor:pointer;"><input type="radio" name="sidebar_lang_' + index + '" value="es" ' + (getSavedLang(student) === 'es' ? 'checked' : '') + ' onchange="updateStudentLang(\'' + (student.email || '') + '\', \'es\')"> ES</label>' +
-          '<label style="cursor:pointer;"><input type="radio" name="sidebar_lang_' + index + '" value="ar" ' + (getSavedLang(student) === 'ar' ? 'checked' : '') + ' onchange="updateStudentLang(\'' + (student.email || '') + '\', \'ar\')"> AR</label>' +
-          '</div>' +
           '</div>' +
           '</div>';
 
