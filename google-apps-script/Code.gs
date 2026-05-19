@@ -67,6 +67,42 @@ function spellNumber(n) {
   return n <= 10 ? words[n] : String(n);
 }
 
+function normalizeLanguageCode(lang) {
+  var code = String(lang || 'en').toLowerCase().trim();
+  if (!code || code === 'english') return 'en';
+  if (code === 'spanish') return 'es';
+  if (code === 'portuguese') return 'pt';
+  if (code === 'french') return 'fr';
+  if (code === 'arabic') return 'ar';
+  if (code === 'chinese') return 'zh';
+  if (code === 'chinese (simplified)') return 'zh-CN';
+  if (code === 'chinese (traditional)') return 'zh-TW';
+  if (code === 'haitian creole') return 'ht';
+  if (code === 'vietnamese') return 'vi';
+  if (code === 'bengali') return 'bn';
+  if (code === 'urdu') return 'ur';
+  if (code === 'korean') return 'ko';
+  if (code === 'russian') return 'ru';
+  return code;
+}
+
+function translateOnTheFly(text, targetLang) {
+  var content = String(text || '');
+  var target = normalizeLanguageCode(targetLang);
+  if (!content || !target || target === 'en') return content;
+  try {
+    return LanguageApp.translate(content, 'en', target);
+  } catch (e) {
+    return content;
+  }
+}
+
+function calcAttendancePct(presentCount, tardyCount, scheduledCount) {
+  var scheduled = Number(scheduledCount || 0);
+  if (scheduled <= 0) return null;
+  return Math.round(((Number(presentCount || 0) + Number(tardyCount || 0)) / scheduled) * 100);
+}
+
 // ─── Get Teacher Info ───
 function getTeacherInfo() {
   var email = Session.getActiveUser().getEmail();
@@ -598,6 +634,10 @@ function sendParentEmails(emailData) {
       var absences = s.absences || 0;
       var teacherName = emailData.teacherName || teacherEmail;
       var subject = emailData.subject.replace('{student}', firstName);
+      var targetLang = normalizeLanguageCode(s.language || 'en');
+      var translatedParentComment = translateOnTheFly(s.parentComment, targetLang);
+      var translatedStudentComment = translateOnTheFly(s.studentComment, targetLang);
+      var translatedCustomMessage = translateOnTheFly(emailData.customMessage || '', targetLang);
 
       // Helper function to build HTML
       function buildHtmlEmail(recipientType, comment) {
@@ -625,8 +665,8 @@ function sendParentEmails(emailData) {
           + comment
           + '</div>';
 
-        if (emailData.customMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + emailData.customMessage.replace(/\n/g, '<br>') + '</p>';
+        if (translatedCustomMessage) {
+          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
         htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
@@ -643,8 +683,8 @@ function sendParentEmails(emailData) {
       function buildPlainEmail(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
         var plainBody = greeting + comment + '\n\n';
-        if (emailData.customMessage) {
-          plainBody += emailData.customMessage + '\n\n';
+        if (translatedCustomMessage) {
+          plainBody += translatedCustomMessage + '\n\n';
         }
         plainBody += 'If you have any questions or concerns, please do not hesitate to reach out.\n\n'
           + 'Best regards,\n'
@@ -655,8 +695,8 @@ function sendParentEmails(emailData) {
 
       // Send to Parent
       if (s.parentEmail) {
-        GmailApp.sendEmail(s.parentEmail, subject, buildPlainEmail('parent', s.parentComment), {
-          htmlBody: buildHtmlEmail('parent', s.parentComment),
+        GmailApp.sendEmail(s.parentEmail, subject, buildPlainEmail('parent', translatedParentComment), {
+          htmlBody: buildHtmlEmail('parent', translatedParentComment),
           name: emailData.teacherName || '',
           replyTo: teacherEmail
         });
@@ -665,8 +705,8 @@ function sendParentEmails(emailData) {
 
       // Send to Student
       if (s.studentEmail) {
-        GmailApp.sendEmail(s.studentEmail, subject, buildPlainEmail('student', s.studentComment), {
-          htmlBody: buildHtmlEmail('student', s.studentComment),
+        GmailApp.sendEmail(s.studentEmail, subject, buildPlainEmail('student', translatedStudentComment), {
+          htmlBody: buildHtmlEmail('student', translatedStudentComment),
           name: emailData.teacherName || '',
           replyTo: teacherEmail
         });
@@ -717,7 +757,7 @@ function generateStudentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'C' || grade === 'D') {
-    var msg = firstName + '- you currently have a ' + grade + ' in the class.';
+    var msg = firstName + '- you have shown real potential this period, and you currently have a ' + grade + ' in the class.';
     if (tardies > 3) {
       msg += ' You have ' + spellNumber(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
     } else if (absences > 0) {
@@ -729,7 +769,7 @@ function generateStudentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'F') {
-    var msg = firstName + '- I need to see more from you - your grade is an F right now.';
+    var msg = firstName + '- I know you can improve, and I want to help you be successful. Right now your grade is an F.';
     if (tardies > 0 || absences > 0) {
       var parts = [];
       if (tardies > 0) parts.push(spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
@@ -772,24 +812,24 @@ function generateParentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'C' || grade === 'D') {
-    var msg = firstName + ' is maintaining a ' + grade + ' grade in the course.';
+    var msg = firstName + ' has shown positive effort this period and is currently maintaining a ' + grade + ' grade in the course.';
     if (tardies > 3) {
-      msg += firstName +'has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
+      msg += ' ' + firstName + ' has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
     } else if (absences > 0) {
-      msg +=  firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
+      msg += ' ' + firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
     } else {
-      msg += firstName +'attendance is solid with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
+      msg += ' ' + firstName + ' has solid attendance with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
     }
     return msg;
   }
 
   if (grade === 'F') {
-    var msg = firstName + ' is struggling in the course with an F grade at this time.';
+    var msg = firstName + ' has the ability to improve, and we want to partner with you to support that growth. At this time, they are struggling in the course with an F grade.';
     if (tardies > 0 || absences > 0) {
       var parts = [];
       if (tardies > 0) parts.push(spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
       if (absences > 0) parts.push(spellNumber(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
-      msg +=  firstName +'has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
+      msg += ' ' + firstName + ' has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
     } else {
       msg += ' Attendance is not the issue but engagement and effort need improvement. We would like to partner with you to discuss strategies for improvement.';
     }
@@ -1128,7 +1168,7 @@ function getActivityReport(config, startDate, endDate) {
 
       // Extract data for each date column
       var dateData = [];
-      var totalPresent = 0, totalTardy = 0, totalAbsent = 0, totalNotScheduled = 0;
+      var totalPresent = 0, totalTardy = 0, totalAbsent = 0, totalNotScheduled = 0, totalScheduledDays = 0;
 
       for (var d = 0; d < dateCols.length; d++) {
         var colIdx = dateCols[d].colIdx;
@@ -1165,9 +1205,9 @@ function getActivityReport(config, startDate, endDate) {
 
         // Count attendance totals
 
-        if (attLower === 'present') totalPresent++;
-        else if (attLower === 'tardy') totalTardy++;
-        else if (attLower === 'absent') totalAbsent++;
+        if (attLower === 'present') { totalPresent++; totalScheduledDays++; }
+        else if (attLower === 'tardy') { totalTardy++; totalScheduledDays++; }
+        else if (attLower === 'absent') { totalAbsent++; totalScheduledDays++; }
         else if (attLower.indexOf('not s') > -1 || attLower.indexOf('not scheduled') > -1) totalNotScheduled++;
 
         dateData.push({
@@ -1192,7 +1232,9 @@ function getActivityReport(config, startDate, endDate) {
           totalTardy: totalTardy,
           totalAbsent: totalAbsent,
           totalNotScheduled: totalNotScheduled,
-          totalDays: dateCols.length
+          totalDays: dateCols.length,
+          totalScheduledDays: totalScheduledDays,
+          attendancePct: calcAttendancePct(totalPresent, totalTardy, totalScheduledDays)
         }
       });
 
@@ -1394,6 +1436,75 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       return { error: 'No email addresses found in sheet "' + mappedConfig.emailSheetName + '". Please check the column mapping.' };
     }
 
+    function collectChartSeries(dates, key) {
+      var rows = [];
+      for (var k = 0; k < (dates || []).length; k++) {
+        var day = dates[k] || {};
+        var val = day[key];
+        if (val === null || val === undefined || isNaN(val)) continue;
+        rows.push({ label: String(day.date || ('Day ' + (k + 1))), value: Math.max(0, Math.min(100, Number(val))) });
+      }
+      return rows.slice(-6);
+    }
+
+    function buildSeriesChart(rows, color) {
+      if (!rows || rows.length === 0) {
+        return '<div style="font-size:12px;color:#64748b;">No graded data in selected range.</div>';
+      }
+      var html = '<div style="font-size:12px;color:#334155;">';
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r];
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;">'
+          + '<span style="min-width:54px;color:#64748b;font-size:11px;">' + row.label + '</span>'
+          + '<div style="flex:1;background:#e2e8f0;height:8px;border-radius:999px;overflow:hidden;">'
+          + '<div style="height:8px;width:' + row.value + '%;background:' + color + ';"></div>'
+          + '</div>'
+          + '<span style="min-width:34px;text-align:right;font-weight:600;">' + row.value + '%</span>'
+          + '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function getAttendanceStats(summary, dates) {
+      var scheduled = Number(summary.totalScheduledDays || 0);
+      var presentCount = Number(summary.totalPresent || 0);
+      var tardyCount = Number(summary.totalTardy || 0);
+      if (!scheduled && dates && dates.length) {
+        for (var a = 0; a < dates.length; a++) {
+          var att = String((dates[a] || {}).attendance || '').toLowerCase();
+          if (att === 'present') { presentCount++; scheduled++; }
+          else if (att === 'tardy') { tardyCount++; scheduled++; }
+          else if (att === 'absent') { scheduled++; }
+        }
+      }
+      return { scheduled: scheduled, present: presentCount, tardy: tardyCount };
+    }
+
+    function buildAttendanceGraph(summary, dates) {
+      var stats = getAttendanceStats(summary, dates);
+      var scheduled = stats.scheduled;
+      if (!scheduled) {
+        return '<div style="font-size:12px;color:#64748b;">No scheduled attendance days in selected range.</div>';
+      }
+      var presentPct = Math.round((stats.present / scheduled) * 100);
+      var tardyPct = Math.round((stats.tardy / scheduled) * 100);
+      var absentPct = Math.max(0, 100 - presentPct - tardyPct);
+      return ''
+        + '<div style="margin-top:4px;">'
+        + '<div style="display:flex;width:100%;height:12px;border-radius:999px;overflow:hidden;background:#e2e8f0;">'
+        + '<div style="width:' + presentPct + '%;background:#10b981;"></div>'
+        + '<div style="width:' + tardyPct + '%;background:#f59e0b;"></div>'
+        + '<div style="width:' + absentPct + '%;background:#ef4444;"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#334155;">'
+        + '<span>Present: <strong>' + presentPct + '%</strong></span>'
+        + '<span>Tardy: <strong>' + tardyPct + '%</strong></span>'
+        + '<span>Absent: <strong>' + absentPct + '%</strong></span>'
+        + '<span>Scheduled Days: <strong>' + scheduled + '</strong></span>'
+        + '</div></div>';
+    }
+
     // 2. Loop through students and send emails
     for (var i = 0; i < payload.length; i++) {
       var s = payload[i];
@@ -1412,6 +1523,15 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       if (!firstName) firstName = s.name;
 
       var emailSubject = subject.replace('{student}', firstName);
+      var targetLang = normalizeLanguageCode(s.language || 'en');
+      var translatedParentComment = translateOnTheFly(s.parentComment, targetLang);
+      var translatedStudentComment = translateOnTheFly(s.studentComment, targetLang);
+      var translatedCustomMessage = translateOnTheFly(customMessage || '', targetLang);
+      var participationRows = collectChartSeries(s.dates || [], 'participationPct');
+      var quizRows = collectChartSeries(s.dates || [], 'exitTicketPct');
+      var attendanceStats = getAttendanceStats(s.summary || {}, s.dates || []);
+      var attendanceRate = calcAttendancePct(attendanceStats.present, attendanceStats.tardy, attendanceStats.scheduled);
+      var attendanceRateStr = attendanceRate === null ? '—' : (attendanceRate + '%');
 
       function buildHtml(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
@@ -1434,7 +1554,25 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + s.tardies + '</td></tr>'
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + s.absences + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Attendance Rate</td><td>' + attendanceRateStr + '</td></tr>'
           + '</table></div>'
+          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin:0 0 20px;">'
+          + '<div style="font-weight:bold;font-size:14px;color:#2c3e50;margin-bottom:10px;">Performance Charts</div>'
+          + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
+          + '<div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:6px;">Participation</div>'
+          + buildSeriesChart(participationRows, '#14b8a6')
+          + '</div>'
+          + '<div style="flex:1;min-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
+          + '<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;">Quiz / Exit Ticket</div>'
+          + buildSeriesChart(quizRows, '#3b82f6')
+          + '</div>'
+          + '</div>'
+          + '<div style="margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
+          + '<div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">Attendance Graph</div>'
+          + buildAttendanceGraph(s.summary || {}, s.dates || [])
+          + '</div>'
+          + '</div>'
           + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
           + comment
           + '</div>';
@@ -1480,8 +1618,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           htmlBody += '</tbody></table></div></div>';
         }
 
-        if (customMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + customMessage.replace(/\n/g, '<br>') + '</p>';
+        if (translatedCustomMessage) {
+          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
         htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
@@ -1498,7 +1636,7 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       function buildPlain(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
         var body = greeting + comment + '\n\n';
-        if (customMessage) body += customMessage + '\n\n';
+        if (translatedCustomMessage) body += translatedCustomMessage + '\n\n';
         body += 'If you have any questions or concerns, please do not hesitate to reach out.\n\nBest regards,\n' + teacherName + '\n' + teacherEmail;
         return body;
       }
@@ -1509,8 +1647,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       if (sendToParent) {
         var mailOptions = {
           subject: emailSubject,
-          body: buildPlain('parent', s.parentComment),
-          htmlBody: buildHtml('parent', s.parentComment),
+          body: buildPlain('parent', translatedParentComment),
+          htmlBody: buildHtml('parent', translatedParentComment),
           name: teacherName || '',
           replyTo: teacherEmail
         };
@@ -1522,8 +1660,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       if (sendToStudent) {
         var mailOptions = {
           subject: emailSubject,
-          body: buildPlain('student', s.studentComment),
-          htmlBody: buildHtml('student', s.studentComment),
+          body: buildPlain('student', translatedStudentComment),
+          htmlBody: buildHtml('student', translatedStudentComment),
           name: teacherName || '',
           replyTo: teacherEmail
         };

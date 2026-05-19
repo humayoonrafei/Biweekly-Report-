@@ -2544,6 +2544,8 @@
           '<div class="email-card-grade">' + gradeBadge(r.grade) + '</div>' +
           '</div>' +
           '<div class="email-card-body">' +
+          '<div class="form-group"><label>Email Language</label>' +
+          '<select id="emailLanguage' + idx + '">' + languageOptionsHtml(r.language || 'en') + '</select></div>' +
           '<div class="form-group"><label>Parent Comment (Emailed to parent)</label>' +
           '<textarea id="parentCommentText' + idx + '" style="min-height:80px;">' + r.parentComment + '</textarea></div>' +
           '<div class="form-group" style="margin-top: 10px;"><label>Student Comment (Emailed to student)</label>' +
@@ -2596,6 +2598,7 @@
         if (cb && cb.checked && (r.parentEmail || r.studentEmail)) {
           var pTextArea = document.getElementById('parentCommentText' + idx);
           var sTextArea = document.getElementById('studentCommentText' + idx);
+          var langSel = document.getElementById('emailLanguage' + idx);
 
           selected.push({
             name: r.name,
@@ -2605,7 +2608,8 @@
             studentComment: sTextArea ? sTextArea.value : r.studentComment,
             grade: r.grade || '',
             tardies: r.tardies || 0,
-            absences: r.absences || 0
+            absences: r.absences || 0,
+            language: langSel ? langSel.value : 'en'
           });
         }
       });
@@ -3333,6 +3337,25 @@
       return '';
     }
 
+    function languageOptionsHtml(selected) {
+      var options = [
+        { value: 'en', label: 'English' },
+        { value: 'es', label: 'Spanish' },
+        { value: 'pt', label: 'Portuguese' },
+        { value: 'fr', label: 'French' },
+        { value: 'ar', label: 'Arabic' },
+        { value: 'ht', label: 'Haitian Creole' },
+        { value: 'zh', label: 'Chinese' },
+        { value: 'vi', label: 'Vietnamese' },
+        { value: 'bn', label: 'Bengali' },
+        { value: 'ur', label: 'Urdu' }
+      ];
+      var chosen = (selected || 'en').toLowerCase();
+      return options.map(function (opt) {
+        return '<option value="' + opt.value + '"' + (opt.value === chosen ? ' selected' : '') + '>' + opt.label + '</option>';
+      }).join('');
+    }
+
     function generateStudentCommentClient(name, grade, tardies, absences, present, periodName) {
       var firstName = name.indexOf(',') > -1
         ? (name.split(',')[1] || '').trim()
@@ -3368,7 +3391,7 @@
       }
 
       if (grade === 'C' || grade === 'D') {
-        var msg = firstName + '- you currently have a ' + grade + ' ' + inClassStr + '.';
+        var msg = firstName + '- you have shown real potential this period, and you currently have a ' + grade + ' ' + inClassStr + '.';
         if (tardies > 3) {
           msg += ' You have ' + spellNumberClient(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
         } else if (absences > 0) {
@@ -3382,7 +3405,7 @@
       }
 
       if (grade === 'F') {
-        var msg = firstName + '- I need to see more from you - your grade ' + inClassStr + ' is an F right now.';
+        var msg = firstName + '- I know you can improve, and I want to help you be successful. Right now your grade ' + inClassStr + ' is an F.';
         if (tardies > 0 || absences > 0) {
           var parts = [];
           if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
@@ -3436,7 +3459,7 @@
       }
 
       if (grade === 'C' || grade === 'D') {
-        var msg = firstName + ' is maintaining a ' + grade + ' grade ' + inClassStr + '.';
+        var msg = firstName + ' has shown positive effort this period and is currently maintaining a ' + grade + ' grade ' + inClassStr + '.';
         if (tardies > 3) {
           msg += ' ' + firstName + ' has ' + spellNumberClient(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumberClient(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing.';
         } else if (absences > 0) {
@@ -3450,7 +3473,7 @@
       }
 
       if (grade === 'F') {
-        var msg = firstName + ' is struggling with an F grade ' + inClassStr + ' at this time.';
+        var msg = firstName + ' has the ability to improve, and we want to partner with you to support that growth. At this time, they are struggling with an F grade ' + inClassStr + '.';
         if (tardies > 0 || absences > 0) {
           var parts = [];
           if (tardies > 0) parts.push(spellNumberClient(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
@@ -3594,6 +3617,8 @@
         var bodyHtml = '<div class="src-body">' +
           '<div class="src-data-col">' + table + '</div>' +
           '<div class="src-comment-col">' +
+          '<div class="src-comment-label no-print">🌐 Email Language</div>' +
+          '<select class="src-language-select no-print" data-student-index="' + report.students.indexOf(student) + '" style="margin-bottom:12px;">' + languageOptionsHtml(student.language || 'en') + '</select>' +
           '<div class="src-comment-label">💬 Student Comment</div>' +
           '<textarea class="src-comment-textarea" data-student-index="' + report.students.indexOf(student) + '">' + comment + '</textarea>' +
           '<div class="src-comment-label no-print" style="margin-top:16px;">📧 Parent Comment (Editable)</div>' +
@@ -3975,6 +4000,7 @@
         var parentComment = parentTextarea ? parentTextarea.value : generateParentCommentClient(
           s.name, s.letterGrade || '', s.summary.totalTardy, s.summary.totalAbsent, s.summary.totalPresent, getSelectedReportingPeriod()
         );
+        var languageSelect = document.querySelector('.src-language-select[data-student-index="' + idx + '"]');
 
         return {
           name: s.name,
@@ -3983,7 +4009,9 @@
           grade: s.letterGrade,
           tardies: s.summary.totalTardy,
           absences: s.summary.totalAbsent,
-          dates: s.dates
+          dates: s.dates,
+          summary: s.summary,
+          language: languageSelect ? languageSelect.value : 'en'
         };
       });
 
