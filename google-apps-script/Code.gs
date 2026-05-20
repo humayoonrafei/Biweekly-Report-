@@ -22,6 +22,20 @@ function saveUserPreference(key, data) {
   }
 }
 
+// ─── Module B: Translate Comment via Google Translate (LanguageApp) ───
+// Uses the built-in LanguageApp service — no API key or external quota needed.
+// targetLang: any BCP-47 language code ('es', 'ar', 'fr', 'so', 'zh', 'vi', etc.)
+function translateComment(text, targetLang) {
+  try {
+    if (!text || !targetLang || targetLang === 'en') {
+      return { success: true, translated: text, lang: 'en' };
+    }
+    var translated = LanguageApp.translate(text, 'en', targetLang);
+    return { success: true, translated: translated, lang: targetLang };
+  } catch (e) {
+    return { error: 'Translation failed: ' + e.message };
+  }
+}
 function loadUserPreference(key) {
   try {
     var props = PropertiesService.getUserProperties();
@@ -603,7 +617,9 @@ function sendParentEmails(emailData) {
       function buildHtmlEmail(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
         var htmlBody = ''
-          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
+          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<style>@media(max-width:600px){.email-wrap{width:100%!important;max-width:100%!important;padding:0!important}.email-body{padding:16px!important}.email-table td{display:block!important;width:100%!important;text-align:left!important;padding:4px 0!important}}</style></head><body style="margin:0;padding:0;background:#f0f2f5;">'
+          + '<div class="email-wrap" style="width:100%;max-width:680px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
           + '<div style="background:#2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
           + '<td style="color:#fff;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
@@ -611,11 +627,11 @@ function sendParentEmails(emailData) {
           + '<span style="color:#6bb8c9;font-size:22px;font-weight:bold;">blueprint</span><br>'
           + '<span style="color:#6bb8c9;font-size:11px;">schools network</span>'
           + '</td></tr></table></div>'
-          + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
+          + '<div class="email-body" style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
           + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
           + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
           + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
+          + '<table class="email-table" cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (grade === 'A' || grade === 'B' ? '#d1fae5;color:#059669' : grade === 'C' || grade === 'D' ? '#fef3c7;color:#d97706' : grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (grade || '—') + '</span></td></tr>'
           + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + tardies + '</td></tr>'
@@ -636,7 +652,7 @@ function sendParentEmails(emailData) {
           + '</div>'
           + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
           + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
-          + '</div></div>';
+          + '</div></div></body></html>';
         return htmlBody;
       }
 
@@ -1411,87 +1427,191 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         : s.name.split(',')[0].trim();
       if (!firstName) firstName = s.name;
 
-      var emailSubject = subject.replace('{student}', firstName);
+    var emailSubject = subject.replace('{student}', firstName);
+
+      // ── SVG Chart Helpers (inline, no external URLs) ──
+      function buildAttendanceDonut(present, tardy, absent, total) {
+        if (total === 0) return '';
+        var r = 40, cx = 56, cy = 56;
+        var circumference = 2 * Math.PI * r;
+        var pPct = present / total, tPct = tardy / total, aPct = absent / total;
+        var pDash = pPct * circumference, tDash = tPct * circumference, aDash = aPct * circumference;
+        var pOff = 0, tOff = circumference - pDash, aOff = tOff - tDash;
+        var ns = total - present - tardy - absent;
+        var nsDash = (ns / total) * circumference;
+        var nsOff = aOff - aDash;
+
+        var svg = '<svg viewBox="0 0 112 112" width="112" height="112" style="display:inline-block;vertical-align:middle;">'
+          + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#e2e8f0" stroke-width="18"/>';
+        if (present > 0) svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#059669" stroke-width="18" stroke-dasharray="' + pDash.toFixed(2) + ' ' + (circumference - pDash).toFixed(2) + '" stroke-dashoffset="' + circumference / 4 + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        if (tardy > 0) svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#d97706" stroke-width="18" stroke-dasharray="' + tDash.toFixed(2) + ' ' + (circumference - tDash).toFixed(2) + '" stroke-dashoffset="' + (circumference / 4 - pDash).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        if (absent > 0) svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#dc2626" stroke-width="18" stroke-dasharray="' + aDash.toFixed(2) + ' ' + (circumference - aDash).toFixed(2) + '" stroke-dashoffset="' + (circumference / 4 - pDash - tDash).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        svg += '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="14" fill="#1e293b">' + Math.round(pPct * 100) + '%</text>'
+          + '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Present</text>'
+          + '</svg>';
+        return svg;
+      }
+
+      function buildBarChart(dates, valueKey, maxVal, barColor, title) {
+        if (!dates || dates.length === 0) return '';
+        var w = Math.max(dates.length * 24, 120), h = 72, pad = 8, barW = 14;
+        var svg = '<svg viewBox="0 0 ' + (w + pad * 2) + ' ' + (h + 24) + '" width="' + (w + pad * 2) + '" height="' + (h + 24) + '" style="display:block;max-width:100%;">';
+        // Background grid lines
+        [0, 25, 50, 75, 100].forEach(function(pct) {
+          var y = pad + h - (pct / 100) * h;
+          svg += '<line x1="' + pad + '" y1="' + y + '" x2="' + (w + pad) + '" y2="' + y + '" stroke="#f1f5f9" stroke-width="1"/>';
+        });
+        dates.forEach(function(d, idx) {
+          var val = d[valueKey];
+          if (val === null || val === undefined) { idx; return; }
+          var pct = Math.min(val / maxVal, 1);
+          var barH = Math.max(pct * h, 2);
+          var x = pad + idx * 24 + (24 - barW) / 2;
+          var y = pad + h - barH;
+          var color = pct >= 0.8 ? '#059669' : pct >= 0.6 ? '#d97706' : '#dc2626';
+          svg += '<rect x="' + x.toFixed(0) + '" y="' + y.toFixed(0) + '" width="' + barW + '" height="' + barH.toFixed(0) + '" fill="' + color + '" rx="2"/>';
+          if (pct > 0) {
+            svg += '<text x="' + (x + barW / 2).toFixed(0) + '" y="' + (y - 2).toFixed(0) + '" text-anchor="middle" font-family="Arial" font-size="7" fill="' + color + '">' + Math.round(pct * 100) + '</text>';
+          }
+        });
+        svg += '<text x="' + (w / 2 + pad) + '" y="' + (h + pad + 14) + '" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b" font-weight="bold">' + title + '</text>';
+        svg += '</svg>';
+        return svg;
+      }
+
+      // Build the three charts
+      var totalDaysChart = s.dates ? s.dates.length : 0;
+      var presentCount = 0, tardyCount = 0, absentCount = 0;
+      if (s.dates) {
+        s.dates.forEach(function(d) {
+          var a = (d.attendance || '').toLowerCase();
+          if (a === 'present') presentCount++;
+          else if (a === 'tardy') tardyCount++;
+          else if (a === 'absent') absentCount++;
+        });
+      }
+      var donutSvg = buildAttendanceDonut(presentCount, tardyCount, absentCount, totalDaysChart);
+      var partBarSvg = buildBarChart(s.dates || [], 'participationPct', 100, '#2563eb', 'Participation %');
+      var etBarSvg = buildBarChart(s.dates || [], 'exitTicketPct', 100, '#7c3aed', 'Exit Ticket %');
+
+      // Grade badge color
+      var gradeG = s.grade || '';
+      var gradeBg = gradeG === 'A' || gradeG === 'B' ? '#d1fae5' : gradeG === 'C' || gradeG === 'D' ? '#fef3c7' : gradeG === 'F' ? '#fee2e2' : '#f3f4f6';
+      var gradeColor = gradeG === 'A' || gradeG === 'B' ? '#059669' : gradeG === 'C' || gradeG === 'D' ? '#d97706' : gradeG === 'F' ? '#dc2626' : '#6b7280';
 
       function buildHtml(recipientType, comment) {
         var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
         var htmlBody = ''
-          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
-          + '<div style="background:#ffffff;border-bottom:3px solid #2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
+          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<style>@media(max-width:600px){.ew{width:100%!important;max-width:100%!important}.eb{padding:16px!important}.chart-row{display:block!important}.chart-cell{display:block!important;width:100%!important;text-align:center!important;padding:12px 0!important}}</style>'
+          + '</head><body style="margin:0;padding:0;background:#f0f2f5;">'
+          + '<div class="ew" style="width:100%;max-width:640px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
+          // Header
+          + '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-          + '<td style="color:#2c3e50;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
+          + '<td style="color:#fff;font-size:17px;font-weight:bold;letter-spacing:-0.3px;">Biweekly Progress Report</td>'
           + '<td style="text-align:right;">'
-          + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools Network" style="height: 36px; width: auto; display: inline-block;">' : '<strong>Blueprint Schools Network</strong>')
+          + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools" style="height:32px;width:auto;">' : '<span style="color:#93c5fd;font-size:16px;font-weight:bold;">blueprint</span>')
           + '</td></tr></table></div>'
-          + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
-          + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
-          + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
-          + (className && className.trim() !== '' ? '<tr><td style="padding:4px 16px 4px 0;color:#666;">Class</td><td style="font-weight:bold;">' + className.trim() + '</td></tr>' : '')
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Dates</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + s.tardies + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + s.absences + '</td></tr>'
-          + '</table></div>'
-          + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
+          // Body
+          + '<div class="eb" style="padding:24px;background:#fff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
+          + '<p style="margin:0 0 20px;font-size:15px;color:#1e293b;">' + greeting + '</p>'
+          // Summary card
+          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 20px;">'
+          + '<div style="font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:12px;">Student Summary</div>'
+          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;"><tbody>'
+          + '<tr><td style="padding:4px 0;color:#64748b;width:90px;">Student</td><td style="font-weight:bold;color:#0f172a;">' + s.name + '</td></tr>'
+          + (className ? '<tr><td style="padding:4px 0;color:#64748b;">Class</td><td style="font-weight:bold;">' + className + '</td></tr>' : '')
+          + '<tr><td style="padding:4px 0;color:#64748b;">Period</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;">Grade</td><td><span style="display:inline-block;padding:3px 12px;border-radius:20px;font-weight:bold;font-size:13px;background:' + gradeBg + ';color:' + gradeColor + ';">' + (gradeG || '&mdash;') + '</span></td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;">Tardies</td><td style="font-weight:600;color:' + (s.tardies > 0 ? '#d97706' : '#0f172a') + ';">' + s.tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;">Absences</td><td style="font-weight:600;color:' + (s.absences > 0 ? '#dc2626' : '#0f172a') + ';">' + s.absences + '</td></tr>'
+          + '</tbody></table></div>'
+          // 📊 Performance Charts
+          + '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
+          + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4CA; Performance Snapshot</span></div>'
+          + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>'
+          // Attendance donut
+          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:middle;">'
+          + donutSvg
+          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">Attendance</div>'
+          + '<div style="margin-top:4px;font-size:11px;color:#64748b;">'
+          + '<span style="color:#059669;font-weight:600;">&#x25CF; ' + presentCount + ' Present</span> &nbsp;'
+          + '<span style="color:#d97706;font-weight:600;">&#x25CF; ' + tardyCount + ' Tardy</span> &nbsp;'
+          + '<span style="color:#dc2626;font-weight:600;">&#x25CF; ' + absentCount + ' Absent</span>'
+          + '</div></td>'
+          // Participation bar chart
+          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:middle;">'
+          + partBarSvg
+          + '</td>'
+          // ET bar chart
+          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;vertical-align:middle;">'
+          + etBarSvg
+          + '</td>'
+          + '</tr></table></div>'
+          // Comment / message
+          + '<div style="border-left:4px solid #2563eb;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;color:#1e293b;">'
           + comment
           + '</div>';
 
         // Add Detailed Daily Activity Table if available
         if (s.dates && s.dates.length > 0) {
-          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 20px;overflow:hidden;">'
-            + '<div style="background:#2c3e50;padding:12px 16px;color:#fff;font-weight:bold;font-size:14px;">Daily Activity Log</div>'
+          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
+            + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4C5; Daily Activity Log</span></div>'
             + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;">'
-            + '<thead style="background:#f8f9fa;border-bottom:2px solid #e2e8f0;"><tr>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Date</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Attendance</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Participation</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Exit Ticket</th>'
+            + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;white-space:nowrap;">Date</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">Attendance</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">Grades</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">Part. %</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">Exit Ticket</th>'
             + '</tr></thead><tbody>';
 
           for (var d = 0; d < s.dates.length; d++) {
             var day = s.dates[d];
-            var attColor = day.attendance.toLowerCase() === 'absent' ? '#dc2626' : (day.attendance.toLowerCase() === 'tardy' ? '#d97706' : '#333');
+            var attLower = (day.attendance || '').toLowerCase();
+            var attColor = attLower === 'absent' ? '#dc2626' : attLower === 'tardy' ? '#d97706' : '#059669';
+            var attBg = attLower === 'absent' ? '#fef2f2' : attLower === 'tardy' ? '#fffbeb' : '#f0fdf4';
             var bg = d % 2 === 0 ? '#ffffff' : '#f8fafc';
-            
-            var partStr = day.gradesStr;
-            if (day.participationPct !== null && day.participationPct !== undefined) {
-               if (partStr && partStr !== '—') partStr += ' (' + day.participationPct + '%)';
-               else partStr = day.participationPct + '%';
-            }
-            if (!partStr) partStr = '—';
-            
-            var etStr = day.exitTicket;
-            if (day.exitTicketPct !== null && day.exitTicketPct !== undefined) {
-               if (etStr && String(etStr).trim() !== '') etStr += ' (' + day.exitTicketPct + '%)';
-               else etStr = day.exitTicketPct + '%';
-            }
-            if (!etStr || String(etStr).trim() === '') etStr = '—';
+
+            // Participation % bar inline
+            var pPct = (day.participationPct !== null && day.participationPct !== undefined) ? day.participationPct : null;
+            var pBarColor = pPct !== null ? (pPct >= 80 ? '#059669' : pPct >= 60 ? '#d97706' : '#dc2626') : '#e2e8f0';
+            var pStr = pPct !== null ? (pPct + '%') : '&mdash;';
+            var pBar = pPct !== null
+              ? '<div style="background:#e2e8f0;border-radius:3px;height:6px;width:80px;margin:3px auto 0;"><div style="background:' + pBarColor + ';width:' + pPct + '%;height:100%;border-radius:3px;"></div></div>'
+              : '';
+
+            var etPct = (day.exitTicketPct !== null && day.exitTicketPct !== undefined) ? day.exitTicketPct : null;
+            var etStr = day.exitTicket !== '' && day.exitTicket != null ? day.exitTicket : '&mdash;';
+            if (etPct !== null) etStr += ' <span style="font-size:11px;color:#64748b;">(' + etPct + '%)</span>';
+
+            var gradesDisplay = (day.gradesStr && day.gradesStr !== '&mdash;' && day.gradesStr !== '\u2014') ? day.gradesStr : '&mdash;';
 
             htmlBody += '<tr style="background:' + bg + ';border-bottom:1px solid #f1f5f9;">'
-              + '<td style="padding:10px 16px;color:#334155;white-space:nowrap;">' + day.date + '</td>'
-              + '<td style="padding:10px 16px;color:' + attColor + ';font-weight:500;">' + day.attendance + '</td>'
-              + '<td style="padding:10px 16px;color:#334155;">' + (partStr || '—') + '</td>'
-              + '<td style="padding:10px 16px;color:#334155;">' + (etStr || '—') + '</td>'
+              + '<td style="padding:9px 14px;color:#334155;white-space:nowrap;font-size:12px;">' + day.date + '</td>'
+              + '<td style="padding:9px 14px;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:' + attBg + ';color:' + attColor + ';">' + day.attendance + '</span></td>'
+              + '<td style="padding:9px 14px;font-family:monospace;font-size:12px;color:#334155;">' + gradesDisplay + '</td>'
+              + '<td style="padding:9px 14px;text-align:center;"><span style="font-weight:600;font-size:12px;color:' + (pPct !== null ? pBarColor : '#94a3b8') + ';">' + pStr + '</span>' + pBar + '</td>'
+              + '<td style="padding:9px 14px;text-align:center;color:#334155;font-size:12px;">' + etStr + '</td>'
               + '</tr>';
           }
           htmlBody += '</tbody></table></div></div>';
         }
 
         if (customMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + customMessage.replace(/\n/g, '<br>') + '</p>';
+          htmlBody += '<p style="font-size:14px;line-height:1.6;color:#334155;">' + customMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
-          + '<p style="font-size:14px;margin-bottom:0;">Best regards,<br>'
+        htmlBody += '<p style="font-size:14px;color:#334155;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
+          + '<p style="font-size:14px;margin-bottom:0;color:#334155;">Best regards,<br>'
           + '<strong>' + teacherName + '</strong><br>'
-          + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
+          + '<span style="color:#64748b;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
-          + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
-          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
-          + '</div></div>';
+          // Footer
+          + '<div style="background:#f8fafc;padding:12px 24px;text-align:center;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">'
+          + '<span style="color:#94a3b8;font-size:11px;">Blueprint Schools Network &middot; Biweekly Progress Report</span>'
+          + '</div></div></body></html>';
         return htmlBody;
       }
 
@@ -1543,5 +1663,78 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
   } catch (e) {
     return { error: 'Failed to send emails: ' + e.message };
+  }
+}
+
+// ─── Module 4.2: Export School Roster by Email ───
+function exportRosterByEmail(adminEmail, rosterData, tutorName, dateRange) {
+  try {
+    var teacherEmail = Session.getActiveUser().getEmail();
+    var dateStr = '';
+    if (dateRange && dateRange.start) {
+      dateStr = dateRange.start + ' – ' + (dateRange.end || '');
+    }
+
+    var rows = '';
+    var num = 0;
+    rosterData.forEach(function(s) {
+      num++;
+      var gradeStyle = s.grade === 'A' || s.grade === 'B'
+        ? 'background:#d1fae5;color:#059669'
+        : s.grade === 'C' || s.grade === 'D'
+        ? 'background:#fef3c7;color:#d97706'
+        : s.grade === 'F'
+        ? 'background:#fee2e2;color:#dc2626'
+        : 'background:#f3f4f6;color:#6b7280';
+      rows += '<tr>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + num + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">' + s.name + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + (s.period || '—') + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">'
+        + (s.grade ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;' + gradeStyle + ';">' + s.grade + '</span>' : '—')
+        + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;font-weight:600;">' + (s.present || 0) + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#d97706;font-weight:600;">' + (s.tardy || 0) + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#dc2626;font-weight:600;">' + (s.absent || 0) + '</td>'
+        + '</tr>';
+    });
+
+    var htmlBody = '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+      + '<style>body{font-family:Arial,Helvetica,sans-serif;color:#333;margin:0;padding:0;background:#f0f2f5}'
+      + 'table{border-collapse:collapse;width:100%}th{background:#1e3a8a;color:#fff;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;text-align:left}'
+      + 'tr:nth-child(even){background:#f8fafc}</style></head><body>'
+      + '<div style="max-width:700px;margin:20px auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">'
+      + '<div style="background:#1e3a8a;padding:20px 24px;">'
+      + '<div style="color:#fff;font-size:18px;font-weight:bold;">Blueprint School Roster</div>'
+      + '<div style="color:#93c5fd;font-size:12px;margin-top:4px;">Tutor: ' + (tutorName || 'N/A') + ' · ' + dateStr + '</div>'
+      + '</div>'
+      + '<div style="padding:0;">'
+      + '<table><thead><tr>'
+      + '<th>#</th><th>Student Name</th><th style="text-align:center;">Period</th>'
+      + '<th style="text-align:center;">Grade</th><th style="text-align:center;">Present</th>'
+      + '<th style="text-align:center;">Tardy</th><th style="text-align:center;">Absent</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table>'
+      + '</div>'
+      + '<div style="padding:12px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center;">'
+      + 'Blueprint Schools Network · ' + rosterData.length + ' students · Sent by ' + teacherEmail
+      + '</div></div></body></html>';
+
+    var plainBody = 'Blueprint School Roster\n'
+      + 'Tutor: ' + (tutorName || 'N/A') + ' · ' + dateStr + '\n'
+      + rosterData.length + ' students\n\n'
+      + rosterData.map(function(s, i) {
+          return (i + 1) + '. ' + s.name + ' | Period: ' + (s.period || '—') + ' | Grade: ' + (s.grade || '—') + ' | Present: ' + (s.present || 0) + ' | Absent: ' + (s.absent || 0);
+        }).join('\n');
+
+    GmailApp.sendEmail(
+      adminEmail,
+      'Blueprint School Roster – ' + (tutorName || teacherEmail) + (dateStr ? ' · ' + dateStr : ''),
+      plainBody,
+      { htmlBody: htmlBody, replyTo: teacherEmail, name: tutorName || 'Blueprint Tools' }
+    );
+
+    return { success: true };
+  } catch (e) {
+    return { error: e.message };
   }
 }
