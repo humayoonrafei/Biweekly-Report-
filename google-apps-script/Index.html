@@ -2909,7 +2909,8 @@
             studentComment: sTextArea ? sTextArea.value : r.studentComment,
             grade: r.grade || '',
             tardies: r.tardies || 0,
-            absences: r.absences || 0
+            absences: r.absences || 0,
+            lang: (window._studentLangPrefs && window._studentLangPrefs[r.name]) || 'en'
           });
         }
       });
@@ -3816,12 +3817,35 @@
 
         var gpText = student.letterGrade ? student.letterGrade : '—';
         var gpCls = gradeClass(student.letterGrade || '');
+        var savedLang = (window._studentLangPrefs && window._studentLangPrefs[student.name]) || 'en';
+        var langOptions = [
+          { code: 'en', label: '🇺🇸 English' },
+          { code: 'es', label: '🇲🇽 Spanish' },
+          { code: 'ar', label: '🇸🇦 Arabic' },
+          { code: 'fr', label: '🇫🇷 French' },
+          { code: 'so', label: '🇸🇴 Somali' },
+          { code: 'zh', label: '🇨🇳 Chinese' },
+          { code: 'vi', label: '🇻🇳 Vietnamese' },
+          { code: 'hy', label: '🇦🇲 Armenian' }
+        ];
+        var langSelectHtml = '<select class="sidebar-lang-select" id="sidebar-lang-' + index + '" onclick="event.stopPropagation();" onchange="changeStudentLang(' + index + ', \'' + student.name.replace(/'/g, "\\'") + '\')" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; max-width: 90px; color: var(--text-secondary);">';
+        langOptions.forEach(function(l) {
+          langSelectHtml += '<option value="' + l.code + '"' + (savedLang === l.code ? ' selected' : '') + '>' + l.label + '</option>';
+        });
+        langSelectHtml += '</select>';
+
         sidebarItem.innerHTML =
           '<div style="display:flex; align-items:center; gap:12px;">' +
           '<input type="checkbox" class="student-select-checkbox" data-index="' + index + '" checked onclick="event.stopPropagation();">' +
-          '<div style="flex:1;">' +
-          '<div class="si-name">' + student.name + '</div>' +
-          '<div class="si-meta"><span class="grade-pill ' + gpCls + '" style="font-size:10px;padding:1px 6px;">' + gpText + '</span> · Abs: ' + student.summary.totalAbsent + '</div>' +
+          '<div style="flex:1; display:flex; flex-direction:column; gap:2px;">' +
+          '<div class="si-name" style="font-weight:600;">' + student.name + '</div>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+          '<span class="grade-pill ' + gpCls + '" style="font-size:10px;padding:1px 6px;">' + gpText + '</span>' +
+          '<span class="si-meta">· Abs: ' + student.summary.totalAbsent + '</span>' +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:4px; margin-top:2px;">' +
+          '<span style="font-size:10px; opacity:0.8;">🌐</span> ' + langSelectHtml +
+          '</div>' +
           '</div>' +
           '</div>';
 
@@ -3887,7 +3911,8 @@
             }
             var rawPct = possible > 0 ? Math.round((earned / possible) * 100) : 0;
             var pillCls = rawPct >= 80 ? 'high' : rawPct >= 60 ? 'mid' : 'low';
-            gradesHtml = '<span class="grade-pill-log ' + pillCls + '">' + d.gradesStr + '</span>';
+            var numericalStr = possible > 0 ? ' (' + earned + '/' + possible + ')' : '';
+            gradesHtml = '<span class="grade-pill-log ' + pillCls + '">' + d.gradesStr + '</span><span style="font-size:11px;color:var(--text-muted);margin-left:4px;">' + numericalStr + '</span>';
           } else if (isAbsent) {
             gradesHtml = '<span style="color:var(--text-muted);">—</span>';
           } else {
@@ -3923,8 +3948,8 @@
         // Build two-column layout
         var si = report.students.indexOf(student);
         var pCommentPreview = generateParentCommentClient(student.name, student.letterGrade || '', student.summary.totalTardy, student.summary.totalAbsent, student.summary.totalPresent, getSelectedReportingPeriod());
-        // Restore previously saved language pref for this student
-        var savedLang = (window._studentLangPrefs && window._studentLangPrefs[si]) || 'en';
+        // Restore previously saved language pref for this student name
+        var savedLang = (window._studentLangPrefs && window._studentLangPrefs[student.name]) || 'en';
 
         var langOptions = [
           { code: 'en', label: '🇺🇸 English' },
@@ -3940,19 +3965,24 @@
           return '<option value="' + l.code + '"' + (savedLang === l.code ? ' selected' : '') + '>' + l.label + '</option>';
         }).join('');
 
+        var initialStatusText = '';
+        if (savedLang !== 'en') {
+          var matchedLabel = langOptions.find(function(l) { return l.code === savedLang; });
+          initialStatusText = '📧 Parents will receive email in ' + (matchedLabel ? matchedLabel.label : savedLang) + ' (translated on the fly).';
+        }
+
         var bodyHtml = '<div class="src-body">' +
           '<div class="src-data-col">' + table + '</div>' +
           '<div class="src-comment-col">' +
           // Language selector
-          '<div class="lang-selector-wrap">' +
-          '<span class="lang-selector-label">🌐 Lang</span>' +
-          '<select class="lang-selector" id="lang-sel-' + si + '" data-student-index="' + si + '">' + langOptHtml + '</select>' +
-          '<button class="lang-translate-btn" id="lang-btn-' + si + '" onclick="translateStudentComment(' + si + ')" title="Translate">⚡ Translate</button>' +
+          '<div class="lang-selector-wrap" style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">' +
+          '<span style="font-size: 13px; font-weight:600; color:var(--text-secondary);">📧 Parent Email Language:</span>' +
+          '<select class="lang-selector" id="lang-sel-' + si + '" data-student-index="' + si + '" onchange="changeStudentLang(' + si + ', \'' + student.name.replace(/'/g, "\\'") + '\')" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; color: var(--text-main);">' + langOptHtml + '</select>' +
           '</div>' +
-          '<div class="lang-status" id="lang-status-' + si + '"></div>' +
+          '<div class="lang-status" id="lang-status-' + si + '" style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">' + initialStatusText + '</div>' +
           // Student comment
           '<div class="src-comment-label">💬 Student Comment</div>' +
-          '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '">' + comment + '</textarea>' +
+          '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '" style="min-height:90px;">' + comment + '</textarea>' +
           // Parent comment
           '<div class="src-comment-label no-print" style="margin-top:16px;">📧 Parent Comment (Editable)</div>' +
           '<textarea class="src-parent-textarea no-print" id="parent-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + pCommentPreview.replace(/"/g, '&quot;') + '" style="min-height:120px;">' + pCommentPreview + '</textarea>' +
@@ -4042,74 +4072,54 @@
     // ─── Module B: Per-Student Translation ───
     window._studentLangPrefs = window._studentLangPrefs || {};
 
-    function translateStudentComment(si) {
-      var sel = document.getElementById('lang-sel-' + si);
-      var lang = sel ? sel.value : 'en';
-      var statusEl = document.getElementById('lang-status-' + si);
-      var btn = document.getElementById('lang-btn-' + si);
-      var studentTA = document.getElementById('student-comment-' + si);
-      var parentTA = document.getElementById('parent-comment-' + si);
+    function changeStudentLang(index, studentName, langCode) {
+      if (!window._studentLangPrefs) window._studentLangPrefs = {};
 
-      if (!studentTA || !parentTA) return;
+      var val = langCode;
+      if (!val) {
+        var sidebarSel = document.getElementById('sidebar-lang-' + index);
+        var detailSel = document.getElementById('lang-sel-' + index);
+        if (sidebarSel) val = sidebarSel.value;
+        else if (detailSel) val = detailSel.value;
+      }
 
-      // Save preference
-      window._studentLangPrefs[si] = lang;
+      if (!val) val = 'en';
+
+      // Save preference under the student's name
+      window._studentLangPrefs[studentName] = val;
       saveLangPrefs();
 
-      // RTL for Arabic
-      var isRtl = (lang === 'ar');
-      studentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-      studentTA.style.textAlign = isRtl ? 'right' : 'left';
-      parentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-      parentTA.style.textAlign = isRtl ? 'right' : 'left';
+      // Synchronize both select controls
+      var sidebarSel = document.getElementById('sidebar-lang-' + index);
+      if (sidebarSel) sidebarSel.value = val;
 
-      // If English — restore originals
-      if (lang === 'en') {
-        studentTA.value = studentTA.dataset.originalComment || studentTA.value;
-        parentTA.value = parentTA.dataset.originalComment || parentTA.value;
-        if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; }
-        return;
-      }
+      var detailSel = document.getElementById('lang-sel-' + index);
+      if (detailSel) detailSel.value = val;
 
-      // Call backend for translation
-      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
-      if (statusEl) { statusEl.textContent = 'Translating…'; statusEl.style.color = 'var(--text-muted)'; }
-
-      var sText = studentTA.dataset.originalComment || studentTA.value;
-      var pText = parentTA.dataset.originalComment || parentTA.value;
-      var done = 0, sResult = '', pResult = '';
-
-      function finish() {
-        done++;
-        if (done < 2) return;
-        if (btn) { btn.disabled = false; btn.innerHTML = '⚡ Translate'; }
-        if (statusEl) {
-          statusEl.textContent = '✅ Translated to ' + sel.options[sel.selectedIndex].text;
-          statusEl.style.color = 'var(--success)';
+      // Update status visual indicator
+      var statusEl = document.getElementById('lang-status-' + index);
+      if (statusEl) {
+        if (val === 'en') {
+          statusEl.textContent = '';
+        } else {
+          var matchedLabel = val;
+          var langOptions = [
+            { code: 'en', label: '🇺🇸 English' },
+            { code: 'es', label: '🇲🇽 Spanish' },
+            { code: 'ar', label: '🇸🇦 Arabic' },
+            { code: 'fr', label: '🇫🇷 French' },
+            { code: 'so', label: '🇸🇴 Somali' },
+            { code: 'zh', label: '🇨🇳 Chinese' },
+            { code: 'vi', label: '🇻🇳 Vietnamese' },
+            { code: 'hy', label: '🇦🇲 Armenian' }
+          ];
+          var matchedOpt = langOptions.find(function(l) { return l.code === val; });
+          if (matchedOpt) matchedLabel = matchedOpt.label;
+          statusEl.textContent = '📧 Parents will receive email in ' + matchedLabel + ' (translated on the fly).';
+          statusEl.style.color = 'var(--text-secondary)';
+          statusEl.style.fontSize = '12px';
         }
-        if (sResult) studentTA.value = sResult;
-        if (pResult) parentTA.value = pResult;
       }
-
-      google.script.run
-        .withSuccessHandler(function(r) {
-          if (r && r.success) sResult = r.translated;
-          else if (statusEl) { statusEl.textContent = '⚠️ ' + (r ? r.error : 'Unknown error'); statusEl.style.color = 'var(--danger)'; }
-          finish();
-        })
-        .withFailureHandler(function(e) {
-          if (statusEl) { statusEl.textContent = '❌ ' + e.message; statusEl.style.color = 'var(--danger)'; }
-          if (btn) { btn.disabled = false; btn.innerHTML = '⚡ Translate'; }
-        })
-        .translateComment(sText, lang);
-
-      google.script.run
-        .withSuccessHandler(function(r) {
-          if (r && r.success) pResult = r.translated;
-          finish();
-        })
-        .withFailureHandler(function(e) { finish(); })
-        .translateComment(pText, lang);
     }
 
     function saveLangPrefs() {
@@ -4447,7 +4457,8 @@
           tardies: s.summary.totalTardy,
           absences: s.summary.totalAbsent,
           present: s.summary.totalPresent,
-          dates: s.dates
+          dates: s.dates,
+          lang: (window._studentLangPrefs && window._studentLangPrefs[s.name]) || 'en'
         };
       });
 
