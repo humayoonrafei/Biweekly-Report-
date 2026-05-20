@@ -11,11 +11,25 @@
  * No external APIs, no AI, no third-party services.
  */
 
+// ─── Scoping Helper Scopes Keys by Tutor Email ───
+function getUserScopedKey(baseKey) {
+  try {
+    var email = Session.getActiveUser().getEmail();
+    if (email) {
+      return baseKey + '_' + email.toLowerCase().trim();
+    }
+  } catch (e) {
+    // fallback if getEmail fails
+  }
+  return baseKey;
+}
+
 // ─── User Preference Memory (FERPA Compliant / Private to User) ───
 function saveUserPreference(key, data) {
   try {
     var props = PropertiesService.getUserProperties();
-    props.setProperty(key, JSON.stringify(data));
+    var scopedKey = getUserScopedKey(key);
+    props.setProperty(scopedKey, JSON.stringify(data));
     return { success: true };
   } catch (e) {
     return { error: e.message };
@@ -39,7 +53,8 @@ function translateComment(text, targetLang) {
 function loadUserPreference(key) {
   try {
     var props = PropertiesService.getUserProperties();
-    var val = props.getProperty(key);
+    var scopedKey = getUserScopedKey(key);
+    var val = props.getProperty(scopedKey);
     return val ? JSON.parse(val) : null;
   } catch (e) {
     return null;

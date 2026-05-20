@@ -2163,7 +2163,8 @@
               if (bestScore < 1.5) nameCol = '';
             }
 
-            populateHeaderSelect('actGradesNameCol', gradeHeaders, nameCol);
+            var savedNameCol = (window._savedConfig && window._savedConfig.gradesNameCol) ? window._savedConfig.gradesNameCol : nameCol;
+            populateHeaderSelect('actGradesNameCol', gradeHeaders, savedNameCol);
 
             // Grade dropdown
             var gradeSel = document.getElementById('actGradesGradeCol');
@@ -2185,9 +2186,10 @@
                 gradeSel.appendChild(opt);
               });
             }
-            if (gradeCol) {
+            var savedGradeCol = (window._savedConfig && window._savedConfig.gradesGradeCol) ? window._savedConfig.gradesGradeCol : gradeCol;
+            if (savedGradeCol) {
               for (var k = 0; k < gradeSel.options.length; k++) {
-                if (gradeSel.options[k].value === gradeCol) { gradeSel.selectedIndex = k; break; }
+                if (gradeSel.options[k].value === savedGradeCol) { gradeSel.selectedIndex = k; break; }
               }
             }
 
@@ -2611,7 +2613,8 @@
             }
           }
 
-          populateHeaderSelect('actGradesNameCol', result.headers, nameCol);
+          var finalNameCol = (window._savedConfig && window._savedConfig.gradesNameCol) ? window._savedConfig.gradesNameCol : nameCol;
+          populateHeaderSelect('actGradesNameCol', result.headers, finalNameCol);
           
           // Custom population for Grade Column -> Reporting Period
           // Each option is labelled with its topHeader (section) for clarity
@@ -2639,12 +2642,12 @@
             gradeSel.appendChild(opt);
           });
 
-          // Apply the grade column detected from Pass 1 / Pass 2.5
-          if (gradeCol) {
+          var finalGradeCol = (window._savedConfig && window._savedConfig.gradesGradeCol) ? window._savedConfig.gradesGradeCol : gradeCol;
+          if (finalGradeCol) {
             // Try to find matching option by column letter
             var matched = false;
             for (var k = 0; k < gradeSel.options.length; k++) {
-              if (gradeSel.options[k].value === gradeCol) {
+              if (gradeSel.options[k].value === finalGradeCol) {
                 gradeSel.selectedIndex = k;
                 matched = true;
                 break;
@@ -2652,7 +2655,7 @@
             }
             // If no match (period label mismatch), add and select it explicitly
             if (!matched) {
-              var fallbackHdr = result.headers.find ? result.headers.find(function(hh) { return hh.col === gradeCol; }) : null;
+              var fallbackHdr = result.headers.find ? result.headers.find(function(hh) { return hh.col === finalGradeCol; }) : null;
               if (fallbackHdr) {
                 var opt2 = document.createElement('option');
                 opt2.value = fallbackHdr.col;
@@ -3365,7 +3368,10 @@
         emailSheet: document.getElementById('actEmailSheetName').value,
         fellowFilter: document.getElementById('actFellowFilter').value,
         tutorName: document.getElementById('actTutorName').value,
-        className: document.getElementById('actClassName').value
+        className: document.getElementById('actClassName').value,
+        gradesNameCol: document.getElementById('actGradesNameCol') ? document.getElementById('actGradesNameCol').value : '',
+        gradesGradeCol: document.getElementById('actGradesGradeCol') ? document.getElementById('actGradesGradeCol').value : '',
+        gradesStartRow: document.getElementById('actGradesStartRow') ? document.getElementById('actGradesStartRow').value : ''
       };
       google.script.run.saveUserPreference('activity_config', config);
     }
@@ -3381,6 +3387,9 @@
           }
           if (config.tutorName) document.getElementById('actTutorName').value = config.tutorName;
           if (config.className) document.getElementById('actClassName').value = config.className;
+          if (config.gradesStartRow && document.getElementById('actGradesStartRow')) {
+            document.getElementById('actGradesStartRow').value = config.gradesStartRow;
+          }
           
           // These will be applied AFTER the sheets are loaded in loadSheetNames success handler
           window._savedConfig = config; 
