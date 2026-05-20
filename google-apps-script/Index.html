@@ -872,6 +872,20 @@
       transform: rotate(90deg);
     }
 
+    .daily-log-table-wrap {
+      max-height: 365px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 8px;
+      background: #ffffff;
+    }
+    .daily-log-table-wrap .src-table th,
+    .daily-log-table-wrap .src-table td {
+      padding: 8px 6px;
+    }
+
     /* ─── Grade Color Pills in Daily Log (2.2) ─── */
     .grade-pill-log {
       display: inline-block;
@@ -3883,7 +3897,7 @@
           '</div>';
 
         var table = '<details class="daily-log-details" open><summary><span class="daily-log-toggle-arrow">▼</span> Daily Log (' + student.dates.length + ' days)</summary>' +
-          '<div class="daily-log-table-wrap" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;">' +
+          '<div class="daily-log-table-wrap">' +
           '<table class="src-table"><thead><tr>' +
           '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Participation</th>' +
           '</tr></thead><tbody>';
