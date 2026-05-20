@@ -3882,9 +3882,7 @@
           '</div>' +
           '</div>';
 
-        // Two-column body: Table + Comment
-        // 2.1 Fixed column header "GRADES" (was "GARDES")
-        var table = '<details class="daily-log-details"><summary><span class="daily-log-toggle-arrow">▶</span> Daily Log (' + student.dates.length + ' days)</summary>' +
+        var table = '<details class="daily-log-details" open><summary><span class="daily-log-toggle-arrow">▼</span> Daily Log (' + student.dates.length + ' days)</summary>' +
           '<table class="src-table"><thead><tr>' +
           '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Participation</th>' +
           '</tr></thead><tbody>';
@@ -3948,38 +3946,10 @@
         // Build two-column layout
         var si = report.students.indexOf(student);
         var pCommentPreview = generateParentCommentClient(student.name, student.letterGrade || '', student.summary.totalTardy, student.summary.totalAbsent, student.summary.totalPresent, getSelectedReportingPeriod());
-        // Restore previously saved language pref for this student name
-        var savedLang = (window._studentLangPrefs && window._studentLangPrefs[student.name]) || 'en';
-
-        var langOptions = [
-          { code: 'en', label: '🇺🇸 English' },
-          { code: 'es', label: '🇲🇽 Spanish' },
-          { code: 'ar', label: '🇸🇦 Arabic' },
-          { code: 'fr', label: '🇫🇷 French' },
-          { code: 'so', label: '🇸🇴 Somali' },
-          { code: 'zh', label: '🇨🇳 Chinese' },
-          { code: 'vi', label: '🇻🇳 Vietnamese' },
-          { code: 'hy', label: '🇦🇲 Armenian' }
-        ];
-        var langOptHtml = langOptions.map(function(l) {
-          return '<option value="' + l.code + '"' + (savedLang === l.code ? ' selected' : '') + '>' + l.label + '</option>';
-        }).join('');
-
-        var initialStatusText = '';
-        if (savedLang !== 'en') {
-          var matchedLabel = langOptions.find(function(l) { return l.code === savedLang; });
-          initialStatusText = '📧 Parents will receive email in ' + (matchedLabel ? matchedLabel.label : savedLang) + ' (translated on the fly).';
-        }
 
         var bodyHtml = '<div class="src-body">' +
           '<div class="src-data-col">' + table + '</div>' +
           '<div class="src-comment-col">' +
-          // Language selector
-          '<div class="lang-selector-wrap" style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">' +
-          '<span style="font-size: 13px; font-weight:600; color:var(--text-secondary);">📧 Parent Email Language:</span>' +
-          '<select class="lang-selector" id="lang-sel-' + si + '" data-student-index="' + si + '" onchange="changeStudentLang(' + si + ', \'' + student.name.replace(/'/g, "\\'") + '\')" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; color: var(--text-main);">' + langOptHtml + '</select>' +
-          '</div>' +
-          '<div class="lang-status" id="lang-status-' + si + '" style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">' + initialStatusText + '</div>' +
           // Student comment
           '<div class="src-comment-label">💬 Student Comment</div>' +
           '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '" style="min-height:90px;">' + comment + '</textarea>' +
@@ -4059,25 +4029,6 @@
       document.getElementById('paginationText').innerText = (index + 1) + ' of ' + window.totalStudents;
       document.getElementById('btnPrevStudent').disabled = (index === 0);
       document.getElementById('btnNextStudent').disabled = (index === window.totalStudents - 1);
-
-      // Apply RTL style based on language selection
-      if (window.activityReport && window.activityReport.students) {
-        var s = window.activityReport.students[index];
-        if (s) {
-          var savedLang = (window._studentLangPrefs && window._studentLangPrefs[s.name]) || 'en';
-          var isRtl = (savedLang === 'ar');
-          var studentTA = document.getElementById('student-comment-' + index);
-          if (studentTA) {
-            studentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-            studentTA.style.textAlign = isRtl ? 'right' : 'left';
-          }
-          var parentTA = document.getElementById('parent-comment-' + index);
-          if (parentTA) {
-            parentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-            parentTA.style.textAlign = isRtl ? 'right' : 'left';
-          }
-        }
-      }
     }
 
     function nextStudent() {
@@ -4097,9 +4048,7 @@
       var val = langCode;
       if (!val) {
         var sidebarSel = document.getElementById('sidebar-lang-' + index);
-        var detailSel = document.getElementById('lang-sel-' + index);
         if (sidebarSel) val = sidebarSel.value;
-        else if (detailSel) val = detailSel.value;
       }
 
       if (!val) val = 'en';
@@ -4108,50 +4057,9 @@
       window._studentLangPrefs[studentName] = val;
       saveLangPrefs();
 
-      // Synchronize both select controls
+      // Synchronize select control in sidebar
       var sidebarSel = document.getElementById('sidebar-lang-' + index);
       if (sidebarSel) sidebarSel.value = val;
-
-      var detailSel = document.getElementById('lang-sel-' + index);
-      if (detailSel) detailSel.value = val;
-
-      // RTL styling for textareas on toggle change
-      var isRtl = (val === 'ar');
-      var studentTA = document.getElementById('student-comment-' + index);
-      if (studentTA) {
-        studentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-        studentTA.style.textAlign = isRtl ? 'right' : 'left';
-      }
-      var parentTA = document.getElementById('parent-comment-' + index);
-      if (parentTA) {
-        parentTA.style.direction = isRtl ? 'rtl' : 'ltr';
-        parentTA.style.textAlign = isRtl ? 'right' : 'left';
-      }
-
-      // Update status visual indicator
-      var statusEl = document.getElementById('lang-status-' + index);
-      if (statusEl) {
-        if (val === 'en') {
-          statusEl.textContent = '';
-        } else {
-          var matchedLabel = val;
-          var langOptions = [
-            { code: 'en', label: '🇺🇸 English' },
-            { code: 'es', label: '🇲🇽 Spanish' },
-            { code: 'ar', label: '🇸🇦 Arabic' },
-            { code: 'fr', label: '🇫🇷 French' },
-            { code: 'so', label: '🇸🇴 Somali' },
-            { code: 'zh', label: '🇨🇳 Chinese' },
-            { code: 'vi', label: '🇻🇳 Vietnamese' },
-            { code: 'hy', label: '🇦🇲 Armenian' }
-          ];
-          var matchedOpt = langOptions.find(function(l) { return l.code === val; });
-          if (matchedOpt) matchedLabel = matchedOpt.label;
-          statusEl.textContent = '📧 Parents will receive email in ' + matchedLabel + ' (translated on the fly).';
-          statusEl.style.color = 'var(--text-secondary)';
-          statusEl.style.fontSize = '12px';
-        }
-      }
     }
 
     function saveLangPrefs() {
