@@ -700,8 +700,8 @@ function sendParentEmails(emailData) {
 
         var isRtl = (lang === 'ar' && isParent);
         var commentDirStyle = isRtl
-          ? 'dir="rtl" style="text-align:right;border-right:4px solid #6bb8c9;border-left:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"'
-          : 'dir="ltr" style="text-align:left;border-left:4px solid #6bb8c9;border-right:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"';
+          ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #6bb8c9;border-left:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"'
+          : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #6bb8c9;border-right:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"';
 
         var htmlBody = ''
           + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -1593,9 +1593,9 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
       if (partBarBlob) studentInlineImages['partBarChart'] = partBarBlob;
       if (etBarBlob) studentInlineImages['etBarChart'] = etBarBlob;
 
-      var donutImg = attChartBlob ? '<img src="cid:attChart" width="112" height="112" style="display:inline-block;vertical-align:middle;margin:0 auto;" alt="Attendance">' : '';
-      var partImg = partBarBlob ? '<img src="cid:partBarChart" width="140" height="105" style="display:inline-block;vertical-align:middle;margin:0 auto;" alt="Participation">' : '';
-      var etImg = etBarBlob ? '<img src="cid:etBarChart" width="140" height="105" style="display:inline-block;vertical-align:middle;margin:0 auto;" alt="Exit Ticket">' : '';
+      var donutImg = attChartBlob ? '<img src="cid:attChart" width="125" height="125" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Attendance">' : '';
+      var partImg = partBarBlob ? '<img src="cid:partBarChart" width="155" height="143" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Participation">' : '';
+      var etImg = etBarBlob ? '<img src="cid:etBarChart" width="155" height="143" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Exit Ticket">' : '';
 
       // Grade badge color
       var gradeG = s.grade || '';
@@ -1610,8 +1610,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
         var isRtl = (lang === 'ar' && isParent);
         var commentDirStyle = isRtl 
-          ? 'dir="rtl" style="text-align:right;border-right:4px solid #2563eb;border-left:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:8px 0 0 8px;font-size:14px;line-height:1.7;color:#1e293b;"' 
-          : 'dir="ltr" style="text-align:left;border-left:4px solid #2563eb;border-right:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;color:#1e293b;"';
+          ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #2563eb;border-left:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:8px 0 0 8px;font-size:14px;line-height:1.7;color:#1e293b;"' 
+          : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #2563eb;border-right:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;color:#1e293b;"';
 
         var summaryTitle = getLocalizedText('studentSummary', lang, 'Student Summary');
         var performanceTitle = getLocalizedText('performanceSnapshot', lang, 'Performance Snapshot');
@@ -1661,10 +1661,12 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           // Participation chart
           + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:middle;">'
           + partImg
+          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">' + getLocalizedText('participation', lang, 'Participation') + '</div>'
           + '</td>'
           // ET chart
           + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;vertical-align:middle;">'
           + etImg
+          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">' + getLocalizedText('exitTicket', lang, 'Exit Ticket') + '</div>'
           + '</td>'
           + '</tr></table></div>'
           // Comment / message
@@ -2075,12 +2077,13 @@ function buildAttendanceChartNative(present, tardy, absent) {
       
     var chart = Charts.newPieChart()
       .setDataTable(dataTable)
-      .setColors(['#059669', '#d97706', '#dc2626'])
-      .setDimensions(240, 240)
-      .setBackgroundColor('#f8fafc')
-      .setOption('pieHole', 0.5)
+      .setColors(['#10b981', '#f59e0b', '#ef4444']) // Vibrant modern colors
+      .setDimensions(220, 220)
+      .setBackgroundColor('#ffffff') // Clean seamless white
+      .setOption('pieHole', 0.65) // Clean modern donut ring
       .setOption('legend', 'none')
-      .setOption('chartArea', { left: 10, top: 10, width: '220', height: '220' })
+      .setOption('pieSliceText', 'none') // Banish overlapping slice labels!
+      .setOption('chartArea', { left: '10%', top: '10%', width: '80%', height: '80%' })
       .build();
       
     return chart.getAs('image/png');
@@ -2119,11 +2122,24 @@ function buildBarChartNative(dates, valueKey, maxVal, barColor, title) {
     var chart = Charts.newColumnChart()
       .setDataTable(dataTable.build())
       .setColors([barColor])
-      .setDimensions(240, 180)
-      .setBackgroundColor('#f8fafc')
+      .setDimensions(200, 185)
+      .setBackgroundColor('#ffffff') // Clean seamless white
       .setOption('legend', 'none')
-      .setOption('vAxis', { minValue: 0, maxValue: maxVal })
-      .setOption('chartArea', { left: 35, top: 20, width: '190', height: '130' })
+      .setOption('bar', { groupWidth: '68%' }) // Thick, well-proportioned modern bars
+      .setOption('hAxis', {
+        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Arial' },
+        gridlines: { count: 0 },
+        slantedText: true,
+        slantedTextAngle: 30
+      })
+      .setOption('vAxis', {
+        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Arial' },
+        gridlines: { color: '#f1f5f9' },
+        baselineColor: '#cbd5e1',
+        minValue: 0,
+        maxValue: maxVal
+      })
+      .setOption('chartArea', { left: 30, top: 15, width: '160', height: '125' })
       .build();
       
     return chart.getAs('image/png');

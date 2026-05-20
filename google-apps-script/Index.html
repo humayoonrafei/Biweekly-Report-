@@ -4059,6 +4059,25 @@
       document.getElementById('paginationText').innerText = (index + 1) + ' of ' + window.totalStudents;
       document.getElementById('btnPrevStudent').disabled = (index === 0);
       document.getElementById('btnNextStudent').disabled = (index === window.totalStudents - 1);
+
+      // Apply RTL style based on language selection
+      if (window.activityReport && window.activityReport.students) {
+        var s = window.activityReport.students[index];
+        if (s) {
+          var savedLang = (window._studentLangPrefs && window._studentLangPrefs[s.name]) || 'en';
+          var isRtl = (savedLang === 'ar');
+          var studentTA = document.getElementById('student-comment-' + index);
+          if (studentTA) {
+            studentTA.style.direction = isRtl ? 'rtl' : 'ltr';
+            studentTA.style.textAlign = isRtl ? 'right' : 'left';
+          }
+          var parentTA = document.getElementById('parent-comment-' + index);
+          if (parentTA) {
+            parentTA.style.direction = isRtl ? 'rtl' : 'ltr';
+            parentTA.style.textAlign = isRtl ? 'right' : 'left';
+          }
+        }
+      }
     }
 
     function nextStudent() {
@@ -4095,6 +4114,19 @@
 
       var detailSel = document.getElementById('lang-sel-' + index);
       if (detailSel) detailSel.value = val;
+
+      // RTL styling for textareas on toggle change
+      var isRtl = (val === 'ar');
+      var studentTA = document.getElementById('student-comment-' + index);
+      if (studentTA) {
+        studentTA.style.direction = isRtl ? 'rtl' : 'ltr';
+        studentTA.style.textAlign = isRtl ? 'right' : 'left';
+      }
+      var parentTA = document.getElementById('parent-comment-' + index);
+      if (parentTA) {
+        parentTA.style.direction = isRtl ? 'rtl' : 'ltr';
+        parentTA.style.textAlign = isRtl ? 'right' : 'left';
+      }
 
       // Update status visual indicator
       var statusEl = document.getElementById('lang-status-' + index);
