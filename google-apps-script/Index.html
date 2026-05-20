@@ -809,7 +809,7 @@
     }
     .att-bar-track {
       display: flex;
-      height: 10px;
+      height: 6px;
       border-radius: 6px;
       overflow: hidden;
       margin-bottom: 10px;
@@ -893,7 +893,7 @@
       gap: 3px;
     }
     .part-bar-track {
-      height: 5px;
+      height: 3px;
       border-radius: 3px;
       background: #e2e8f0;
       overflow: hidden;
@@ -1804,7 +1804,7 @@
 
             <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
               <div class="form-group">
-                <label style="font-size: 11px;">Spreadsheet ID</label>
+                <label style="font-size: 11px;">🔗 Spreadsheet Connection Link</label>
                 <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
                   oninput="loadSheetNames('actSpreadsheetId')" onpaste="setTimeout(function(){loadSheetNames('actSpreadsheetId')},50)" 
                   onchange="autoSaveConfig()" style="height: 38px;">
@@ -1854,19 +1854,19 @@
             <div class="columns-grid" id="gradesGrid" style="display:none; border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #f8fafc; margin-top: 8px; gap: 12px;">
               <div class="form-group">
                 <label style="font-size: 11px;">Student Name Column</label>
-                <select id="actGradesNameCol" style="height: 34px; font-size: 12px;">
+                <select id="actGradesNameCol" onchange="autoSaveConfig()" style="height: 34px; font-size: 12px;">
                   <option value="B">— select grades sheet —</option>
                 </select>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Reporting Period</label>
-                <select id="actGradesGradeCol" style="height: 34px; font-size: 12px;">
+                <select id="actGradesGradeCol" onchange="autoSaveConfig()" style="height: 34px; font-size: 12px;">
                   <option value="E">— select grades sheet —</option>
                 </select>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Data Start Row</label>
-                <input type="text" id="actGradesStartRow" value="4"
+                <input type="text" id="actGradesStartRow" value="4" oninput="autoSaveConfig()" onchange="autoSaveConfig()"
                   style="font-family:'SF Mono','Fira Code',monospace;text-align:center; height: 34px; font-size: 12px;">
               </div>
             </div>
@@ -3239,7 +3239,7 @@
       var p = prefix || 'act';
       var config = getActivityConfig(p);
       if (!config.spreadsheetId) {
-        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter a Spreadsheet Connection Link.');
         return;
       }
       if (!config.activitySheetName) {
@@ -3883,6 +3883,7 @@
           '</div>';
 
         var table = '<details class="daily-log-details" open><summary><span class="daily-log-toggle-arrow">▼</span> Daily Log (' + student.dates.length + ' days)</summary>' +
+          '<div class="daily-log-table-wrap" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;">' +
           '<table class="src-table"><thead><tr>' +
           '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Participation</th>' +
           '</tr></thead><tbody>';
@@ -3941,7 +3942,7 @@
             '</tr>';
         });
 
-        table += '</tbody></table></details>';
+        table += '</tbody></table></div></details>';
 
         // Build two-column layout
         var si = report.students.indexOf(student);
@@ -3952,10 +3953,10 @@
           '<div class="src-comment-col">' +
           // Student comment
           '<div class="src-comment-label">💬 Student Comment</div>' +
-          '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '" style="min-height:90px;">' + comment + '</textarea>' +
+          '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '" style="min-height:160px; resize: vertical;">' + comment + '</textarea>' +
           // Parent comment
           '<div class="src-comment-label no-print" style="margin-top:16px;">📧 Parent Comment (Editable)</div>' +
-          '<textarea class="src-parent-textarea no-print" id="parent-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + pCommentPreview.replace(/"/g, '&quot;') + '" style="min-height:120px;">' + pCommentPreview + '</textarea>' +
+          '<textarea class="src-parent-textarea no-print" id="parent-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + pCommentPreview.replace(/"/g, '&quot;') + '" style="min-height:180px; resize: vertical;">' + pCommentPreview + '</textarea>' +
           '</div>' +
           '</div>';
 

@@ -1583,19 +1583,16 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         });
       }
 
-      var attChartBlob = buildAttendanceChartNative(presentCount, tardyCount, absentCount);
       var partBarBlob = buildBarChartNative(s.dates || [], 'participationPct', 100, '#2563eb', getLocalizedText('participation', lang, 'Participation'));
       var etBarBlob = buildBarChartNative(s.dates || [], 'exitTicketPct', 100, '#7c3aed', getLocalizedText('exitTicket', lang, 'Exit Ticket'));
 
       var studentInlineImages = {};
       if (logoBlob) studentInlineImages['logo'] = logoBlob;
-      if (attChartBlob) studentInlineImages['attChart'] = attChartBlob;
       if (partBarBlob) studentInlineImages['partBarChart'] = partBarBlob;
       if (etBarBlob) studentInlineImages['etBarChart'] = etBarBlob;
 
-      var donutImg = attChartBlob ? '<img src="cid:attChart" width="125" height="125" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Attendance">' : '';
-      var partImg = partBarBlob ? '<img src="cid:partBarChart" width="155" height="143" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Participation">' : '';
-      var etImg = etBarBlob ? '<img src="cid:etBarChart" width="155" height="143" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;" alt="Exit Ticket">' : '';
+      var partImg = partBarBlob ? '<img src="cid:partBarChart" width="220" height="202" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;max-width:100%;" alt="Participation">' : '';
+      var etImg = etBarBlob ? '<img src="cid:etBarChart" width="220" height="202" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;max-width:100%;" alt="Exit Ticket">' : '';
 
       // Grade badge color
       var gradeG = s.grade || '';
@@ -1617,11 +1614,110 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         var performanceTitle = getLocalizedText('performanceSnapshot', lang, 'Performance Snapshot');
         var activityLogTitle = getLocalizedText('dailyActivityLog', lang, 'Daily Activity Log');
 
+        var gradeCalTitle = getLocalizedText('grade', lang, 'Grade');
+        if (lang === 'es') gradeCalTitle = 'Grade / Calificación';
+        else if (lang === 'ar') gradeCalTitle = 'الدرجة / Grade';
+
+        var gradeBubbleHtml = '<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '"><tr>'
+          + '<td style="font-size:15px;font-weight:bold;color:#475569;padding-right:8px;vertical-align:middle;">' + gradeCalTitle + '</td>'
+          + '<td style="vertical-align:middle;"><span style="display:inline-block;padding:4px 14px;border-radius:20px;font-weight:bold;font-size:14px;background:#e0f2fe;color:#0284c7;">' + (gradeG || '&mdash;') + '</span></td>'
+          + '</tr></table>';
+
+        var streakVal = 0;
+        if (s.dates && s.dates.length > 0) {
+          for (var si = s.dates.length - 1; si >= 0; si--) {
+            var attStatus = String(s.dates[si].attendance || '').toLowerCase().trim();
+            if (attStatus === 'present') {
+              streakVal++;
+            } else if (attStatus === 'tardy' || attStatus === 'absent') {
+              break;
+            }
+          }
+        }
+
+        var chartsHtml = '';
+        if (partBarBlob || etBarBlob) {
+          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
+            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;"><tr>';
+            
+          var partTitle = getLocalizedText('participation', lang, 'Participation');
+          if (lang === 'es') partTitle = 'Participación / Participation';
+          else if (lang === 'ar') partTitle = 'المشاركة / Participation';
+          
+          var etTitle = getLocalizedText('exitTicket', lang, 'Exit Ticket');
+          if (lang === 'es') etTitle = 'Exit Ticket / Boleto de Salida';
+          else if (lang === 'ar') etTitle = 'تذكرة الخروج / Exit Ticket';
+
+          if (partBarBlob && etBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
+              + partImg
+              + '</td>'
+              + '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + etTitle + '</div>'
+              + etImg
+              + '</td>';
+          } else if (partBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:100%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
+              + partImg
+              + '</td>';
+          } else if (etBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:100%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + etTitle + '</div>'
+              + etImg
+              + '</td>';
+          }
+          
+          chartsHtml += '</tr></table></div>';
+        }
+
+        var attendanceHtml = '';
+        if (presentCount + tardyCount + absentCount > 0) {
+          var totalAtt = presentCount + tardyCount + absentCount;
+          var pPct = Math.round((presentCount / totalAtt) * 100);
+          var tPct = Math.round((tardyCount / totalAtt) * 100);
+          var aPct = Math.max(0, 100 - pPct - tPct);
+          
+          var attTitle = getLocalizedText('attendance', lang, 'Attendance');
+          if (lang === 'es') attTitle = 'Asistencia / Attendance';
+          else if (lang === 'ar') attTitle = 'الحضور / Attendance';
+          
+          var presText = getLocalizedText('present', lang, 'Pres');
+          var tardText = getLocalizedText('tardy', lang, 'Tardy');
+          var absText = getLocalizedText('absent', lang, 'Abs');
+          
+          var streakHtml = '';
+          if (streakVal >= 3) {
+            var streakLabel = streakVal + '-day streak';
+            if (lang === 'es') streakLabel = 'racha de ' + streakVal + ' días';
+            else if (lang === 'ar') streakLabel = 'سلسلة حضور ' + streakVal + ' أيام';
+            streakHtml = '<div style="display:inline-block;padding:3px 10px;border-radius:12px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:bold;margin-top:8px;">'
+              + '&#x2605; ' + streakLabel
+              + '</div>';
+          }
+
+          attendanceHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+            + '<div style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:8px;">' + attTitle + '</div>'
+            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;">'
+            + (pPct > 0 ? '<div style="width:' + pPct + '%;background:#10b981;height:100%;"></div>' : '')
+            + (tPct > 0 ? '<div style="width:' + tPct + '%;background:#f59e0b;height:100%;"></div>' : '')
+            + (aPct > 0 ? '<div style="width:' + aPct + '%;background:#ef4444;height:100%;"></div>' : '')
+            + '</div>'
+            + '<div style="font-size:12px;color:#64748b;line-height:1.5;">'
+            + '<span style="color:#059669;font-weight:bold;">&#x25CF; ' + presText + ': ' + presentCount + '</span>'
+            + '<span style="color:#d97706;font-weight:bold;margin-left:12px;">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
+            + '<span style="color:#dc2626;font-weight:bold;margin-left:12px;">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
+            + '</div>'
+            + streakHtml
+            + '</div>';
+        }
+
         var htmlBody = ''
           + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
-          + '<style>@media(max-width:600px){.ew{width:100%!important;max-width:100%!important}.eb{padding:16px!important}.chart-row{display:block!important}.chart-cell{display:block!important;width:100%!important;text-align:center!important;padding:12px 0!important}}</style>'
+          + '<style>@media(max-width:600px){.ew{width:96%!important;max-width:96%!important}.eb{padding:16px!important}.chart-row, .chart-row tr, .chart-row td{display:block!important;width:100%!important;box-sizing:border-box!important}.chart-cell{border-right:none!important;border-bottom:1px solid #f1f5f9!important;padding:16px 0!important}.chart-cell:last-child{border-bottom:none!important}img{max-width:100%!important;height:auto!important}}</style>'
           + '</head><body style="margin:0;padding:0;background:#f0f2f5;">'
-          + '<div class="ew" style="width:100%;max-width:640px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
+          + '<div class="ew" style="width:92%;max-width:880px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
           // Header
           + '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
@@ -1634,6 +1730,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           // Body
           + '<div class="eb" style="padding:24px;background:#fff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
           + '<p style="margin:0 0 20px;font-size:15px;color:#1e293b;">' + greetingText + '</p>'
+          // Top Grade Bubble
+          + gradeBubbleHtml
           // Summary card
           + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 20px;">'
           + '<div style="font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:12px;">' + summaryTitle + '</div>'
@@ -1641,34 +1739,13 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           + '<tr><td style="padding:4px 0;color:#64748b;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;color:#0f172a;">' + s.name + '</td></tr>'
           + (className ? '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('class', lang, 'Class') + '</td><td style="font-weight:bold;">' + className + '</td></tr>' : '')
           + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('period', lang, 'Period') + '</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
-          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('grade', lang, 'Grade') + '</td><td><span style="display:inline-block;padding:3px 12px;border-radius:20px;font-weight:bold;font-size:13px;background:' + gradeBg + ';color:' + gradeColor + ';">' + (gradeG || '&mdash;') + '</span></td></tr>'
           + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td style="font-weight:600;color:' + (s.tardies > 0 ? '#d97706' : '#0f172a') + ';">' + s.tardies + '</td></tr>'
           + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td style="font-weight:600;color:' + (s.absences > 0 ? '#dc2626' : '#0f172a') + ';">' + s.absences + '</td></tr>'
           + '</tbody></table></div>'
-          // 📊 Performance Charts
-          + '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
-          + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">' + performanceTitle + '</span></div>'
-          + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>'
-          // Attendance chart
-          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:middle;">'
-          + donutImg
-          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">' + getLocalizedText('attendance', lang, 'Attendance') + '</div>'
-          + '<div style="margin-top:4px;font-size:10px;color:#64748b;line-height:1.4;">'
-          + '<span style="color:#059669;font-weight:600;">&#x25CF; ' + presentCount + ' ' + getLocalizedText('present', lang, 'Pres') + '</span><br>'
-          + '<span style="color:#d97706;font-weight:600;">&#x25CF; ' + tardyCount + ' ' + getLocalizedText('tardy', lang, 'Tardy') + '</span><br>'
-          + '<span style="color:#dc2626;font-weight:600;">&#x25CF; ' + absentCount + ' ' + getLocalizedText('absent', lang, 'Abs') + '</span>'
-          + '</div></td>'
-          // Participation chart
-          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:middle;">'
-          + partImg
-          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">' + getLocalizedText('participation', lang, 'Participation') + '</div>'
-          + '</td>'
-          // ET chart
-          + '<td class="chart-cell" style="width:33%;padding:16px;text-align:center;vertical-align:middle;">'
-          + etImg
-          + '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">' + getLocalizedText('exitTicket', lang, 'Exit Ticket') + '</div>'
-          + '</td>'
-          + '</tr></table></div>'
+          // 📊 Performance Charts (Side-by-Side Dual Charts Card)
+          + chartsHtml
+          // 📈 Attendance Progress Bar Block
+          + attendanceHtml
           // Comment / message
           + '<div ' + commentDirStyle + '>'
           + comment
@@ -1677,7 +1754,7 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         // Add Detailed Daily Activity Table if available
         if (s.dates && s.dates.length > 0) {
           htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
-            + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">' + activityLogTitle + '</span></div>'
+            + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4C5; ' + activityLogTitle + '</span></div>'
             + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;' + (isRtl ? 'text-align:right;' : '') + '">'
             + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">'
             + '<th style="padding:10px 14px;color:#475569;font-weight:600;white-space:nowrap;">' + getLocalizedText('date', lang, 'Date') + '</th>'
@@ -1878,11 +1955,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'Ausencias',
     class: 'Clase',
     period: 'Período',
-    performanceSnapshot: '📊 Instantánea de Rendimiento',
+    performanceSnapshot: 'Instantánea de Rendimiento',
     attendance: 'Asistencia',
     participation: 'Participación',
     exitTicket: 'Boleto de Salida',
-    dailyActivityLog: '📅 Registro de Actividad Diaria',
+    dailyActivityLog: 'Registro de Actividad Diaria',
     date: 'Fecha',
     grades: 'Calificaciones',
     partPct: 'Part. %',
@@ -1904,11 +1981,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'الغيابات',
     class: 'الصف',
     period: 'الفترة',
-    performanceSnapshot: '📊 لقطة الأداء',
+    performanceSnapshot: 'لقطة الأداء',
     attendance: 'الحضور',
     participation: 'المشاركة',
     exitTicket: 'تذكرة الخروج',
-    dailyActivityLog: '📅 سجل النشاط اليومي',
+    dailyActivityLog: 'سجل النشاط اليومي',
     date: 'التاريخ',
     grades: 'الدرجات',
     partPct: 'نسبة المشاركة',
@@ -1930,11 +2007,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'Absences',
     class: 'Classe',
     period: 'Période',
-    performanceSnapshot: '📊 Aperçu des Performances',
+    performanceSnapshot: 'Aperçu des Performances',
     attendance: 'Présence',
     participation: 'Participation',
     exitTicket: 'Ticket de Sortie',
-    dailyActivityLog: '📅 Journal d\'Activité Quotidien',
+    dailyActivityLog: 'Journal d\'Activité Quotidien',
     date: 'Date',
     grades: 'Notes',
     partPct: 'Part. %',
@@ -1956,11 +2033,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'Maqnaanshaha',
     class: 'Fasalka',
     period: 'Muddada',
-    performanceSnapshot: '📊 Sawirka Waxqabadka',
+    performanceSnapshot: 'Sawirka Waxqabadka',
     attendance: 'Ilaalinta',
     participation: 'Ka Qaybgalka',
     exitTicket: 'Warqadda Ka Bixidda',
-    dailyActivityLog: '📅 Diiwaanka Waxqabadka Maalinlaha ah',
+    dailyActivityLog: 'Diiwaanka Waxqabadka Maalinlaha ah',
     date: 'Taariikhda',
     grades: 'Darajooyinka',
     partPct: 'Boqolkiiba Ka Qaybgalka',
@@ -1982,11 +2059,11 @@ var EMAIL_LOCALIZATION = {
     absences: '缺勤',
     class: '班级',
     period: '期间',
-    performanceSnapshot: '📊 表现概览',
+    performanceSnapshot: '表现概览',
     attendance: '出勤',
     participation: '参与率',
     exitTicket: '出口小票',
-    dailyActivityLog: '📅 每日活动日志',
+    dailyActivityLog: '每日活动日志',
     date: '日期',
     grades: '评分',
     partPct: '参与百分比',
@@ -2008,11 +2085,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'Vắng mặt',
     class: 'Lớp học',
     period: 'Thời gian',
-    performanceSnapshot: '📊 Sơ Lược Về Thành Tích',
+    performanceSnapshot: 'Sơ Lược Về Thành Tích',
     attendance: 'Điểm danh',
     participation: 'Tham gia',
     exitTicket: 'Phiếu kiểm tra nhanh',
-    dailyActivityLog: '📅 Nhật Ký Hoạt Động Hàng Ngày',
+    dailyActivityLog: 'Nhật Ký Hoạt Động Hàng Ngày',
     date: 'Ngày',
     grades: 'Điểm',
     partPct: 'Tỷ lệ tham gia',
@@ -2034,11 +2111,11 @@ var EMAIL_LOCALIZATION = {
     absences: 'Բացակայություններ',
     class: 'Դասարան',
     period: 'Ժամանակահատված',
-    performanceSnapshot: '📊 Կատարողականի ամփոփում',
+    performanceSnapshot: 'Կատարողականի ամփոփում',
     attendance: 'Հաճախելիություն',
     participation: 'Մասնակցություն',
     exitTicket: 'Ելքի տոմս',
-    dailyActivityLog: '📅 Օրական գործունեության մատյան',
+    dailyActivityLog: 'Օրական գործունեության մատյան',
     date: 'Ամսաթիվ',
     grades: 'Գնահատականներ',
     partPct: 'Մասնակցության %',
@@ -2119,27 +2196,30 @@ function buildBarChartNative(dates, valueKey, maxVal, barColor, title) {
     
     if (addedRows === 0) return null;
     
+    var gw = Math.floor(190 / addedRows * 0.65);
+    if (gw > 24) gw = 24;
+    
     var chart = Charts.newColumnChart()
       .setDataTable(dataTable.build())
       .setColors([barColor])
-      .setDimensions(200, 185)
+      .setDimensions(240, 220)
       .setBackgroundColor('#ffffff') // Clean seamless white
       .setOption('legend', 'none')
-      .setOption('bar', { groupWidth: '68%' }) // Thick, well-proportioned modern bars
+      .setOption('bar', { groupWidth: gw }) // Dynamically scaled sleek bars
       .setOption('hAxis', {
-        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Arial' },
+        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Helvetica Neue, Helvetica, Arial' },
         gridlines: { count: 0 },
         slantedText: true,
-        slantedTextAngle: 30
+        slantedTextAngle: 45
       })
       .setOption('vAxis', {
-        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Arial' },
-        gridlines: { color: '#f1f5f9' },
+        textStyle: { color: '#94a3b8', fontSize: 10, fontName: 'Helvetica Neue, Helvetica, Arial' },
+        gridlines: { color: '#f8fafc' },
         baselineColor: '#cbd5e1',
         minValue: 0,
         maxValue: maxVal
       })
-      .setOption('chartArea', { left: 30, top: 15, width: '160', height: '125' })
+      .setOption('chartArea', { left: 35, top: 15, width: 190, height: 155 })
       .build();
       
     return chart.getAs('image/png');
