@@ -664,6 +664,7 @@ function sendParentEmails(emailData) {
 
   for (var i = 0; i < emailData.students.length; i++) {
      try {
+      var s = emailData.students[i];
       // Extract first name for greeting
       var firstName = s.name.indexOf(',') > -1
         ? (s.name.split(',')[1] || '').trim()

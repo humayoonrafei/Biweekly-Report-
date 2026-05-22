@@ -1839,11 +1839,12 @@
             </div>
 
             <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: flex-end;">
-              <div class="form-group" style="display: none;">
+              <div class="form-group">
                 <label style="font-size: 11px;">Fellow Filter</label>
                 <select id="actFellowFilter" onchange="autoSaveConfig()" style="height: 38px;">
                   <option value="">All Fellows</option>
                 </select>
+                <div id="actFellowHint" style="font-size: 10px; margin-top: 2px; font-weight: 600; color: var(--text-muted);"></div>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Grades Sheet Tab (Optional)</label>
