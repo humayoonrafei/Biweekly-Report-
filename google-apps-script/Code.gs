@@ -96,6 +96,42 @@ function spellNumber(n) {
   return n <= 10 ? words[n] : String(n);
 }
 
+function normalizeLanguageCode(lang) {
+  var code = String(lang || 'en').toLowerCase().trim();
+  if (!code || code === 'english') return 'en';
+  if (code === 'spanish') return 'es';
+  if (code === 'portuguese') return 'pt';
+  if (code === 'french') return 'fr';
+  if (code === 'arabic') return 'ar';
+  if (code === 'chinese') return 'zh';
+  if (code === 'chinese (simplified)') return 'zh-CN';
+  if (code === 'chinese (traditional)') return 'zh-TW';
+  if (code === 'haitian creole') return 'ht';
+  if (code === 'vietnamese') return 'vi';
+  if (code === 'bengali') return 'bn';
+  if (code === 'urdu') return 'ur';
+  if (code === 'korean') return 'ko';
+  if (code === 'russian') return 'ru';
+  return code;
+}
+
+function translateOnTheFly(text, targetLang) {
+  var content = String(text || '');
+  var target = normalizeLanguageCode(targetLang);
+  if (!content || !target || target === 'en') return content;
+  try {
+    return LanguageApp.translate(content, 'en', target);
+  } catch (e) {
+    return content;
+  }
+}
+
+function calcAttendancePct(presentCount, tardyCount, scheduledCount) {
+  var scheduled = Number(scheduledCount || 0);
+  if (scheduled <= 0) return null;
+  return Math.round(((Number(presentCount || 0) + Number(tardyCount || 0)) / scheduled) * 100);
+}
+
 // ─── Get Teacher Info ───
 function getTeacherInfo() {
   var email = Session.getActiveUser().getEmail();
@@ -839,7 +875,7 @@ function generateStudentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'C' || grade === 'D') {
-    var msg = firstName + '- you currently have a ' + grade + ' in the class.';
+    var msg = firstName + '- you have shown real potential this period, and you currently have a ' + grade + ' in the class.';
     if (tardies > 3) {
       msg += ' You have ' + spellNumber(tardies) + ' tardies this period which is affecting your ability to start class strong. Please focus on arriving on time and putting in consistent effort so you can raise your grade.';
     } else if (absences > 0) {
@@ -851,7 +887,7 @@ function generateStudentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'F') {
-    var msg = firstName + '- I need to see more from you - your grade is an F right now.';
+    var msg = firstName + '- I know you can improve, and I want to help you be successful. Right now your grade is an F.';
     if (tardies > 0 || absences > 0) {
       var parts = [];
       if (tardies > 0) parts.push(spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
@@ -894,24 +930,24 @@ function generateParentComment(name, grade, tardies, absences) {
   }
 
   if (grade === 'C' || grade === 'D') {
-    var msg = firstName + ' is maintaining a ' + grade + ' grade in the course.';
+    var msg = firstName + ' has shown positive effort this period and is currently maintaining a ' + grade + ' grade in the course.';
     if (tardies > 3) {
-      msg += firstName +'has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
+      msg += ' ' + firstName + ' has ' + spellNumber(tardies) + ' tardies this period and ' + (absences === 0 ? 'zero absences' : spellNumber(absences) + (absences === 1 ? ' absence' : ' absences')) + '. Improving punctuality would help make the most of class time and improve academic standing. We appreciate your support in encouraging on-time arrival.';
     } else if (absences > 0) {
-      msg +=  firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
+      msg += ' ' + firstName + ' has ' + (tardies === 0 ? 'zero tardies' : spellNumber(tardies) + (tardies === 1 ? ' tardy' : ' tardies')) + ' and ' + (absences === 1 ? 'only one absence' : spellNumber(absences) + ' absences') + ' this period. We encourage continued focus on classwork and participation to further improve academic standing.';
     } else {
-      msg += firstName +'attendance is solid with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
+      msg += ' ' + firstName + ' has solid attendance with no tardies or absences. We hope to see continued consistency and work towards a higher grade.';
     }
     return msg;
   }
 
   if (grade === 'F') {
-    var msg = firstName + ' is struggling in the course with an F grade at this time.';
+    var msg = firstName + ' has the ability to improve, and we want to partner with you to support that growth. At this time, they are struggling in the course with an F grade.';
     if (tardies > 0 || absences > 0) {
       var parts = [];
       if (tardies > 0) parts.push(spellNumber(tardies) + ' ' + (tardies === 1 ? 'tardy' : 'tardies'));
       if (absences > 0) parts.push(spellNumber(absences) + ' ' + (absences === 1 ? 'absence' : 'absences'));
-      msg +=  firstName +'has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
+      msg += ' ' + firstName + ' has accumulated ' + parts.join(' and ') + ' this period which is impacting their ability to follow the curriculum consistently. We would like to work with you to ensure they have the support needed to improve their academic performance.';
     } else {
       msg += ' Attendance is not the issue but engagement and effort need improvement. We would like to partner with you to discuss strategies for improvement.';
     }
@@ -1266,7 +1302,7 @@ function getActivityReport(config, startDate, endDate) {
 
       // Extract data for each date column
       var dateData = [];
-      var totalPresent = 0, totalTardy = 0, totalAbsent = 0, totalNotScheduled = 0;
+      var totalPresent = 0, totalTardy = 0, totalAbsent = 0, totalNotScheduled = 0, totalScheduledDays = 0;
 
       for (var d = 0; d < dateCols.length; d++) {
         var colIdx = dateCols[d].colIdx;
@@ -1307,9 +1343,9 @@ function getActivityReport(config, startDate, endDate) {
 
         // Count attendance totals
 
-        if (attLower === 'present') totalPresent++;
-        else if (attLower === 'tardy') totalTardy++;
-        else if (attLower === 'absent') totalAbsent++;
+        if (attLower === 'present') { totalPresent++; totalScheduledDays++; }
+        else if (attLower === 'tardy') { totalTardy++; totalScheduledDays++; }
+        else if (attLower === 'absent') { totalAbsent++; totalScheduledDays++; }
         else if (attLower.indexOf('not s') > -1 || attLower.indexOf('not scheduled') > -1) totalNotScheduled++;
 
         dateData.push({
@@ -1335,7 +1371,9 @@ function getActivityReport(config, startDate, endDate) {
           totalTardy: totalTardy,
           totalAbsent: totalAbsent,
           totalNotScheduled: totalNotScheduled,
-          totalDays: dateCols.length
+          totalDays: dateCols.length,
+          totalScheduledDays: totalScheduledDays,
+          attendancePct: calcAttendancePct(totalPresent, totalTardy, totalScheduledDays)
         }
       });
 
@@ -1535,6 +1573,75 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
     var emailMap = emailLookupResult.map;
     if (Object.keys(emailMap).length === 0) {
       return { error: 'No email addresses found in sheet "' + mappedConfig.emailSheetName + '". Please check the column mapping.' };
+    }
+
+    function collectChartSeries(dates, key) {
+      var rows = [];
+      for (var k = 0; k < (dates || []).length; k++) {
+        var day = dates[k] || {};
+        var val = day[key];
+        if (val === null || val === undefined || isNaN(val)) continue;
+        rows.push({ label: String(day.date || ('Day ' + (k + 1))), value: Math.max(0, Math.min(100, Number(val))) });
+      }
+      return rows.slice(-6);
+    }
+
+    function buildSeriesChart(rows, color) {
+      if (!rows || rows.length === 0) {
+        return '<div style="font-size:12px;color:#64748b;">No graded data in selected range.</div>';
+      }
+      var html = '<div style="font-size:12px;color:#334155;">';
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r];
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;">'
+          + '<span style="min-width:54px;color:#64748b;font-size:11px;">' + row.label + '</span>'
+          + '<div style="flex:1;background:#e2e8f0;height:8px;border-radius:999px;overflow:hidden;">'
+          + '<div style="height:8px;width:' + row.value + '%;background:' + color + ';"></div>'
+          + '</div>'
+          + '<span style="min-width:34px;text-align:right;font-weight:600;">' + row.value + '%</span>'
+          + '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function getAttendanceStats(summary, dates) {
+      var scheduled = Number(summary.totalScheduledDays || 0);
+      var presentCount = Number(summary.totalPresent || 0);
+      var tardyCount = Number(summary.totalTardy || 0);
+      if (!scheduled && dates && dates.length) {
+        for (var a = 0; a < dates.length; a++) {
+          var att = String((dates[a] || {}).attendance || '').toLowerCase();
+          if (att === 'present') { presentCount++; scheduled++; }
+          else if (att === 'tardy') { tardyCount++; scheduled++; }
+          else if (att === 'absent') { scheduled++; }
+        }
+      }
+      return { scheduled: scheduled, present: presentCount, tardy: tardyCount };
+    }
+
+    function buildAttendanceGraph(summary, dates) {
+      var stats = getAttendanceStats(summary, dates);
+      var scheduled = stats.scheduled;
+      if (!scheduled) {
+        return '<div style="font-size:12px;color:#64748b;">No scheduled attendance days in selected range.</div>';
+      }
+      var presentPct = Math.round((stats.present / scheduled) * 100);
+      var tardyPct = Math.round((stats.tardy / scheduled) * 100);
+      var absentPct = Math.max(0, 100 - presentPct - tardyPct);
+      return ''
+        + '<div style="margin-top:4px;">'
+        + '<div style="display:flex;width:100%;height:12px;border-radius:999px;overflow:hidden;background:#e2e8f0;">'
+        + '<div style="width:' + presentPct + '%;background:#10b981;"></div>'
+        + '<div style="width:' + tardyPct + '%;background:#f59e0b;"></div>'
+        + '<div style="width:' + absentPct + '%;background:#ef4444;"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#334155;">'
+        + '<span>Present: <strong>' + presentPct + '%</strong></span>'
+        + '<span>Tardy: <strong>' + tardyPct + '%</strong></span>'
+        + '<span>Absent: <strong>' + absentPct + '%</strong></span>'
+        + '<span>Scheduled Days: <strong>' + scheduled + '</strong></span>'
+        + '</div></div>';
     }
 
     // 2. Loop through students and send emails
