@@ -1825,7 +1825,7 @@
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Activity Sheet Tab</label>
-                <select id="actSheetName" onchange="loadActGradesHeaders(); loadActivityFellows(); autoSaveConfig();" style="height: 38px;">
+                <select id="actSheetName" onchange="loadActGradesHeaders(); loadActivityFellows();" style="height: 38px;">
                   <option value="" disabled selected>— select —</option>
                 </select>
               </div>
@@ -1848,7 +1848,7 @@
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Grades Sheet Tab (Optional)</label>
-                <select id="actGradesSheet" onchange="loadActGradesHeaders(); autoSaveConfig();" style="height: 38px;">
+                <select id="actGradesSheet" onchange="loadActGradesHeaders();" style="height: 38px;">
                   <option value="">— none —</option>
                 </select>
               </div>
@@ -2101,11 +2101,16 @@
           if (result.detectedEmail)    document.getElementById('actEmailSheetName').value = result.detectedEmail;
 
           // ── 2b. Override with Saved Config if exists (User Preference) ──
+          var needRefreshGradeHeaders = false;
           if (window._savedConfig) {
             var sc = window._savedConfig;
             if (sc.activitySheet) document.getElementById('actSheetName').value      = sc.activitySheet;
             if (sc.gradesSheet)   document.getElementById('actGradesSheet').value    = sc.gradesSheet;
             if (sc.emailSheet)    document.getElementById('actEmailSheetName').value = sc.emailSheet;
+            // If saved grades sheet differs from auto-detected, we need to re-fetch headers
+            if (sc.gradesSheet && sc.gradesSheet !== (result.detectedGrades || '')) {
+              needRefreshGradeHeaders = true;
+            }
           }
 
           // ── 3. Populate Fellows dropdown ──
@@ -2128,7 +2133,11 @@
           }
 
           // ── 4. Populate Grade Headers + show Advanced Mapping ──
-          if (result.gradeHeaders && result.gradeHeaders.length > 0) {
+          if (needRefreshGradeHeaders) {
+            // Saved grades sheet differs from auto-detected — re-fetch from correct sheet
+            // loadActGradesHeaders will use _savedGradeCols for column restoration
+            loadActGradesHeaders();
+          } else if (result.gradeHeaders && result.gradeHeaders.length > 0) {
             // Re-use the same smart detection logic inline
             var gradeHeaders = result.gradeHeaders;
             var gradeSampleData = result.gradeSampleData || {};
@@ -2200,6 +2209,8 @@
             document.getElementById('gradeColMapStatus').textContent =
               (nameDetected && gradeDetected) ? '✓ 2/2 auto-detected' :
               (nameDetected || gradeDetected) ? '✓ 1/2 auto-detected' : '⚠ select manually';
+            // Clear saved grade cols after inline restoration to prevent stale reapplication
+            window._savedGradeCols = null;
           }
 
           // ── 5. Email Config ──
@@ -2616,7 +2627,7 @@
             }
           }
 
-          var finalNameCol = (window._savedConfig && window._savedConfig.gradesNameCol) ? window._savedConfig.gradesNameCol : nameCol;
+          var finalNameCol = (window._savedGradeCols && window._savedGradeCols.gradesNameCol) ? window._savedGradeCols.gradesNameCol : nameCol;
           populateHeaderSelect('actGradesNameCol', result.headers, finalNameCol);
           
           // Custom population for Grade Column -> Reporting Period
@@ -2645,7 +2656,7 @@
             gradeSel.appendChild(opt);
           });
 
-          var finalGradeCol = (window._savedConfig && window._savedConfig.gradesGradeCol) ? window._savedConfig.gradesGradeCol : gradeCol;
+          var finalGradeCol = (window._savedGradeCols && window._savedGradeCols.gradesGradeCol) ? window._savedGradeCols.gradesGradeCol : gradeCol;
           if (finalGradeCol) {
             // Try to find matching option by column letter
             var matched = false;
@@ -2682,6 +2693,10 @@
           } else {
             document.getElementById('gradeColMapStatus').textContent = '⚠ Please select columns manually';
           }
+
+          // Clear saved grade cols after applying them, then persist the full config
+          window._savedGradeCols = null;
+          autoSaveConfig();
         })
         .withFailureHandler(function (err) {
           fields.forEach(function (id) {
@@ -3398,7 +3413,12 @@
           }
           
           // These will be applied AFTER the sheets are loaded in loadSheetNames success handler
-          window._savedConfig = config; 
+          window._savedConfig = config;
+          // Preserve grade column mappings separately so they survive _savedConfig clearing
+          window._savedGradeCols = {
+            gradesNameCol: config.gradesNameCol || '',
+            gradesGradeCol: config.gradesGradeCol || ''
+          };
         })
         .loadUserPreference('activity_config');
     }
