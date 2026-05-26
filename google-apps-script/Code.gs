@@ -62,7 +62,18 @@ function loadUserPreference(key) {
 }
 
 // ─── Web App Entry Point ───
-function doGet() {
+function doGet(e) {
+  var params = (e && e.parameter) || {};
+
+  // Route to Student Portal when ?portal=student
+  if (params.portal === 'student') {
+    return HtmlService.createHtmlOutputFromFile('StudentPortal')
+      .setTitle('Blueprint Student Portal')
+      .setFaviconUrl('https://www.gstatic.com/images/branding/product/1x/apps_script_48dp.png')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Biweekly Comment Generator')
     .setFaviconUrl('https://www.gstatic.com/images/branding/product/1x/apps_script_48dp.png')
