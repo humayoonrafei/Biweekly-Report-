@@ -2203,15 +2203,17 @@
           }
 
           // ── 5. Email Config ──
-          if (result.emailConfig) {
+          var currentEmailTab = document.getElementById('actEmailSheetName').value;
+          if (result.emailConfig && result.emailConfig.sheetName === currentEmailTab) {
+            // Auto-detected config matches the currently displayed email tab — use it directly
             autoDetectedEmailConfig = result.emailConfig;
             var statusDiv = document.getElementById('emailConfigStatus');
             if (statusDiv) {
               statusDiv.textContent = '✅ Emails linked';
               statusDiv.style.color = 'var(--success)';
             }
-          } else if (document.getElementById('actEmailSheetName').value) {
-            // Fallback: email tab was detected by name but config couldn't be built — try dedicated call
+          } else if (currentEmailTab) {
+            // Displayed email tab differs from auto-detected config (e.g. saved config override) — re-fetch
             loadEmailConfig();
           }
 
