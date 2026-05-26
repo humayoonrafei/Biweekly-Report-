@@ -2082,7 +2082,7 @@
           var dropdowns = {
             actSheetName:      { optional: false, detect: function(n){ return n.includes('activity') || n.includes('data'); } },
             actGradesSheet:    { optional: true,  detect: function(n){ return n.includes('grade') || n.includes('score'); } },
-            actEmailSheetName: { optional: true,  detect: function(n){ return n.includes('email') || n.includes('contact') || n.includes('parent') || n.includes('directory') || n.includes('roster') || n.includes('student'); } }
+            actEmailSheetName: { optional: true,  detect: function(n){ return n.includes('email') || n.includes('contact') || n.includes('parent') || n.includes('directory') || n.includes('roster'); } }
           };
           Object.keys(dropdowns).forEach(function(selId) {
             var sel = document.getElementById(selId);

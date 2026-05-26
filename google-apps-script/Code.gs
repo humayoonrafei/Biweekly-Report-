@@ -169,7 +169,7 @@ function initializeSpreadsheet(spreadsheetId) {
       var lc = name.toLowerCase();
       if (!activitySheet && (lc.indexOf('activity') > -1 || lc.indexOf('data') > -1)) activitySheet = sheets[i];
       if (!gradesSheet  && (lc.indexOf('grade') > -1 || lc.indexOf('score') > -1))   gradesSheet  = sheets[i];
-      if (!emailSheet   && (lc.indexOf('email') > -1 || lc.indexOf('parent') > -1 || lc.indexOf('contact') > -1 || lc.indexOf('directory') > -1 || lc.indexOf('roster') > -1 || lc.indexOf('student') > -1)) emailSheet = sheets[i];
+      if (!emailSheet   && (lc.indexOf('email') > -1 || lc.indexOf('parent') > -1 || lc.indexOf('contact') > -1 || lc.indexOf('directory') > -1 || lc.indexOf('roster') > -1)) emailSheet = sheets[i];
     }
 
     // ── Step 2: Fellows from Activity Sheet ──
@@ -1417,7 +1417,7 @@ function autoDetectEmailConfig(spreadsheetId, forceSheetName) {
         emailSheet = sheets[i];
       } else if (!forceSheetName && !emailSheet) {
         var lowerName = name.toLowerCase();
-        if (lowerName.indexOf('email') > -1 || lowerName.indexOf('parent') > -1 || lowerName.indexOf('contact') > -1 || lowerName.indexOf('directory') > -1 || lowerName.indexOf('roster') > -1 || lowerName.indexOf('student') > -1) {
+        if (lowerName.indexOf('email') > -1 || lowerName.indexOf('parent') > -1 || lowerName.indexOf('contact') > -1 || lowerName.indexOf('directory') > -1 || lowerName.indexOf('roster') > -1) {
           emailSheet = sheets[i];
         }
       }
