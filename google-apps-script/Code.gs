@@ -750,46 +750,47 @@ function sendParentEmails(emailData) {
           ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},', firstName)
           : getLocalizedText('dearStudent', lang, 'Dear {student},', firstName);
 
-        var isRtl = (lang === 'ar' && isParent);
+        // Apply RTL to ALL Arabic emails (both parent and student)
+        var isRtl = (lang === 'ar');
         var commentDirStyle = isRtl
           ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #6bb8c9;border-left:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"'
           : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #6bb8c9;border-right:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"';
 
         var htmlBody = ''
-          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
-          + '<style>@media(max-width:600px){.email-wrap{width:100%!important;max-width:100%!important;padding:0!important}.email-body{padding:16px!important}.email-table td{display:block!important;width:100%!important;text-align:left!important;padding:4px 0!important}}</style></head><body style="margin:0;padding:0;background:#f0f2f5;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
-          + '<div class="email-wrap" style="width:100%;max-width:680px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
-          + '<div style="background:#2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
-          + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+          + '<!DOCTYPE html><html' + (isRtl ? ' dir="rtl"' : '') + '><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<style>@media(max-width:600px){.email-wrap{width:100%!important;max-width:100%!important;padding:0!important}.email-body{padding:16px!important}.email-table td{display:block!important;width:100%!important;' + (isRtl ? 'text-align:right' : 'text-align:left') + '!important;padding:4px 0!important}}</style></head><body style="margin:0;padding:0;background:#f0f2f5;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<div class="email-wrap" style="width:100%;max-width:680px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '">'
+          + '<div style="background:#2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;' + (isRtl ? 'direction:rtl;' : '') + '">'
+          + '<table width="100%" cellpadding="0" cellspacing="0" ' + (isRtl ? 'dir="rtl"' : '') + '><tr>'
           + '<td style="color:#fff;font-size:18px;font-weight:bold;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</td>'
           + '<td style="' + (isRtl ? 'text-align:left;' : 'text-align:right;') + '">'
           + '<span style="color:#6bb8c9;font-size:22px;font-weight:bold;">blueprint</span><br>'
           + '<span style="color:#6bb8c9;font-size:11px;">schools network</span>'
           + '</td></tr></table></div>'
-          + '<div class="email-body" style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
-          + '<p style="margin:0 0 16px;font-size:15px;">' + greetingText + '</p>'
-          + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">' + getLocalizedText('studentSummary', lang, 'Student Summary') + '</div>'
-          + '<table class="email-table" cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;' + (isRtl ? 'text-align:right;' : '') + '">'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('grade', lang, 'Grade') + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (grade === 'A' || grade === 'B' ? '#d1fae5;color:#059669' : grade === 'C' || grade === 'D' ? '#fef3c7;color:#d97706' : grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (grade || '—') + '</span></td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td>' + tardies + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td>' + absences + '</td></tr>'
+          + '<div class="email-body" style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<p style="margin:0 0 16px;font-size:15px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + greetingText + '</p>'
+          + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('studentSummary', lang, 'Student Summary') + '</div>'
+          + '<table class="email-table" cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '" ' + (isRtl ? 'dir="rtl"' : '') + '>'
+          + '<tr><td style="padding:4px ' + (isRtl ? '0 4px 16px' : '16px 4px 0') + ';color:#666;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
+          + '<tr><td style="padding:4px ' + (isRtl ? '0 4px 16px' : '16px 4px 0') + ';color:#666;">' + getLocalizedText('grade', lang, 'Grade') + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (grade === 'A' || grade === 'B' ? '#d1fae5;color:#059669' : grade === 'C' || grade === 'D' ? '#fef3c7;color:#d97706' : grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (grade || '—') + '</span></td></tr>'
+          + '<tr><td style="padding:4px ' + (isRtl ? '0 4px 16px' : '16px 4px 0') + ';color:#666;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td>' + tardies + '</td></tr>'
+          + '<tr><td style="padding:4px ' + (isRtl ? '0 4px 16px' : '16px 4px 0') + ';color:#666;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td>' + absences + '</td></tr>'
           + '</table></div>'
           + '<div ' + commentDirStyle + '>'
           + comment
           + '</div>';
 
         if (translatedCustomMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
+          htmlBody += '<p style="font-size:14px;line-height:1.6;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
-          + '<p style="font-size:14px;margin-bottom:0;">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
+        htmlBody += '<p style="font-size:14px;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
+          + '<p style="font-size:14px;margin-bottom:0;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
           + '<strong>' + teacherName + '</strong><br>'
           + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
-          + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
+          + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '">'
           + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · ' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</span>'
           + '</div></div></body></html>';
         return htmlBody;
@@ -1728,7 +1729,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},', firstName)
           : getLocalizedText('dearStudent', lang, 'Dear {student},', firstName);
 
-        var isRtl = (lang === 'ar' && isParent);
+        // Apply RTL to ALL Arabic emails (both parent and student)
+        var isRtl = (lang === 'ar');
         var commentDirStyle = isRtl 
           ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #2563eb;border-left:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:8px 0 0 8px;font-size:14px;line-height:1.7;color:#1e293b;"' 
           : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #2563eb;border-right:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;color:#1e293b;"';
@@ -1760,8 +1762,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
         var chartsHtml = '';
         if (partBarBlob || etBarBlob) {
-          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
-            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;"><tr>';
+          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '" ' + (isRtl ? 'dir="rtl"' : '') + '><tr>';
             
           var partTitle = getLocalizedText('participation', lang, 'Participation');
           if (lang === 'es') partTitle = 'Participación / Participation';
@@ -1772,7 +1774,7 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           else if (lang === 'ar') etTitle = 'تذكرة الخروج / Exit Ticket';
 
           if (partBarBlob && etBarBlob) {
-            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:top;">'
+            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;' + (isRtl ? 'border-left:1px solid #f1f5f9;' : 'border-right:1px solid #f1f5f9;') + 'vertical-align:top;">'
               + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
               + partImg
               + '</td>'
@@ -1822,28 +1824,28 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
           attendanceHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
             + '<div style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:8px;">' + attTitle + '</div>'
-            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;">'
+            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;' + (isRtl ? 'direction:ltr;' : '') + '">'
             + (pPct > 0 ? '<div style="width:' + pPct + '%;background:#10b981;height:100%;"></div>' : '')
             + (tPct > 0 ? '<div style="width:' + tPct + '%;background:#f59e0b;height:100%;"></div>' : '')
             + (aPct > 0 ? '<div style="width:' + aPct + '%;background:#ef4444;height:100%;"></div>' : '')
             + '</div>'
-            + '<div style="font-size:12px;color:#64748b;line-height:1.5;">'
+            + '<div style="font-size:12px;color:#64748b;line-height:1.5;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
             + '<span style="color:#059669;font-weight:bold;">&#x25CF; ' + presText + ': ' + presentCount + '</span>'
-            + '<span style="color:#d97706;font-weight:bold;margin-left:12px;">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
-            + '<span style="color:#dc2626;font-weight:bold;margin-left:12px;">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
+            + '<span style="color:#d97706;font-weight:bold;' + (isRtl ? 'margin-right:12px;' : 'margin-left:12px;') + '">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
+            + '<span style="color:#dc2626;font-weight:bold;' + (isRtl ? 'margin-right:12px;' : 'margin-left:12px;') + '">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
             + '</div>'
             + streakHtml
             + '</div>';
         }
 
         var htmlBody = ''
-          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<!DOCTYPE html><html' + (isRtl ? ' dir="rtl"' : '') + '><head><meta name="viewport" content="width=device-width,initial-scale=1">'
           + '<style>@media(max-width:600px){.ew{width:96%!important;max-width:96%!important}.eb{padding:16px!important}.chart-row, .chart-row tr, .chart-row td{display:block!important;width:100%!important;box-sizing:border-box!important}.chart-cell{border-right:none!important;border-bottom:1px solid #f1f5f9!important;padding:16px 0!important}.chart-cell:last-child{border-bottom:none!important}img{max-width:100%!important;height:auto!important}}</style>'
-          + '</head><body style="margin:0;padding:0;background:#f0f2f5;">'
-          + '<div class="ew" style="width:92%;max-width:880px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
+          + '</head><body style="margin:0;padding:0;background:#f0f2f5;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<div class="ew" style="width:92%;max-width:880px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
           // Header
-          + '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 24px;border-radius:8px 8px 0 0;">'
-          + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+          + '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 24px;border-radius:8px 8px 0 0;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '">'
+          + '<table width="100%" cellpadding="0" cellspacing="0" ' + (isRtl ? 'dir="rtl"' : '') + '><tr>'
           + '<td style="color:#fff;font-size:17px;font-weight:bold;letter-spacing:-0.3px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' 
           + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') 
           + '</td>'
@@ -1851,19 +1853,19 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools" style="height:32px;width:auto;">' : '<span style="color:#93c5fd;font-size:16px;font-weight:bold;">blueprint</span>')
           + '</td></tr></table></div>'
           // Body
-          + '<div class="eb" style="padding:24px;background:#fff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
-          + '<p style="margin:0 0 20px;font-size:15px;color:#1e293b;">' + greetingText + '</p>'
+          + '<div class="eb" style="padding:24px;background:#fff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<p style="margin:0 0 20px;font-size:15px;color:#1e293b;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + greetingText + '</p>'
           // Top Grade Bubble
           + gradeBubbleHtml
           // Summary card
-          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:12px;">' + summaryTitle + '</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;"><tbody>'
-          + '<tr><td style="padding:4px 0;color:#64748b;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;color:#0f172a;">' + s.name + '</td></tr>'
-          + (className ? '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('class', lang, 'Class') + '</td><td style="font-weight:bold;">' + className + '</td></tr>' : '')
-          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('period', lang, 'Period') + '</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
-          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td style="font-weight:600;color:' + (s.tardies > 0 ? '#d97706' : '#0f172a') + ';">' + s.tardies + '</td></tr>'
-          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td style="font-weight:600;color:' + (s.absences > 0 ? '#dc2626' : '#0f172a') + ';">' + s.absences + '</td></tr>'
+          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 20px;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+          + '<div style="font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:12px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + summaryTitle + '</div>'
+          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '" ' + (isRtl ? 'dir="rtl"' : '') + '><tbody>'
+          + '<tr><td style="padding:4px 0;color:#64748b;width:110px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;color:#0f172a;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + s.name + '</td></tr>'
+          + (className ? '<tr><td style="padding:4px 0;color:#64748b;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('class', lang, 'Class') + '</td><td style="font-weight:bold;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + className + '</td></tr>' : '')
+          + '<tr><td style="padding:4px 0;color:#64748b;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('period', lang, 'Period') + '</td><td style="font-weight:bold;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td style="font-weight:600;color:' + (s.tardies > 0 ? '#d97706' : '#0f172a') + ';' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + s.tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('absences', lang, 'Absences') + '</td><td style="font-weight:600;color:' + (s.absences > 0 ? '#dc2626' : '#0f172a') + ';' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + s.absences + '</td></tr>'
           + '</tbody></table></div>'
           // 📊 Performance Charts (Side-by-Side Dual Charts Card)
           + chartsHtml
@@ -1876,13 +1878,13 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
         // Add Detailed Daily Activity Table if available
         if (s.dates && s.dates.length > 0) {
-          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
-            + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4C5; ' + activityLogTitle + '</span></div>'
-            + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;' + (isRtl ? 'text-align:right;' : '') + '">'
+          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '">'
+            + '<div style="background:#0f172a;padding:10px 16px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4C5; ' + activityLogTitle + '</span></div>'
+            + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;' + (isRtl ? 'text-align:right;direction:rtl;' : 'text-align:left;direction:ltr;') + 'border-collapse:collapse;" ' + (isRtl ? 'dir="rtl"' : '') + '>'
             + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">'
-            + '<th style="padding:10px 14px;color:#475569;font-weight:600;white-space:nowrap;">' + getLocalizedText('date', lang, 'Date') + '</th>'
-            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">' + getLocalizedText('attendance', lang, 'Attendance') + '</th>'
-            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">' + getLocalizedText('grades', lang, 'Grades') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;white-space:nowrap;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('date', lang, 'Date') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('attendance', lang, 'Attendance') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('grades', lang, 'Grades') + '</th>'
             + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">' + getLocalizedText('partPct', lang, 'Part. %') + '</th>'
             + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">' + getLocalizedText('exitTicket', lang, 'Exit Ticket') + '</th>'
             + '</tr></thead><tbody>';
@@ -1913,9 +1915,9 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
             }
 
             htmlBody += '<tr style="background:' + bg + ';border-bottom:1px solid #f1f5f9;">'
-              + '<td style="padding:9px 14px;color:#334155;white-space:nowrap;font-size:12px;">' + day.date + '</td>'
-              + '<td style="padding:9px 14px;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:' + attBg + ';color:' + attColor + ';">' + getLocalizedText(attLower, lang, day.attendance) + '</span></td>'
-              + '<td style="padding:9px 14px;font-family:monospace;font-size:12px;color:#334155;">' + gradesDisplay + '</td>'
+              + '<td style="padding:9px 14px;color:#334155;white-space:nowrap;font-size:12px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + day.date + '</td>'
+              + '<td style="padding:9px 14px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '"><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:' + attBg + ';color:' + attColor + ';">' + getLocalizedText(attLower, lang, day.attendance) + '</span></td>'
+              + '<td style="padding:9px 14px;font-family:monospace;font-size:12px;color:#334155;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + gradesDisplay + '</td>'
               + '<td style="padding:9px 14px;text-align:center;"><span style="font-weight:600;font-size:12px;color:' + (pPct !== null ? pBarColor : '#94a3b8') + ';">' + pStr + '</span>' + pBar + '</td>'
               + '<td style="padding:9px 14px;text-align:center;color:#334155;font-size:12px;">' + etStr + '</td>'
               + '</tr>';
@@ -1924,16 +1926,16 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         }
 
         if (translatedCustomMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;color:#334155;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
+          htmlBody += '<p style="font-size:14px;line-height:1.6;color:#334155;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;color:#334155;">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
-          + '<p style="font-size:14px;margin-bottom:0;color:#334155;">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
+        htmlBody += '<p style="font-size:14px;color:#334155;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
+          + '<p style="font-size:14px;margin-bottom:0;color:#334155;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
           + '<strong>' + teacherName + '</strong><br>'
           + '<span style="color:#64748b;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
           // Footer
-          + '<div style="background:#f8fafc;padding:12px 24px;text-align:center;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">'
+          + '<div style="background:#f8fafc;padding:12px 24px;text-align:center;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '">'
           + '<span style="color:#94a3b8;font-size:11px;">Blueprint Schools Network &middot; ' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</span>'
           + '</div></div></body></html>';
         return htmlBody;
