@@ -1655,8 +1655,8 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
         var chartsHtml = '';
         if (partBarBlob || etBarBlob) {
-          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
-            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;"><tr>';
+          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;' + (isRtl ? 'direction:rtl;' : 'direction:ltr;') + '" ' + (isRtl ? 'dir="rtl"' : '') + '><tr>';
             
           var partTitle = getLocalizedText('participation', lang, 'Participation');
           if (lang === 'es') partTitle = 'Participación / Participation';
@@ -1667,7 +1667,7 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           else if (lang === 'ar') etTitle = 'تذكرة الخروج / Exit Ticket';
 
           if (partBarBlob && etBarBlob) {
-            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:top;">'
+            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;' + (isRtl ? 'border-left:1px solid #f1f5f9;' : 'border-right:1px solid #f1f5f9;') + 'vertical-align:top;">'
               + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
               + partImg
               + '</td>'
@@ -1717,15 +1717,15 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
 
           attendanceHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
             + '<div style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:8px;">' + attTitle + '</div>'
-            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;">'
+            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;' + (isRtl ? 'direction:ltr;' : '') + '">'
             + (pPct > 0 ? '<div style="width:' + pPct + '%;background:#10b981;height:100%;"></div>' : '')
             + (tPct > 0 ? '<div style="width:' + tPct + '%;background:#f59e0b;height:100%;"></div>' : '')
             + (aPct > 0 ? '<div style="width:' + aPct + '%;background:#ef4444;height:100%;"></div>' : '')
             + '</div>'
-            + '<div style="font-size:12px;color:#64748b;line-height:1.5;">'
+            + '<div style="font-size:12px;color:#64748b;line-height:1.5;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
             + '<span style="color:#059669;font-weight:bold;">&#x25CF; ' + presText + ': ' + presentCount + '</span>'
-            + '<span style="color:#d97706;font-weight:bold;margin-left:12px;">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
-            + '<span style="color:#dc2626;font-weight:bold;margin-left:12px;">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
+            + '<span style="color:#d97706;font-weight:bold;' + (isRtl ? 'margin-right:12px;' : 'margin-left:12px;') + '">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
+            + '<span style="color:#dc2626;font-weight:bold;' + (isRtl ? 'margin-right:12px;' : 'margin-left:12px;') + '">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
             + '</div>'
             + streakHtml
             + '</div>';
