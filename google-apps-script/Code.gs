@@ -11,21 +11,50 @@
  * No external APIs, no AI, no third-party services.
  */
 
+// ─── Scoping Helper Scopes Keys by Tutor Email ───
+function getUserScopedKey(baseKey) {
+  try {
+    var email = Session.getActiveUser().getEmail();
+    if (email) {
+      return baseKey + '_' + email.toLowerCase().trim();
+    }
+  } catch (e) {
+    // fallback if getEmail fails
+  }
+  return baseKey;
+}
+
 // ─── User Preference Memory (FERPA Compliant / Private to User) ───
 function saveUserPreference(key, data) {
   try {
     var props = PropertiesService.getUserProperties();
-    props.setProperty(key, JSON.stringify(data));
+    var scopedKey = getUserScopedKey(key);
+    props.setProperty(scopedKey, JSON.stringify(data));
     return { success: true };
   } catch (e) {
     return { error: e.message };
   }
 }
 
+// ─── Module B: Translate Comment via Google Translate (LanguageApp) ───
+// Uses the built-in LanguageApp service — no API key or external quota needed.
+// targetLang: any BCP-47 language code ('es', 'ar', 'fr', 'so', 'zh', 'vi', etc.)
+function translateComment(text, targetLang) {
+  try {
+    if (!text || !targetLang || targetLang === 'en') {
+      return { success: true, translated: text, lang: 'en' };
+    }
+    var translated = LanguageApp.translate(text, 'en', targetLang);
+    return { success: true, translated: translated, lang: targetLang };
+  } catch (e) {
+    return { error: 'Translation failed: ' + e.message };
+  }
+}
 function loadUserPreference(key) {
   try {
     var props = PropertiesService.getUserProperties();
-    var val = props.getProperty(key);
+    var scopedKey = getUserScopedKey(key);
+    var val = props.getProperty(scopedKey);
     return val ? JSON.parse(val) : null;
   } catch (e) {
     return null;
@@ -400,15 +429,71 @@ function buildEmailLookup(ss, config) {
   return { map: lookup, rawNames: rawNames, sheetFound: true };
 }
 
-// Helper: Look up email using multiple name format attempts
+// Helper: Clean name for robust comparison (lowercase, strip punctuation/initials)
+function cleanNameForMatching(name) {
+  if (!name) return '';
+  var cleaned = name.toLowerCase()
+    .replace(/[.,'\-]/g, ' ') // replace punctuation with space
+    .replace(/\s+/g, ' ')     // collapse spaces
+    .trim();
+  
+  // Remove middle initials (single letters surrounded by spaces or at the end)
+  cleaned = cleaned.replace(/\s[a-z]\s/g, ' ')
+                   .replace(/\s[a-z]$/g, '');
+  return cleaned;
+}
+
+// Helper: Token-based flexible name comparison
+function areNamesMatching(nameA, nameB) {
+  var cleanA = cleanNameForMatching(nameA);
+  var cleanB = cleanNameForMatching(nameB);
+  if (!cleanA || !cleanB) return false;
+  if (cleanA === cleanB) return true;
+
+  // Split into individual word tokens
+  var tokensA = cleanA.split(' ');
+  var tokensB = cleanB.split(' ');
+
+  // Filter out single-character initials
+  tokensA = tokensA.filter(function(t) { return t.length > 1; });
+  tokensB = tokensB.filter(function(t) { return t.length > 1; });
+
+  if (tokensA.length === 0 || tokensB.length === 0) return false;
+
+  // Check if all tokens of one name are present in the other (order independent)
+  var matchCount = 0;
+  for (var i = 0; i < tokensA.length; i++) {
+    if (tokensB.indexOf(tokensA[i]) > -1) {
+      matchCount++;
+    }
+  }
+  
+  // Require at least 2 tokens to match (or all if name has only 1 token)
+  var minRequired = Math.min(tokensA.length, tokensB.length, 2);
+  return matchCount >= minRequired;
+}
+
+// Helper: Look up email using multiple name format attempts and robust fuzzy fallback
 function lookupEmail(emailMap, studentName) {
   if (!emailMap || Object.keys(emailMap).length === 0) return null;
+  
+  // 1. Try exact matches on name variants first (very fast)
   var keys = nameVariants(studentName);
   for (var i = 0; i < keys.length; i++) {
     if (emailMap[keys[i]]) return emailMap[keys[i]];
   }
+  
+  // 2. Token-based fuzzy match fallback
+  var allKeys = Object.keys(emailMap);
+  for (var j = 0; j < allKeys.length; j++) {
+    if (areNamesMatching(allKeys[j], studentName)) {
+      return emailMap[allKeys[j]];
+    }
+  }
+  
   return null;
 }
+
 
 function getStudentData(config) {
   try {
@@ -614,15 +699,8 @@ function sendParentEmails(emailData) {
   var teacherEmail = Session.getActiveUser().getEmail();
 
   for (var i = 0; i < emailData.students.length; i++) {
-    var s = emailData.students[i];
-
-    if (!s.parentEmail && !s.studentEmail) {
-      failed++;
-      errors.push({ name: s.name, email: '', error: 'Missing email address' });
-      continue;
-    }
-
-    try {
+     try {
+      var s = emailData.students[i];
       // Extract first name for greeting
       var firstName = s.name.indexOf(',') > -1
         ? (s.name.split(',')[1] || '').trim()
@@ -633,35 +711,72 @@ function sendParentEmails(emailData) {
       var tardies = s.tardies || 0;
       var absences = s.absences || 0;
       var teacherName = emailData.teacherName || teacherEmail;
+
+      // Localization & Translation
+      var lang = s.lang || 'en';
+      var translatedParentComment = s.parentComment;
+      var translatedStudentComment = s.studentComment;
+      var translatedCustomMessage = emailData.customMessage;
+
+      if (lang && lang !== 'en') {
+        try {
+          if (s.parentComment) {
+            translatedParentComment = LanguageApp.translate(s.parentComment, 'en', lang);
+          }
+        } catch(e) { Logger.log('Parent comment translate error: ' + e.message); }
+        try {
+          if (s.studentComment) {
+            translatedStudentComment = LanguageApp.translate(s.studentComment, 'en', lang);
+          }
+        } catch(e) { Logger.log('Student comment translate error: ' + e.message); }
+        try {
+          if (emailData.customMessage) {
+            translatedCustomMessage = LanguageApp.translate(emailData.customMessage, 'en', lang);
+          }
+        } catch(e) { Logger.log('Custom message translate error: ' + e.message); }
+      }
+
       var subject = emailData.subject.replace('{student}', firstName);
-      var targetLang = normalizeLanguageCode(s.language || 'en');
-      var translatedParentComment = translateOnTheFly(s.parentComment, targetLang);
-      var translatedStudentComment = translateOnTheFly(s.studentComment, targetLang);
-      var translatedCustomMessage = translateOnTheFly(emailData.customMessage || '', targetLang);
+      if (lang && lang !== 'en') {
+        try {
+          subject = LanguageApp.translate(subject, 'en', lang);
+        } catch(e) { Logger.log('Subject translate error: ' + e.message); }
+      }
 
       // Helper function to build HTML
       function buildHtmlEmail(recipientType, comment) {
-        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
+        var isParent = (recipientType === 'parent');
+        var greetingText = isParent
+          ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},', firstName)
+          : getLocalizedText('dearStudent', lang, 'Dear {student},', firstName);
+
+        var isRtl = (lang === 'ar' && isParent);
+        var commentDirStyle = isRtl
+          ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #6bb8c9;border-left:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"'
+          : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #6bb8c9;border-right:none;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;"';
+
         var htmlBody = ''
-          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
+          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<style>@media(max-width:600px){.email-wrap{width:100%!important;max-width:100%!important;padding:0!important}.email-body{padding:16px!important}.email-table td{display:block!important;width:100%!important;text-align:left!important;padding:4px 0!important}}</style></head><body style="margin:0;padding:0;background:#f0f2f5;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
+          + '<div class="email-wrap" style="width:100%;max-width:680px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
           + '<div style="background:#2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-          + '<td style="color:#fff;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
-          + '<td style="text-align:right;">'
+          + '<td style="color:#fff;font-size:18px;font-weight:bold;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</td>'
+          + '<td style="' + (isRtl ? 'text-align:left;' : 'text-align:right;') + '">'
           + '<span style="color:#6bb8c9;font-size:22px;font-weight:bold;">blueprint</span><br>'
           + '<span style="color:#6bb8c9;font-size:11px;">schools network</span>'
           + '</td></tr></table></div>'
-          + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
-          + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
+          + '<div class="email-body" style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
+          + '<p style="margin:0 0 16px;font-size:15px;">' + greetingText + '</p>'
           + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (grade === 'A' || grade === 'B' ? '#d1fae5;color:#059669' : grade === 'C' || grade === 'D' ? '#fef3c7;color:#d97706' : grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (grade || '—') + '</span></td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + tardies + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + absences + '</td></tr>'
+          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">' + getLocalizedText('studentSummary', lang, 'Student Summary') + '</div>'
+          + '<table class="email-table" cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;' + (isRtl ? 'text-align:right;' : '') + '">'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('grade', lang, 'Grade') + '</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (grade === 'A' || grade === 'B' ? '#d1fae5;color:#059669' : grade === 'C' || grade === 'D' ? '#fef3c7;color:#d97706' : grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (grade || '—') + '</span></td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td>' + tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td>' + absences + '</td></tr>'
           + '</table></div>'
-          + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
+          + '<div ' + commentDirStyle + '>'
           + comment
           + '</div>';
 
@@ -669,25 +784,29 @@ function sendParentEmails(emailData) {
           htmlBody += '<p style="font-size:14px;line-height:1.6;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
-          + '<p style="font-size:14px;margin-bottom:0;">Best regards,<br>'
+        htmlBody += '<p style="font-size:14px;">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
+          + '<p style="font-size:14px;margin-bottom:0;">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
           + '<strong>' + teacherName + '</strong><br>'
           + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
           + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
-          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
-          + '</div></div>';
+          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · ' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</span>'
+          + '</div></div></body></html>';
         return htmlBody;
       }
 
       function buildPlainEmail(recipientType, comment) {
-        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
+        var isParent = (recipientType === 'parent');
+        var greeting = isParent
+          ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},\n\n', firstName)
+          : getLocalizedText('dearStudent', lang, 'Dear {student},\n\n', firstName);
         var plainBody = greeting + comment + '\n\n';
         if (translatedCustomMessage) {
           plainBody += translatedCustomMessage + '\n\n';
         }
-        plainBody += 'If you have any questions or concerns, please do not hesitate to reach out.\n\n'
-          + 'Best regards,\n'
+        plainBody += getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.')
+          + '\n\n'
+          + getLocalizedText('regards', lang, 'Best regards,\n')
           + teacherName + '\n'
           + teacherEmail;
         return plainBody;
@@ -712,7 +831,6 @@ function sendParentEmails(emailData) {
         });
         sent++;
       }
-
     } catch (e) {
       failed++;
       errors.push({ name: s.name, email: s.parentEmail || s.studentEmail, error: e.message });
@@ -1038,9 +1156,25 @@ function buildGradeLookup(ss, config, endDate) {
     }
   }
 
+  // ── Emergency Fallback: Scan the header row (startRow - 1) for any "grade" column ──
+  if (targetCol === null) {
+    try {
+      var headerRowIdx = Math.max(1, startRow - 1);
+      var headers = gradeSheet.getRange(headerRowIdx, 1, 1, lastCol).getValues()[0];
+      for (var c = 0; c < headers.length; c++) {
+        var h = String(headers[c] || '').toLowerCase();
+        if (h.indexOf('letter grade') > -1 || h === 'grade' || h.indexOf('grade') > -1) {
+          targetCol = c;
+          break;
+        }
+      }
+    } catch(e) {}
+  }
+
   if (targetCol === null) {
     return { map: lookup, found: false, error: 'No grade column found — select one in the Grade Lookup settings' };
   }
+
 
   if (lastRow < startRow) return { map: lookup, found: false, error: 'No data in grades sheet starting from row ' + startRow };
 
@@ -1191,6 +1325,7 @@ function getActivityReport(config, startDate, endDate) {
         if (!isAbsent && gradesStr && gradesStr !== '—') {
           var pointsEarned = 0;
           var totalPossible = 6;
+          var showPoints = false;
           for (var c = 0; c < gradesStr.length; c++) {
             var char = gradesStr[c];
             if (char === 'X') {
@@ -1198,6 +1333,9 @@ function getActivityReport(config, startDate, endDate) {
             } else if (/[GRADES]/.test(char)) {
               pointsEarned++;
             }
+          }
+          if (gradesStr && gradesStr !== '—') {
+            showPoints = true;
           }
           if (totalPossible < 0) totalPossible = 0;
           participationPct = totalPossible > 0 ? Math.round((pointsEarned / totalPossible) * 100) : 100;
@@ -1217,7 +1355,8 @@ function getActivityReport(config, startDate, endDate) {
           exitTicket: etDisplay,
           exitTicketPct: !isNaN(etValue) ? Math.round((etValue / 4) * 100) : null,
           gradesStr: gradesStr || '—',
-          participationPct: participationPct
+          participationPct: participationPct,
+          participationPoints: showPoints ? (pointsEarned + '/' + totalPossible) : null
         });
       }
 
@@ -1522,122 +1661,293 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
         : s.name.split(',')[0].trim();
       if (!firstName) firstName = s.name;
 
+    var emailSubject = subject.replace('{student}', firstName);
+
+      // ─── Module 5.2: Dynamic Translation & Curated Localization ───
+      var lang = s.lang || 'en';
+      var translatedParentComment = s.parentComment;
+      var translatedStudentComment = s.studentComment;
+      var translatedCustomMessage = customMessage;
+
+      if (lang && lang !== 'en') {
+        try {
+          if (s.parentComment) {
+            translatedParentComment = LanguageApp.translate(s.parentComment, 'en', lang);
+          }
+        } catch(e) { Logger.log('Parent comment translate error: ' + e.message); }
+        try {
+          if (s.studentComment) {
+            translatedStudentComment = LanguageApp.translate(s.studentComment, 'en', lang);
+          }
+        } catch(e) { Logger.log('Student comment translate error: ' + e.message); }
+        try {
+          if (customMessage) {
+            translatedCustomMessage = LanguageApp.translate(customMessage, 'en', lang);
+          }
+        } catch(e) { Logger.log('Custom message translate error: ' + e.message); }
+      }
+
       var emailSubject = subject.replace('{student}', firstName);
-      var targetLang = normalizeLanguageCode(s.language || 'en');
-      var translatedParentComment = translateOnTheFly(s.parentComment, targetLang);
-      var translatedStudentComment = translateOnTheFly(s.studentComment, targetLang);
-      var translatedCustomMessage = translateOnTheFly(customMessage || '', targetLang);
-      var participationRows = collectChartSeries(s.dates || [], 'participationPct');
-      var quizRows = collectChartSeries(s.dates || [], 'exitTicketPct');
-      var attendanceStats = getAttendanceStats(s.summary || {}, s.dates || []);
-      var attendanceRate = calcAttendancePct(attendanceStats.present, attendanceStats.tardy, attendanceStats.scheduled);
-      var attendanceRateStr = attendanceRate === null ? '—' : (attendanceRate + '%');
+      if (lang && lang !== 'en') {
+        try {
+          emailSubject = LanguageApp.translate(emailSubject, 'en', lang);
+        } catch(e) { Logger.log('Subject translate error: ' + e.message); }
+      }
+
+      // Build the three native charts
+      var totalDaysChart = s.dates ? s.dates.length : 0;
+      var presentCount = 0, tardyCount = 0, absentCount = 0;
+      if (s.dates) {
+        s.dates.forEach(function(d) {
+          var a = (d.attendance || '').toLowerCase();
+          if (a === 'present') presentCount++;
+          else if (a === 'tardy') tardyCount++;
+          else if (a === 'absent') absentCount++;
+        });
+      }
+
+      var partBarBlob = buildBarChartNative(s.dates || [], 'participationPct', 100, '#2563eb', getLocalizedText('participation', lang, 'Participation'));
+      var etBarBlob = buildBarChartNative(s.dates || [], 'exitTicketPct', 100, '#7c3aed', getLocalizedText('exitTicket', lang, 'Exit Ticket'));
+
+      var studentInlineImages = {};
+      if (logoBlob) studentInlineImages['logo'] = logoBlob;
+      if (partBarBlob) studentInlineImages['partBarChart'] = partBarBlob;
+      if (etBarBlob) studentInlineImages['etBarChart'] = etBarBlob;
+
+      var partImg = partBarBlob ? '<img src="cid:partBarChart" width="220" height="202" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;max-width:100%;" alt="Participation">' : '';
+      var etImg = etBarBlob ? '<img src="cid:etBarChart" width="220" height="202" style="display:inline-block;vertical-align:middle;margin:0 auto;border:none;max-width:100%;" alt="Exit Ticket">' : '';
+
+      // Grade badge color
+      var gradeG = s.grade || '';
+      var gradeBg = gradeG === 'A' || gradeG === 'B' ? '#d1fae5' : gradeG === 'C' || gradeG === 'D' ? '#fef3c7' : gradeG === 'F' ? '#fee2e2' : '#f3f4f6';
+      var gradeColor = gradeG === 'A' || gradeG === 'B' ? '#059669' : gradeG === 'C' || gradeG === 'D' ? '#d97706' : gradeG === 'F' ? '#dc2626' : '#6b7280';
 
       function buildHtml(recipientType, comment) {
-        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',' : 'Dear ' + firstName + ',';
+        var isParent = (recipientType === 'parent');
+        var greetingText = isParent 
+          ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},', firstName)
+          : getLocalizedText('dearStudent', lang, 'Dear {student},', firstName);
+
+        var isRtl = (lang === 'ar' && isParent);
+        var commentDirStyle = isRtl 
+          ? 'dir="rtl" style="direction:rtl;text-align:right;border-right:4px solid #2563eb;border-left:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:8px 0 0 8px;font-size:14px;line-height:1.7;color:#1e293b;"' 
+          : 'dir="ltr" style="direction:ltr;text-align:left;border-left:4px solid #2563eb;border-right:none;padding:14px 18px;background:#eff6ff;margin:0 0 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;color:#1e293b;"';
+
+        var summaryTitle = getLocalizedText('studentSummary', lang, 'Student Summary');
+        var performanceTitle = getLocalizedText('performanceSnapshot', lang, 'Performance Snapshot');
+        var activityLogTitle = getLocalizedText('dailyActivityLog', lang, 'Daily Activity Log');
+
+        var gradeCalTitle = getLocalizedText('grade', lang, 'Grade');
+        if (lang === 'es') gradeCalTitle = 'Grade / Calificación';
+        else if (lang === 'ar') gradeCalTitle = 'الدرجة / Grade';
+
+        var gradeBubbleHtml = '<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '"><tr>'
+          + '<td style="font-size:15px;font-weight:bold;color:#475569;padding-right:8px;vertical-align:middle;">' + gradeCalTitle + '</td>'
+          + '<td style="vertical-align:middle;"><span style="display:inline-block;padding:4px 14px;border-radius:20px;font-weight:bold;font-size:14px;background:#e0f2fe;color:#0284c7;">' + (gradeG || '&mdash;') + '</span></td>'
+          + '</tr></table>';
+
+        var streakVal = 0;
+        if (s.dates && s.dates.length > 0) {
+          for (var si = s.dates.length - 1; si >= 0; si--) {
+            var attStatus = String(s.dates[si].attendance || '').toLowerCase().trim();
+            if (attStatus === 'present') {
+              streakVal++;
+            } else if (attStatus === 'tardy' || attStatus === 'absent') {
+              break;
+            }
+          }
+        }
+
+        var chartsHtml = '';
+        if (partBarBlob || etBarBlob) {
+          chartsHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
+            + '<table class="chart-row" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;padding:0;"><tr>';
+            
+          var partTitle = getLocalizedText('participation', lang, 'Participation');
+          if (lang === 'es') partTitle = 'Participación / Participation';
+          else if (lang === 'ar') partTitle = 'المشاركة / Participation';
+          
+          var etTitle = getLocalizedText('exitTicket', lang, 'Exit Ticket');
+          if (lang === 'es') etTitle = 'Exit Ticket / Boleto de Salida';
+          else if (lang === 'ar') etTitle = 'تذكرة الخروج / Exit Ticket';
+
+          if (partBarBlob && etBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;border-right:1px solid #f1f5f9;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
+              + partImg
+              + '</td>'
+              + '<td class="chart-cell" style="width:50%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + etTitle + '</div>'
+              + etImg
+              + '</td>';
+          } else if (partBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:100%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + partTitle + '</div>'
+              + partImg
+              + '</td>';
+          } else if (etBarBlob) {
+            chartsHtml += '<td class="chart-cell" style="width:100%;padding:8px;text-align:center;vertical-align:top;">'
+              + '<div style="font-weight:bold;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:12px;">' + etTitle + '</div>'
+              + etImg
+              + '</td>';
+          }
+          
+          chartsHtml += '</tr></table></div>';
+        }
+
+        var attendanceHtml = '';
+        if (presentCount + tardyCount + absentCount > 0) {
+          var totalAtt = presentCount + tardyCount + absentCount;
+          var pPct = Math.round((presentCount / totalAtt) * 100);
+          var tPct = Math.round((tardyCount / totalAtt) * 100);
+          var aPct = Math.max(0, 100 - pPct - tPct);
+          
+          var attTitle = getLocalizedText('attendance', lang, 'Attendance');
+          if (lang === 'es') attTitle = 'Asistencia / Attendance';
+          else if (lang === 'ar') attTitle = 'الحضور / Attendance';
+          
+          var presText = getLocalizedText('present', lang, 'Pres');
+          var tardText = getLocalizedText('tardy', lang, 'Tardy');
+          var absText = getLocalizedText('absent', lang, 'Abs');
+          
+          var streakHtml = '';
+          if (streakVal >= 3) {
+            var streakLabel = streakVal + '-day streak';
+            if (lang === 'es') streakLabel = 'racha de ' + streakVal + ' días';
+            else if (lang === 'ar') streakLabel = 'سلسلة حضور ' + streakVal + ' أيام';
+            streakHtml = '<div style="display:inline-block;padding:3px 10px;border-radius:12px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:bold;margin-top:8px;">'
+              + '&#x2605; ' + streakLabel
+              + '</div>';
+          }
+
+          attendanceHtml += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:0 0 20px;box-shadow:0 1px 3px rgba(0,0,0,0.05);' + (isRtl ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;') + '">'
+            + '<div style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:8px;">' + attTitle + '</div>'
+            + '<div style="width:100%;height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;">'
+            + (pPct > 0 ? '<div style="width:' + pPct + '%;background:#10b981;height:100%;"></div>' : '')
+            + (tPct > 0 ? '<div style="width:' + tPct + '%;background:#f59e0b;height:100%;"></div>' : '')
+            + (aPct > 0 ? '<div style="width:' + aPct + '%;background:#ef4444;height:100%;"></div>' : '')
+            + '</div>'
+            + '<div style="font-size:12px;color:#64748b;line-height:1.5;">'
+            + '<span style="color:#059669;font-weight:bold;">&#x25CF; ' + presText + ': ' + presentCount + '</span>'
+            + '<span style="color:#d97706;font-weight:bold;margin-left:12px;">&#x25CF; ' + tardText + ': ' + tardyCount + '</span>'
+            + '<span style="color:#dc2626;font-weight:bold;margin-left:12px;">&#x25CF; ' + absText + ': ' + absentCount + '</span>'
+            + '</div>'
+            + streakHtml
+            + '</div>';
+        }
+
         var htmlBody = ''
-          + '<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;">'
-          + '<div style="background:#ffffff;border-bottom:3px solid #2c3e50;padding:20px 24px;border-radius:8px 8px 0 0;">'
+          + '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<style>@media(max-width:600px){.ew{width:96%!important;max-width:96%!important}.eb{padding:16px!important}.chart-row, .chart-row tr, .chart-row td{display:block!important;width:100%!important;box-sizing:border-box!important}.chart-cell{border-right:none!important;border-bottom:1px solid #f1f5f9!important;padding:16px 0!important}.chart-cell:last-child{border-bottom:none!important}img{max-width:100%!important;height:auto!important}}</style>'
+          + '</head><body style="margin:0;padding:0;background:#f0f2f5;">'
+          + '<div class="ew" style="width:92%;max-width:880px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#333;' + (isRtl ? 'direction:rtl;text-align:right;' : '') + '">'
+          // Header
+          + '<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:20px 24px;border-radius:8px 8px 0 0;">'
           + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-          + '<td style="color:#2c3e50;font-size:18px;font-weight:bold;">Biweekly Progress Report</td>'
-          + '<td style="text-align:right;">'
-          + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools Network" style="height: 36px; width: auto; display: inline-block;">' : '<strong>Blueprint Schools Network</strong>')
+          + '<td style="color:#fff;font-size:17px;font-weight:bold;letter-spacing:-0.3px;' + (isRtl ? 'text-align:right;' : 'text-align:left;') + '">' 
+          + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') 
+          + '</td>'
+          + '<td style="' + (isRtl ? 'text-align:left;' : 'text-align:right;') + '">'
+          + (logoBlob ? '<img src="cid:logo" alt="Blueprint Schools" style="height:32px;width:auto;">' : '<span style="color:#93c5fd;font-size:16px;font-weight:bold;">blueprint</span>')
           + '</td></tr></table></div>'
-          + '<div style="padding:24px;background:#fff;border-left:1px solid #ddd;border-right:1px solid #ddd;">'
-          + '<p style="margin:0 0 16px;font-size:15px;">' + greeting + '</p>'
-          + '<div style="background:#f8f9fa;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;margin-bottom:12px;color:#2c3e50;">Student Summary</div>'
-          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;">'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;width:100px;">Student</td><td style="font-weight:bold;">' + s.name + '</td></tr>'
-          + (className && className.trim() !== '' ? '<tr><td style="padding:4px 16px 4px 0;color:#666;">Class</td><td style="font-weight:bold;">' + className.trim() + '</td></tr>' : '')
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Dates</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Grade</td><td><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:bold;background:' + (s.grade === 'A' || s.grade === 'B' ? '#d1fae5;color:#059669' : s.grade === 'C' || s.grade === 'D' ? '#fef3c7;color:#d97706' : s.grade === 'F' ? '#fee2e2;color:#dc2626' : '#f3f4f6;color:#6b7280') + ';">' + (s.grade || '—') + '</span></td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Tardies</td><td>' + s.tardies + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Absences</td><td>' + s.absences + '</td></tr>'
-          + '<tr><td style="padding:4px 16px 4px 0;color:#666;">Attendance Rate</td><td>' + attendanceRateStr + '</td></tr>'
-          + '</table></div>'
-          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin:0 0 20px;">'
-          + '<div style="font-weight:bold;font-size:14px;color:#2c3e50;margin-bottom:10px;">Performance Charts</div>'
-          + '<div style="display:flex;gap:12px;flex-wrap:wrap;">'
-          + '<div style="flex:1;min-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
-          + '<div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:6px;">Participation</div>'
-          + buildSeriesChart(participationRows, '#14b8a6')
-          + '</div>'
-          + '<div style="flex:1;min-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
-          + '<div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;">Quiz / Exit Ticket</div>'
-          + buildSeriesChart(quizRows, '#3b82f6')
-          + '</div>'
-          + '</div>'
-          + '<div style="margin-top:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">'
-          + '<div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">Attendance Graph</div>'
-          + buildAttendanceGraph(s.summary || {}, s.dates || [])
-          + '</div>'
-          + '</div>'
-          + '<div style="border-left:4px solid #6bb8c9;padding:12px 16px;background:#f0f9fa;margin:0 0 20px;font-size:14px;line-height:1.6;">'
+          // Body
+          + '<div class="eb" style="padding:24px;background:#fff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
+          + '<p style="margin:0 0 20px;font-size:15px;color:#1e293b;">' + greetingText + '</p>'
+          // Top Grade Bubble
+          + gradeBubbleHtml
+          // Summary card
+          + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 20px;">'
+          + '<div style="font-weight:bold;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:12px;">' + summaryTitle + '</div>'
+          + '<table cellpadding="0" cellspacing="0" style="font-size:14px;width:100%;"><tbody>'
+          + '<tr><td style="padding:4px 0;color:#64748b;width:110px;">' + getLocalizedText('student', lang, 'Student') + '</td><td style="font-weight:bold;color:#0f172a;">' + s.name + '</td></tr>'
+          + (className ? '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('class', lang, 'Class') + '</td><td style="font-weight:bold;">' + className + '</td></tr>' : '')
+          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('period', lang, 'Period') + '</td><td style="font-weight:bold;">' + (dateRange && dateRange.start ? dateRange.start + ' &ndash; ' + dateRange.end : 'N/A') + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('tardies', lang, 'Tardies') + '</td><td style="font-weight:600;color:' + (s.tardies > 0 ? '#d97706' : '#0f172a') + ';">' + s.tardies + '</td></tr>'
+          + '<tr><td style="padding:4px 0;color:#64748b;">' + getLocalizedText('absences', lang, 'Absences') + '</td><td style="font-weight:600;color:' + (s.absences > 0 ? '#dc2626' : '#0f172a') + ';">' + s.absences + '</td></tr>'
+          + '</tbody></table></div>'
+          // 📊 Performance Charts (Side-by-Side Dual Charts Card)
+          + chartsHtml
+          // 📈 Attendance Progress Bar Block
+          + attendanceHtml
+          // Comment / message
+          + '<div ' + commentDirStyle + '>'
           + comment
           + '</div>';
 
         // Add Detailed Daily Activity Table if available
         if (s.dates && s.dates.length > 0) {
-          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 20px;overflow:hidden;">'
-            + '<div style="background:#2c3e50;padding:12px 16px;color:#fff;font-weight:bold;font-size:14px;">Daily Activity Log</div>'
-            + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;">'
-            + '<thead style="background:#f8f9fa;border-bottom:2px solid #e2e8f0;"><tr>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Date</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Attendance</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Participation</th>'
-            + '<th style="padding:10px 16px;color:#475569;font-weight:600;">Exit Ticket</th>'
+          htmlBody += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 20px;overflow:hidden;">'
+            + '<div style="background:#0f172a;padding:10px 16px;"><span style="color:#fff;font-weight:bold;font-size:13px;">&#x1F4C5; ' + activityLogTitle + '</span></div>'
+            + '<div style="overflow-x:auto;"><table cellpadding="0" cellspacing="0" style="width:100%;font-size:13px;text-align:left;border-collapse:collapse;' + (isRtl ? 'text-align:right;' : '') + '">'
+            + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;white-space:nowrap;">' + getLocalizedText('date', lang, 'Date') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">' + getLocalizedText('attendance', lang, 'Attendance') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;">' + getLocalizedText('grades', lang, 'Grades') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">' + getLocalizedText('partPct', lang, 'Part. %') + '</th>'
+            + '<th style="padding:10px 14px;color:#475569;font-weight:600;text-align:center;">' + getLocalizedText('exitTicket', lang, 'Exit Ticket') + '</th>'
             + '</tr></thead><tbody>';
 
           for (var d = 0; d < s.dates.length; d++) {
             var day = s.dates[d];
-            var attColor = day.attendance.toLowerCase() === 'absent' ? '#dc2626' : (day.attendance.toLowerCase() === 'tardy' ? '#d97706' : '#333');
+            var attLower = (day.attendance || '').toLowerCase();
+            var attColor = attLower === 'absent' ? '#dc2626' : attLower === 'tardy' ? '#d97706' : '#059669';
+            var attBg = attLower === 'absent' ? '#fef2f2' : attLower === 'tardy' ? '#fffbeb' : '#f0fdf4';
             var bg = d % 2 === 0 ? '#ffffff' : '#f8fafc';
-            
-            var partStr = day.gradesStr;
-            if (day.participationPct !== null && day.participationPct !== undefined) {
-               if (partStr && partStr !== '—') partStr += ' (' + day.participationPct + '%)';
-               else partStr = day.participationPct + '%';
+
+            // Participation % bar inline
+            var pPct = (day.participationPct !== null && day.participationPct !== undefined) ? day.participationPct : null;
+            var pBarColor = pPct !== null ? (pPct >= 80 ? '#059669' : pPct >= 60 ? '#d97706' : '#dc2626') : '#e2e8f0';
+            var pStr = pPct !== null ? (pPct + '%') : '&mdash;';
+            var pBar = pPct !== null
+              ? '<div style="background:#e2e8f0;border-radius:3px;height:6px;width:80px;margin:3px auto 0;"><div style="background:' + pBarColor + ';width:' + pPct + '%;height:100%;border-radius:3px;"></div></div>'
+              : '';
+
+            var etPct = (day.exitTicketPct !== null && day.exitTicketPct !== undefined) ? day.exitTicketPct : null;
+            var etStr = day.exitTicket !== '' && day.exitTicket != null ? day.exitTicket : '&mdash;';
+            if (etPct !== null) etStr += ' <span style="font-size:11px;color:#64748b;">(' + etPct + '%)</span>';
+
+            // Display numerical participation points alongside grades string
+            var gradesDisplay = (day.gradesStr && day.gradesStr !== '&mdash;' && day.gradesStr !== '\u2014') ? day.gradesStr : '&mdash;';
+            if (day.participationPoints && day.gradesStr !== '&mdash;') {
+              gradesDisplay += ' <span style="font-size:11px;color:#64748b;">(' + day.participationPoints + ')</span>';
             }
-            if (!partStr) partStr = '—';
-            
-            var etStr = day.exitTicket;
-            if (day.exitTicketPct !== null && day.exitTicketPct !== undefined) {
-               if (etStr && String(etStr).trim() !== '') etStr += ' (' + day.exitTicketPct + '%)';
-               else etStr = day.exitTicketPct + '%';
-            }
-            if (!etStr || String(etStr).trim() === '') etStr = '—';
 
             htmlBody += '<tr style="background:' + bg + ';border-bottom:1px solid #f1f5f9;">'
-              + '<td style="padding:10px 16px;color:#334155;white-space:nowrap;">' + day.date + '</td>'
-              + '<td style="padding:10px 16px;color:' + attColor + ';font-weight:500;">' + day.attendance + '</td>'
-              + '<td style="padding:10px 16px;color:#334155;">' + (partStr || '—') + '</td>'
-              + '<td style="padding:10px 16px;color:#334155;">' + (etStr || '—') + '</td>'
+              + '<td style="padding:9px 14px;color:#334155;white-space:nowrap;font-size:12px;">' + day.date + '</td>'
+              + '<td style="padding:9px 14px;"><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:' + attBg + ';color:' + attColor + ';">' + getLocalizedText(attLower, lang, day.attendance) + '</span></td>'
+              + '<td style="padding:9px 14px;font-family:monospace;font-size:12px;color:#334155;">' + gradesDisplay + '</td>'
+              + '<td style="padding:9px 14px;text-align:center;"><span style="font-weight:600;font-size:12px;color:' + (pPct !== null ? pBarColor : '#94a3b8') + ';">' + pStr + '</span>' + pBar + '</td>'
+              + '<td style="padding:9px 14px;text-align:center;color:#334155;font-size:12px;">' + etStr + '</td>'
               + '</tr>';
           }
           htmlBody += '</tbody></table></div></div>';
         }
 
         if (translatedCustomMessage) {
-          htmlBody += '<p style="font-size:14px;line-height:1.6;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
+          htmlBody += '<p style="font-size:14px;line-height:1.6;color:#334155;">' + translatedCustomMessage.replace(/\n/g, '<br>') + '</p>';
         }
 
-        htmlBody += '<p style="font-size:14px;">If you have any questions or concerns, please do not hesitate to reach out.</p>'
-          + '<p style="font-size:14px;margin-bottom:0;">Best regards,<br>'
+        htmlBody += '<p style="font-size:14px;color:#334155;">' + getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') + '</p>'
+          + '<p style="font-size:14px;margin-bottom:0;color:#334155;">' + getLocalizedText('regards', lang, 'Best regards,') + '<br>'
           + '<strong>' + teacherName + '</strong><br>'
-          + '<span style="color:#666;font-size:13px;">' + teacherEmail + '</span></p>'
+          + '<span style="color:#64748b;font-size:13px;">' + teacherEmail + '</span></p>'
           + '</div>'
-          + '<div style="background:#f8f9fa;padding:12px 24px;text-align:center;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">'
-          + '<span style="color:#999;font-size:11px;">Blueprint Schools Network · Biweekly Progress Report</span>'
-          + '</div></div>';
+          // Footer
+          + '<div style="background:#f8fafc;padding:12px 24px;text-align:center;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">'
+          + '<span style="color:#94a3b8;font-size:11px;">Blueprint Schools Network &middot; ' + getLocalizedText('reportTitle', lang, 'Biweekly Progress Report') + '</span>'
+          + '</div></div></body></html>';
         return htmlBody;
       }
 
       function buildPlain(recipientType, comment) {
-        var greeting = recipientType === 'parent' ? 'Dear Parent/Guardian of ' + firstName + ',\n\n' : 'Dear ' + firstName + ',\n\n';
+        var isParent = (recipientType === 'parent');
+        var greeting = isParent
+          ? getLocalizedText('dearParent', lang, 'Dear Parent/Guardian of {student},\n\n', firstName) 
+          : getLocalizedText('dearStudent', lang, 'Dear {student},\n\n', firstName);
         var body = greeting + comment + '\n\n';
         if (translatedCustomMessage) body += translatedCustomMessage + '\n\n';
-        body += 'If you have any questions or concerns, please do not hesitate to reach out.\n\nBest regards,\n' + teacherName + '\n' + teacherEmail;
+        body += getLocalizedText('questions', lang, 'If you have any questions or concerns, please do not hesitate to reach out.') 
+          + '\n\n' + getLocalizedText('regards', lang, 'Best regards,') + '\n' + teacherName + '\n' + teacherEmail;
         return body;
       }
 
@@ -1650,9 +1960,9 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           body: buildPlain('parent', translatedParentComment),
           htmlBody: buildHtml('parent', translatedParentComment),
           name: teacherName || '',
-          replyTo: teacherEmail
+          replyTo: teacherEmail,
+          inlineImages: studentInlineImages
         };
-        if (logoBlob) mailOptions.inlineImages = { logo: logoBlob };
         GmailApp.sendEmail(emails.parentEmail, emailSubject, mailOptions.body, mailOptions);
         sent++;
       }
@@ -1663,9 +1973,9 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
           body: buildPlain('student', translatedStudentComment),
           htmlBody: buildHtml('student', translatedStudentComment),
           name: teacherName || '',
-          replyTo: teacherEmail
+          replyTo: teacherEmail,
+          inlineImages: studentInlineImages
         };
-        if (logoBlob) mailOptions.inlineImages = { logo: logoBlob };
         GmailApp.sendEmail(emails.studentEmail, emailSubject, mailOptions.body, mailOptions);
         sent++;
       }
@@ -1683,3 +1993,362 @@ function sendActivityEmails(spreadsheetId, emailConfig, payload, teacherName, su
     return { error: 'Failed to send emails: ' + e.message };
   }
 }
+
+// ─── Module 4.2: Export School Roster by Email ───
+function exportRosterByEmail(adminEmail, rosterData, tutorName, dateRange) {
+  try {
+    var teacherEmail = Session.getActiveUser().getEmail();
+    var dateStr = '';
+    if (dateRange && dateRange.start) {
+      dateStr = dateRange.start + ' – ' + (dateRange.end || '');
+    }
+
+    var rows = '';
+    var num = 0;
+    rosterData.forEach(function(s) {
+      num++;
+      var gradeStyle = s.grade === 'A' || s.grade === 'B'
+        ? 'background:#d1fae5;color:#059669'
+        : s.grade === 'C' || s.grade === 'D'
+        ? 'background:#fef3c7;color:#d97706'
+        : s.grade === 'F'
+        ? 'background:#fee2e2;color:#dc2626'
+        : 'background:#f3f4f6;color:#6b7280';
+      rows += '<tr>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">' + num + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">' + s.name + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">' + (s.period || '—') + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">'
+        + (s.grade ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;' + gradeStyle + ';">' + s.grade + '</span>' : '—')
+        + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#059669;font-weight:600;">' + (s.present || 0) + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#d97706;font-weight:600;">' + (s.tardy || 0) + '</td>'
+        + '<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:center;color:#dc2626;font-weight:600;">' + (s.absent || 0) + '</td>'
+        + '</tr>';
+    });
+
+    var htmlBody = '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+      + '<style>body{font-family:Arial,Helvetica,sans-serif;color:#333;margin:0;padding:0;background:#f0f2f5}'
+      + 'table{border-collapse:collapse;width:100%}th{background:#1e3a8a;color:#fff;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;text-align:left}'
+      + 'tr:nth-child(even){background:#f8fafc}</style></head><body>'
+      + '<div style="max-width:700px;margin:20px auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">'
+      + '<div style="background:#1e3a8a;padding:20px 24px;">'
+      + '<div style="color:#fff;font-size:18px;font-weight:bold;">Blueprint School Roster</div>'
+      + '<div style="color:#93c5fd;font-size:12px;margin-top:4px;">Tutor: ' + (tutorName || 'N/A') + ' · ' + dateStr + '</div>'
+      + '</div>'
+      + '<div style="padding:0;">'
+      + '<table><thead><tr>'
+      + '<th>#</th><th>Student Name</th><th style="text-align:center;">Period</th>'
+      + '<th style="text-align:center;">Grade</th><th style="text-align:center;">Present</th>'
+      + '<th style="text-align:center;">Tardy</th><th style="text-align:center;">Absent</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table>'
+      + '</div>'
+      + '<div style="padding:12px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center;">'
+      + 'Blueprint Schools Network · ' + rosterData.length + ' students · Sent by ' + teacherEmail
+      + '</div></div></body></html>';
+
+    var plainBody = 'Blueprint School Roster\n'
+      + 'Tutor: ' + (tutorName || 'N/A') + ' · ' + dateStr + '\n'
+      + rosterData.length + ' students\n\n'
+      + rosterData.map(function(s, i) {
+          return (i + 1) + '. ' + s.name + ' | Period: ' + (s.period || '—') + ' | Grade: ' + (s.grade || '—') + ' | Present: ' + (s.present || 0) + ' | Absent: ' + (s.absent || 0);
+        }).join('\n');
+
+    GmailApp.sendEmail(
+      adminEmail,
+      'Blueprint School Roster – ' + (tutorName || teacherEmail) + (dateStr ? ' · ' + dateStr : ''),
+      plainBody,
+      { htmlBody: htmlBody, replyTo: teacherEmail, name: tutorName || 'Blueprint Tools' }
+    );
+
+    return { success: true };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+// ─── Module 5.1: Global Email Localization & Native Chart Generation ───
+var EMAIL_LOCALIZATION = {
+  'es': {
+    reportTitle: 'Informe de Progreso Bisemanal',
+    studentSummary: 'Resumen del Estudiante',
+    student: 'Estudiante',
+    grade: 'Calificación',
+    tardies: 'Tardanzas',
+    absences: 'Ausencias',
+    class: 'Clase',
+    period: 'Período',
+    performanceSnapshot: 'Instantánea de Rendimiento',
+    attendance: 'Asistencia',
+    participation: 'Participación',
+    exitTicket: 'Boleto de Salida',
+    dailyActivityLog: 'Registro de Actividad Diaria',
+    date: 'Fecha',
+    grades: 'Calificaciones',
+    partPct: 'Part. %',
+    present: 'Presente',
+    tardy: 'Tarde',
+    absent: 'Ausente',
+    notScheduled: 'No Programado',
+    questions: 'Si tiene alguna pregunta o inquietud, no dude en comunicarse.',
+    regards: 'Atentamente,',
+    dearParent: 'Estimado padre/tutor de {student},',
+    dearStudent: 'Estimado {student},'
+  },
+  'ar': {
+    reportTitle: 'تقرير التقدم نصف الأسبوعي',
+    studentSummary: 'ملخص الطالب',
+    student: 'الطالب',
+    grade: 'الدرجة',
+    tardies: 'التأخيرات',
+    absences: 'الغيابات',
+    class: 'الصف',
+    period: 'الفترة',
+    performanceSnapshot: 'لقطة الأداء',
+    attendance: 'الحضور',
+    participation: 'المشاركة',
+    exitTicket: 'تذكرة الخروج',
+    dailyActivityLog: 'سجل النشاط اليومي',
+    date: 'التاريخ',
+    grades: 'الدرجات',
+    partPct: 'نسبة المشاركة',
+    present: 'حاضر',
+    tardy: 'متأخر',
+    absent: 'غائب',
+    notScheduled: 'غير مقرر',
+    questions: 'إذا كان لديك أي أسئلة أو استفسارات، فلا تتردد في التواصل معنا.',
+    regards: 'أطيب التحيات،',
+    dearParent: 'عزيزي ولي أمر/وصي {student}،',
+    dearStudent: 'عزيزي {student}،'
+  },
+  'fr': {
+    reportTitle: 'Rapport de Progrès Bimensuel',
+    studentSummary: 'Résumé de l\'Étudiant',
+    student: 'Étudiant',
+    grade: 'Note',
+    tardies: 'Retards',
+    absences: 'Absences',
+    class: 'Classe',
+    period: 'Période',
+    performanceSnapshot: 'Aperçu des Performances',
+    attendance: 'Présence',
+    participation: 'Participation',
+    exitTicket: 'Ticket de Sortie',
+    dailyActivityLog: 'Journal d\'Activité Quotidien',
+    date: 'Date',
+    grades: 'Notes',
+    partPct: 'Part. %',
+    present: 'Présent',
+    tardy: 'En retard',
+    absent: 'Absent',
+    notScheduled: 'Non programmé',
+    questions: 'Si vous avez des questions ou des préoccupations, n\'hésitez pas à nous contacter.',
+    regards: 'Cordialement,',
+    dearParent: 'Cher parent/tuteur de {student},',
+    dearStudent: 'Cher {student},'
+  },
+  'so': {
+    reportTitle: 'Warbixinta Horumarka Laba-todobaadlaha ah',
+    studentSummary: 'Koobidda Ardayga',
+    student: 'Ardayga',
+    grade: 'Darajada',
+    tardies: 'Dahabitaanka',
+    absences: 'Maqnaanshaha',
+    class: 'Fasalka',
+    period: 'Muddada',
+    performanceSnapshot: 'Sawirka Waxqabadka',
+    attendance: 'Ilaalinta',
+    participation: 'Ka Qaybgalka',
+    exitTicket: 'Warqadda Ka Bixidda',
+    dailyActivityLog: 'Diiwaanka Waxqabadka Maalinlaha ah',
+    date: 'Taariikhda',
+    grades: 'Darajooyinka',
+    partPct: 'Boqolkiiba Ka Qaybgalka',
+    present: 'Halkan jooga',
+    tardy: 'Dahashay',
+    absent: 'Maqan',
+    notScheduled: 'Aan loo qorsheyn',
+    questions: 'Haddii aad qabtid wax su\'aalo ah ama walaac ah, fadlan ha ka waaban inaad nala soo xiriirto.',
+    regards: 'Mahadsanid,',
+    dearParent: 'Gacaliye Waalid/Madaariyaha {student},',
+    dearStudent: 'Gacaliye {student},'
+  },
+  'zh': {
+    reportTitle: '双周进度报告',
+    studentSummary: '学生概况',
+    student: '学生',
+    grade: '成绩',
+    tardies: '迟到',
+    absences: '缺勤',
+    class: '班级',
+    period: '期间',
+    performanceSnapshot: '表现概览',
+    attendance: '出勤',
+    participation: '参与率',
+    exitTicket: '出口小票',
+    dailyActivityLog: '每日活动日志',
+    date: '日期',
+    grades: '评分',
+    partPct: '参与百分比',
+    present: '出勤',
+    tardy: '迟到',
+    absent: '缺勤',
+    notScheduled: '未安排',
+    questions: '如有任何疑问或关切，请随时与我们联系。',
+    regards: '此致敬礼，',
+    dearParent: '尊敬的 {student} 家长/监护人：',
+    dearStudent: '亲爱的 {student}：'
+  },
+  'vi': {
+    reportTitle: 'Báo Cáo Tiến Độ Hai Tuần Một Lần',
+    studentSummary: 'Tóm Tắt Về Học Sinh',
+    student: 'Học sinh',
+    grade: 'Điểm số',
+    tardies: 'Đi muộn',
+    absences: 'Vắng mặt',
+    class: 'Lớp học',
+    period: 'Thời gian',
+    performanceSnapshot: 'Sơ Lược Về Thành Tích',
+    attendance: 'Điểm danh',
+    participation: 'Tham gia',
+    exitTicket: 'Phiếu kiểm tra nhanh',
+    dailyActivityLog: 'Nhật Ký Hoạt Động Hàng Ngày',
+    date: 'Ngày',
+    grades: 'Điểm',
+    partPct: 'Tỷ lệ tham gia',
+    present: 'Có mặt',
+    tardy: 'Đi muộn',
+    absent: 'Vắng mặt',
+    notScheduled: 'Không có lịch',
+    questions: 'Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào, xin vui lòng liên hệ.',
+    regards: 'Trân trọng,',
+    dearParent: 'Kính gửi Phụ huynh/Người giám hộ của {student},',
+    dearStudent: 'Thân gửi {student},'
+  },
+  'hy': {
+    reportTitle: 'Երկշաբաթյա առաջադիմության հաշվետվություն',
+    studentSummary: 'Ուսանողի ամփոփագիր',
+    student: 'Ուսանող',
+    grade: 'Գնահատական',
+    tardies: 'Ուշացումներ',
+    absences: 'Բացակայություններ',
+    class: 'Դասարան',
+    period: 'Ժամանակահատված',
+    performanceSnapshot: 'Կատարողականի ամփոփում',
+    attendance: 'Հաճախելիություն',
+    participation: 'Մասնակցություն',
+    exitTicket: 'Ելքի տոմս',
+    dailyActivityLog: 'Օրական գործունեության մատյան',
+    date: 'Ամսաթիվ',
+    grades: 'Գնահատականներ',
+    partPct: 'Մասնակցության %',
+    present: 'Ներկա',
+    tardy: 'Ուշացած',
+    absent: 'Բացակա',
+    notScheduled: 'Չնախատեսված',
+    questions: 'Հարցերի կամ մտահոգությունների դեպքում խնդրում ենք կապ հաստատել մեզ հետ:',
+    regards: 'Հարգանքներով՝',
+    dearParent: 'Հարգելի {student}-ի ծնող/խնամակալ,',
+    dearStudent: 'Սիրելի {student},'
+  }
+};
+
+function getLocalizedText(key, lang, defaultText, studentName) {
+  var langMap = EMAIL_LOCALIZATION[lang];
+  var text = (langMap && langMap[key]) ? langMap[key] : defaultText;
+  if (studentName) {
+    text = text.replace('{student}', studentName);
+  }
+  return text;
+}
+
+function buildAttendanceChartNative(present, tardy, absent) {
+  try {
+    var total = present + tardy + absent;
+    if (total === 0) return null;
+    
+    var dataTable = Charts.newDataTable()
+      .addColumn(Charts.ColumnType.STRING, 'Status')
+      .addColumn(Charts.ColumnType.NUMBER, 'Days')
+      .addRow(['Present', present])
+      .addRow(['Tardy', tardy])
+      .addRow(['Absent', absent])
+      .build();
+      
+    var chart = Charts.newPieChart()
+      .setDataTable(dataTable)
+      .setColors(['#10b981', '#f59e0b', '#ef4444']) // Vibrant modern colors
+      .setDimensions(220, 220)
+      .setBackgroundColor('#ffffff') // Clean seamless white
+      .setOption('pieHole', 0.65) // Clean modern donut ring
+      .setOption('legend', 'none')
+      .setOption('pieSliceText', 'none') // Banish overlapping slice labels!
+      .setOption('chartArea', { left: '10%', top: '10%', width: '80%', height: '80%' })
+      .build();
+      
+    return chart.getAs('image/png');
+  } catch (e) {
+    Logger.log('Error creating attendance chart: ' + e.message);
+    return null;
+  }
+}
+
+function buildBarChartNative(dates, valueKey, maxVal, barColor, title) {
+  try {
+    if (!dates || dates.length === 0) return null;
+    
+    var dataTable = Charts.newDataTable()
+      .addColumn(Charts.ColumnType.STRING, 'Date')
+      .addColumn(Charts.ColumnType.NUMBER, title);
+      
+    var addedRows = 0;
+    dates.forEach(function(d) {
+      var val = d[valueKey];
+      if (val !== null && val !== undefined) {
+        var dateStr = '';
+        if (d.date && d.date.indexOf('-') > -1) {
+          var p = d.date.split('-');
+          dateStr = p[1] + '/' + p[2];
+        } else {
+          dateStr = String(d.date || '');
+        }
+        dataTable.addRow([dateStr, val]);
+        addedRows++;
+      }
+    });
+    
+    if (addedRows === 0) return null;
+    
+    var gw = Math.floor(190 / addedRows * 0.65);
+    if (gw > 24) gw = 24;
+    
+    var chart = Charts.newColumnChart()
+      .setDataTable(dataTable.build())
+      .setColors([barColor])
+      .setDimensions(240, 220)
+      .setBackgroundColor('#ffffff') // Clean seamless white
+      .setOption('legend', 'none')
+      .setOption('bar', { groupWidth: gw }) // Dynamically scaled sleek bars
+      .setOption('hAxis', {
+        textStyle: { color: '#64748b', fontSize: 9, fontName: 'Helvetica Neue, Helvetica, Arial' },
+        gridlines: { count: 0 },
+        slantedText: true,
+        slantedTextAngle: 45
+      })
+      .setOption('vAxis', {
+        textStyle: { color: '#94a3b8', fontSize: 10, fontName: 'Helvetica Neue, Helvetica, Arial' },
+        gridlines: { color: '#f8fafc' },
+        baselineColor: '#cbd5e1',
+        minValue: 0,
+        maxValue: maxVal
+      })
+      .setOption('chartArea', { left: 35, top: 15, width: 190, height: 155 })
+      .build();
+      
+    return chart.getAs('image/png');
+  } catch (e) {
+    Logger.log('Error creating bar chart: ' + e.message);
+    return null;
+  }
+}
+

@@ -801,6 +801,167 @@
       }
     }
 
+    /* ─── Attendance Bar (2.6) ─── */
+    .att-bar-wrap {
+      padding: 12px 20px;
+      background: var(--bg-input);
+      border-top: 1px solid var(--border);
+    }
+    .att-bar-track {
+      display: flex;
+      height: 6px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      background: #e2e8f0;
+    }
+    .att-bar-fill {
+      height: 100%;
+      transition: width 0.4s ease;
+    }
+    .att-bar-fill.present  { background: #059669; }
+    .att-bar-fill.tardy    { background: #d97706; }
+    .att-bar-fill.absent   { background: #dc2626; }
+    .att-bar-fill.ns       { background: #cbd5e1; }
+    .att-bar-legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .att-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .att-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .att-legend-dot.present { background: #059669; }
+    .att-legend-dot.tardy   { background: #d97706; }
+    .att-legend-dot.absent  { background: #dc2626; }
+    .att-legend-dot.ns      { background: #cbd5e1; }
+
+    /* ─── Daily Log Foldable (2.4) ─── */
+    .daily-log-details summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      user-select: none;
+      background: var(--bg-input);
+      border-bottom: 1px solid var(--border);
+    }
+    .daily-log-details summary::-webkit-details-marker { display: none; }
+    .daily-log-toggle-arrow {
+      font-size: 10px;
+      transition: transform 0.2s ease;
+      color: var(--text-muted);
+    }
+    .daily-log-details[open] .daily-log-toggle-arrow {
+      transform: rotate(90deg);
+    }
+
+    .daily-log-table-wrap {
+      max-height: 365px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 8px;
+      background: #ffffff;
+    }
+    .daily-log-table-wrap .src-table th,
+    .daily-log-table-wrap .src-table td {
+      padding: 8px 6px;
+    }
+
+    /* ─── Grade Color Pills in Daily Log (2.2) ─── */
+    .grade-pill-log {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .grade-pill-log.high    { background: #d1fae5; color: #059669; }
+    .grade-pill-log.mid     { background: #fef3c7; color: #b45309; }
+    .grade-pill-log.low     { background: #fee2e2; color: #dc2626; }
+    .grade-pill-log.neutral { background: #f1f5f9; color: #64748b; }
+
+    /* ─── Participation Mini-Bar (2.3) ─── */
+    .part-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .part-bar-track {
+      height: 3px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+    .part-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #2563eb;
+      transition: width 0.3s ease;
+    }
+    .part-bar-fill.high  { background: #059669; }
+    .part-bar-fill.mid   { background: #d97706; }
+    .part-bar-fill.low   { background: #dc2626; }
+    .part-pct-label {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ─── Empty Cell Placeholder (2.5) ─── */
+    .cell-empty {
+      display: inline-block;
+      width: 100%;
+      min-width: 36px;
+      height: 20px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      border: 2px dashed #e2e8f0;
+    }
+
+    /* ─── Export Roster Modal (4.2) ─── */
+    .roster-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .roster-table th {
+      background: var(--bg-input);
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+    }
+    .roster-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .roster-table tr:last-child td { border-bottom: none; }
+
     /* MISSING CLOSING BRACE RESTORED */
 
     /* ─── Mode Toggle ─── */
@@ -924,6 +1085,64 @@
     .grade-f {
       background: #fee2e2;
       color: #dc2626;
+    }
+
+    .grade-none {
+      background: #f1f5f9;
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    /* ─── Language Selector (Module B) ─── */
+    .lang-selector-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .lang-selector-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .lang-selector {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .lang-selector:focus { border-color: var(--purple); }
+    .lang-translate-btn {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      background: var(--purple);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .lang-translate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .lang-status {
+      font-size: 11px;
+      margin-top: 4px;
+      font-weight: 600;
+      min-height: 16px;
     }
 
     .src-table {
@@ -1085,13 +1304,26 @@
       .app-sidebar {
         flex: none;
         width: 100%;
-        height: 250px;
+        height: 220px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .app-sidebar-item {
+        flex: 0 0 auto;
+        min-width: 140px;
+        max-width: 180px;
       }
     }
 
     @media (max-width: 600px) {
       .container {
-        padding: 16px 12px;
+        padding: 12px 10px;
       }
 
       .form-row {
@@ -1100,6 +1332,12 @@
 
       .steps-bar {
         flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .step-pill {
+        padding: 8px 16px 8px 10px;
+        font-size: 12px;
       }
 
       .email-card-body {
@@ -1121,6 +1359,60 @@
 
       .header h1 {
         font-size: 24px;
+      }
+
+      .modal-box {
+        width: 95vw;
+        padding: 24px 18px 20px;
+      }
+
+      .modal-btns {
+        flex-direction: column;
+      }
+
+      .modal-btns .btn {
+        min-width: unset;
+        width: 100%;
+      }
+    }
+
+    /* ─── 3.4 Mobile: Config form collapse at 480px ─── */
+    @media (max-width: 480px) {
+      /* Config form rows → single column */
+      #actConfigContent .form-row {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Report action buttons wrap cleanly */
+      #actReportSection > div:first-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      #actReportSection > div:first-child > div:first-child {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* Sidebar becomes horizontal chip strip on very small screens */
+      .app-sidebar {
+        height: 180px;
+      }
+
+      .app-sidebar-item {
+        min-width: 120px;
+      }
+
+      /* Touch-friendly minimum tap targets */
+      .btn, .mode-btn, .btn-sm {
+        min-height: 44px;
+      }
+
+      /* Date picker stacks */
+      #actDateSection .date-picker-row {
+        grid-template-columns: 1fr !important;
+        display: grid;
       }
     }
 
@@ -1526,7 +1818,7 @@
 
             <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
               <div class="form-group">
-                <label style="font-size: 11px;">Spreadsheet ID</label>
+                <label style="font-size: 11px;">🔗 Spreadsheet Connection Link</label>
                 <input type="text" id="actSpreadsheetId" placeholder="Paste spreadsheet URL or ID"
                   oninput="loadSheetNames('actSpreadsheetId')" onpaste="setTimeout(function(){loadSheetNames('actSpreadsheetId')},50)" 
                   onchange="autoSaveConfig()" style="height: 38px;">
@@ -1547,11 +1839,12 @@
             </div>
 
             <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: flex-end;">
-              <div class="form-group" style="display: none;">
+              <div class="form-group">
                 <label style="font-size: 11px;">Fellow Filter</label>
                 <select id="actFellowFilter" onchange="autoSaveConfig()" style="height: 38px;">
                   <option value="">All Fellows</option>
                 </select>
+                <div id="actFellowHint" style="font-size: 10px; margin-top: 2px; font-weight: 600; color: var(--text-muted);"></div>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Grades Sheet Tab (Optional)</label>
@@ -1576,19 +1869,19 @@
             <div class="columns-grid" id="gradesGrid" style="display:none; border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #f8fafc; margin-top: 8px; gap: 12px;">
               <div class="form-group">
                 <label style="font-size: 11px;">Student Name Column</label>
-                <select id="actGradesNameCol" style="height: 34px; font-size: 12px;">
+                <select id="actGradesNameCol" onchange="autoSaveConfig()" style="height: 34px; font-size: 12px;">
                   <option value="B">— select grades sheet —</option>
                 </select>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Reporting Period</label>
-                <select id="actGradesGradeCol" style="height: 34px; font-size: 12px;">
+                <select id="actGradesGradeCol" onchange="autoSaveConfig()" style="height: 34px; font-size: 12px;">
                   <option value="E">— select grades sheet —</option>
                 </select>
               </div>
               <div class="form-group">
                 <label style="font-size: 11px;">Data Start Row</label>
-                <input type="text" id="actGradesStartRow" value="4"
+                <input type="text" id="actGradesStartRow" value="4" oninput="autoSaveConfig()" onchange="autoSaveConfig()"
                   style="font-family:'SF Mono','Fira Code',monospace;text-align:center; height: 34px; font-size: 12px;">
               </div>
             </div>
@@ -1624,17 +1917,19 @@
         <!-- ─── Dashboard Section: Report Results ─── -->
         <div class="section-hidden" id="actReportSection" style="padding-top: 12px; position: relative;">
           <!-- Consolidated Header & Action Bar -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 10px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 10px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                <div class="icon purple" style="width: 28px; height: 28px; font-size: 14px;">📝</div>
                <span id="actReportTitle" style="font-weight: 800; font-size: 15px;">Activity Report Results</span>
-               
-               <div style="display: flex; gap: 6px; margin-left: 12px;">
+               <div style="display: flex; gap: 6px; margin-left: 4px; flex-wrap: wrap;">
                  <button class="btn btn-purple btn-sm" onclick="printActivityReport()" style="font-size: 11px; padding: 4px 10px;">
                    🖨️ Print PDF
                  </button>
-                 <span style="font-size: 10px; color: var(--text-secondary); font-weight: 700; margin-left: 10px; text-transform: uppercase; white-space: nowrap;">Send To:</span>
-                  <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('both')" style="font-size: 11px; padding: 4px 12px;">
+                 <button class="btn btn-sm" onclick="openExportRosterModal()" style="font-size: 11px; padding: 4px 10px; background: #0f172a; color: #fff;">
+                   📋 Roster
+                 </button>
+                 <span style="font-size: 10px; color: var(--text-secondary); font-weight: 700; margin-left: 6px; text-transform: uppercase; white-space: nowrap; align-self: center;">Send To:</span>
+                 <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('both')" style="font-size: 11px; padding: 4px 12px;">
                    ✉️ Both
                  </button>
                  <button class="btn btn-purple btn-sm" onclick="sendEmailsDirectly('parents')" style="font-size: 11px; padding: 4px 8px;">
@@ -1645,7 +1940,6 @@
                  </button>
                </div>
             </div>
-            
             <button class="btn btn-sm btn-secondary" id="btnToggleConfig" onclick="toggleDashboardConfig()" style="font-size: 11px; border-radius: 20px; display: none;">
               ⚙️ Edit Settings
             </button>
@@ -1690,6 +1984,31 @@
       <div class="modal-title" id="modalTitle"></div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-btns" id="modalBtns"></div>
+    </div>
+  </div>
+
+  <!-- Export Roster Modal (4.2) -->
+  <div class="modal-overlay" id="rosterModalOverlay" onclick="if(event.target===this)closeRosterModal()">
+    <div class="modal-box" style="max-width:520px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:800;color:var(--text-primary);">&#x1F4CB; School Roster Export</div>
+        <button onclick="closeRosterModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);line-height:1;">&#x00D7;</button>
+      </div>
+      <div id="rosterModalBody" class="modal-body" style="max-height:50vh;overflow-y:auto;margin-bottom:16px;">
+        <!-- Populated dynamically -->
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:6px;">&#x1F4E7; Email Roster to Admin (Optional)</label>
+        <div style="display:flex;gap:8px;">
+          <input type="email" id="rosterAdminEmail" placeholder="admin@school.org" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;">
+          <button class="btn btn-primary btn-sm" onclick="emailRoster()" id="rosterEmailBtn">Send</button>
+        </div>
+        <div id="rosterEmailStatus" style="font-size:12px;margin-top:6px;font-weight:600;"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary btn-sm" onclick="closeRosterModal()">Close</button>
+        <button class="btn btn-primary btn-sm" onclick="printRoster()">&#x1F5A8;&#xFE0F; Print / PDF</button>
+      </div>
     </div>
   </div>
 
@@ -1845,7 +2164,8 @@
               if (bestScore < 1.5) nameCol = '';
             }
 
-            populateHeaderSelect('actGradesNameCol', gradeHeaders, nameCol);
+            var savedNameCol = (window._savedConfig && window._savedConfig.gradesNameCol) ? window._savedConfig.gradesNameCol : nameCol;
+            populateHeaderSelect('actGradesNameCol', gradeHeaders, savedNameCol);
 
             // Grade dropdown
             var gradeSel = document.getElementById('actGradesGradeCol');
@@ -1867,9 +2187,10 @@
                 gradeSel.appendChild(opt);
               });
             }
-            if (gradeCol) {
+            var savedGradeCol = (window._savedConfig && window._savedConfig.gradesGradeCol) ? window._savedConfig.gradesGradeCol : gradeCol;
+            if (savedGradeCol) {
               for (var k = 0; k < gradeSel.options.length; k++) {
-                if (gradeSel.options[k].value === gradeCol) { gradeSel.selectedIndex = k; break; }
+                if (gradeSel.options[k].value === savedGradeCol) { gradeSel.selectedIndex = k; break; }
               }
             }
 
@@ -2293,7 +2614,8 @@
             }
           }
 
-          populateHeaderSelect('actGradesNameCol', result.headers, nameCol);
+          var finalNameCol = (window._savedConfig && window._savedConfig.gradesNameCol) ? window._savedConfig.gradesNameCol : nameCol;
+          populateHeaderSelect('actGradesNameCol', result.headers, finalNameCol);
           
           // Custom population for Grade Column -> Reporting Period
           // Each option is labelled with its topHeader (section) for clarity
@@ -2321,12 +2643,12 @@
             gradeSel.appendChild(opt);
           });
 
-          // Apply the grade column detected from Pass 1 / Pass 2.5
-          if (gradeCol) {
+          var finalGradeCol = (window._savedConfig && window._savedConfig.gradesGradeCol) ? window._savedConfig.gradesGradeCol : gradeCol;
+          if (finalGradeCol) {
             // Try to find matching option by column letter
             var matched = false;
             for (var k = 0; k < gradeSel.options.length; k++) {
-              if (gradeSel.options[k].value === gradeCol) {
+              if (gradeSel.options[k].value === finalGradeCol) {
                 gradeSel.selectedIndex = k;
                 matched = true;
                 break;
@@ -2334,7 +2656,7 @@
             }
             // If no match (period label mismatch), add and select it explicitly
             if (!matched) {
-              var fallbackHdr = result.headers.find ? result.headers.find(function(hh) { return hh.col === gradeCol; }) : null;
+              var fallbackHdr = result.headers.find ? result.headers.find(function(hh) { return hh.col === finalGradeCol; }) : null;
               if (fallbackHdr) {
                 var opt2 = document.createElement('option');
                 opt2.value = fallbackHdr.col;
@@ -2609,7 +2931,7 @@
             grade: r.grade || '',
             tardies: r.tardies || 0,
             absences: r.absences || 0,
-            language: langSel ? langSel.value : 'en'
+            lang: (window._studentLangPrefs && window._studentLangPrefs[r.name]) || 'en'
           });
         }
       });
@@ -2938,7 +3260,7 @@
       var p = prefix || 'act';
       var config = getActivityConfig(p);
       if (!config.spreadsheetId) {
-        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter a Spreadsheet ID.');
+        showStatus(p + 'ConfigStatus', 'error', '⚠️ Please enter a Spreadsheet Connection Link.');
         return;
       }
       if (!config.activitySheetName) {
@@ -3050,7 +3372,10 @@
         emailSheet: document.getElementById('actEmailSheetName').value,
         fellowFilter: document.getElementById('actFellowFilter').value,
         tutorName: document.getElementById('actTutorName').value,
-        className: document.getElementById('actClassName').value
+        className: document.getElementById('actClassName').value,
+        gradesNameCol: document.getElementById('actGradesNameCol') ? document.getElementById('actGradesNameCol').value : '',
+        gradesGradeCol: document.getElementById('actGradesGradeCol') ? document.getElementById('actGradesGradeCol').value : '',
+        gradesStartRow: document.getElementById('actGradesStartRow') ? document.getElementById('actGradesStartRow').value : ''
       };
       google.script.run.saveUserPreference('activity_config', config);
     }
@@ -3066,6 +3391,9 @@
           }
           if (config.tutorName) document.getElementById('actTutorName').value = config.tutorName;
           if (config.className) document.getElementById('actClassName').value = config.className;
+          if (config.gradesStartRow && document.getElementById('actGradesStartRow')) {
+            document.getElementById('actGradesStartRow').value = config.gradesStartRow;
+          }
           
           // These will be applied AFTER the sheets are loaded in loadSheetNames success handler
           window._savedConfig = config; 
@@ -3074,7 +3402,10 @@
     }
 
     window.onload = function() {
-      autoLoadConfig();
+      // Load language prefs first, then auto-load spreadsheet config
+      loadLangPrefs(function() {
+        autoLoadConfig();
+      });
     };
 
     // ─── Modal Helpers ───
@@ -3313,14 +3644,14 @@
     }
 
     function gradeClass(g) {
-      if (!g) return '';
-      var gl = g.toLowerCase();
-      if (gl === 'a') return 'grade-a';
-      if (gl === 'b') return 'grade-b';
-      if (gl === 'c') return 'grade-c';
-      if (gl === 'd') return 'grade-d';
-      if (gl === 'f') return 'grade-f';
-      return '';
+      if (!g) return 'grade-none';
+      var gl = g.toUpperCase().charAt(0);
+      if (gl === 'A') return 'grade-a';
+      if (gl === 'B') return 'grade-b';
+      if (gl === 'C') return 'grade-c';
+      if (gl === 'D') return 'grade-d';
+      if (gl === 'F') return 'grade-f';
+      return 'grade-none';
     }
 
     // ─── Client-side Student Comment Generator (same templates as Code.gs) ───
@@ -3530,13 +3861,37 @@
         sidebarItem.id = 'sidebar-item-' + index;
         sidebarItem.onclick = function () { selectStudent(index); };
 
-        var gpText = student.letterGrade ? student.letterGrade : 'No Grade';
+        var gpText = student.letterGrade ? student.letterGrade : '—';
+        var gpCls = gradeClass(student.letterGrade || '');
+        var savedLang = (window._studentLangPrefs && window._studentLangPrefs[student.name]) || 'en';
+        var langOptions = [
+          { code: 'en', label: '🇺🇸 English' },
+          { code: 'es', label: '🇲🇽 Spanish' },
+          { code: 'ar', label: '🇸🇦 Arabic' },
+          { code: 'fr', label: '🇫🇷 French' },
+          { code: 'so', label: '🇸🇴 Somali' },
+          { code: 'zh', label: '🇨🇳 Chinese' },
+          { code: 'vi', label: '🇻🇳 Vietnamese' },
+          { code: 'hy', label: '🇦🇲 Armenian' }
+        ];
+        var langSelectHtml = '<select class="sidebar-lang-select" id="sidebar-lang-' + index + '" onclick="event.stopPropagation();" onchange="changeStudentLang(' + index + ', \'' + student.name.replace(/'/g, "\\'") + '\')" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; max-width: 90px; color: var(--text-secondary);">';
+        langOptions.forEach(function(l) {
+          langSelectHtml += '<option value="' + l.code + '"' + (savedLang === l.code ? ' selected' : '') + '>' + l.label + '</option>';
+        });
+        langSelectHtml += '</select>';
+
         sidebarItem.innerHTML =
           '<div style="display:flex; align-items:center; gap:12px;">' +
           '<input type="checkbox" class="student-select-checkbox" data-index="' + index + '" checked onclick="event.stopPropagation();">' +
-          '<div style="flex:1;">' +
-          '<div class="si-name">' + student.name + '</div>' +
-          '<div class="si-meta">Grade: ' + gpText + ' &bull; Absences: ' + student.summary.totalAbsent + '</div>' +
+          '<div style="flex:1; display:flex; flex-direction:column; gap:2px;">' +
+          '<div class="si-name" style="font-weight:600;">' + student.name + '</div>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+          '<span class="grade-pill ' + gpCls + '" style="font-size:10px;padding:1px 6px;">' + gpText + '</span>' +
+          '<span class="si-meta">· Abs: ' + student.summary.totalAbsent + '</span>' +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:4px; margin-top:2px;">' +
+          '<span style="font-size:10px; opacity:0.8;">🌐</span> ' + langSelectHtml +
+          '</div>' +
           '</div>' +
           '</div>';
 
@@ -3548,11 +3903,9 @@
         card.id = 'report-card-' + index;
         card.style.display = 'none'; // Hidden by default
 
-        // Header
-        var gradeHtml = '';
-        if (student.letterGrade) {
-          gradeHtml = '<span class="grade-pill ' + gradeClass(student.letterGrade) + '">' + student.letterGrade + '</span>';
-        }
+        // Header — grade pill ALWAYS rendered (grade-none for missing)
+        var gl = student.letterGrade ? student.letterGrade.toUpperCase().charAt(0) : '';
+        var gradeHtml = '<span class="grade-pill ' + gradeClass(gl) + '">' + (gl || '—') + '</span>';
 
         // Generate the student comment
         var comment = generateStudentCommentClient(
@@ -3575,9 +3928,10 @@
           '</div>' +
           '</div>';
 
-        // Two-column body: Table + Comment
-        var table = '<table class="src-table"><thead><tr>' +
-          '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Part. %</th>' +
+        var table = '<details class="daily-log-details" open><summary><span class="daily-log-toggle-arrow">▼</span> Daily Log (' + student.dates.length + ' days)</summary>' +
+          '<div class="daily-log-table-wrap">' +
+          '<table class="src-table"><thead><tr>' +
+          '<th>Date</th><th>Attendance</th><th>Exit Ticket</th><th>ET %</th><th>GRADES</th><th>Participation</th>' +
           '</tr></thead><tbody>';
 
         student.dates.forEach(function (d) {
@@ -3591,13 +3945,38 @@
             ? '<strong>' + d.exitTicketPct + '%</strong>'
             : '<span style="color:var(--text-muted);">—</span>';
 
-          var gradesHtml = (d.gradesStr !== '—' && !isAbsent)
-            ? '<span class="grades-str">' + d.gradesStr + '</span>'
-            : '<span style="color:var(--text-muted);">—</span>';
+          // 2.2 Color-coded grades pill
+          var gradesHtml;
+          if (!isAbsent && d.gradesStr && d.gradesStr !== '—') {
+            var earned = 0, possible = 0;
+            for (var gi = 0; gi < d.gradesStr.length; gi++) {
+              var gc2 = d.gradesStr[gi];
+              if (gc2 === 'X') { /* skip */ }
+              else if (/[GRADES]/.test(gc2)) { earned++; possible++; }
+            }
+            var rawPct = possible > 0 ? Math.round((earned / possible) * 100) : 0;
+            var pillCls = rawPct >= 80 ? 'high' : rawPct >= 60 ? 'mid' : 'low';
+            var numericalStr = possible > 0 ? ' (' + earned + '/' + possible + ')' : '';
+            gradesHtml = '<span class="grade-pill-log ' + pillCls + '">' + d.gradesStr + '</span><span style="font-size:11px;color:var(--text-muted);margin-left:4px;">' + numericalStr + '</span>';
+          } else if (isAbsent) {
+            gradesHtml = '<span style="color:var(--text-muted);">—</span>';
+          } else {
+            // 2.5 Empty cell placeholder
+            gradesHtml = '<span class="cell-empty"></span>';
+          }
 
-          var partHtml = (d.participationPct != null && !isAbsent)
-            ? '<strong>' + d.participationPct + '%</strong>'
-            : '<span style="color:var(--text-muted);">—</span>';
+          // 2.3 Participation % with mini-bar
+          var partHtml;
+          if (d.participationPct != null && !isAbsent) {
+            var pct = d.participationPct;
+            var barCls = pct >= 80 ? 'high' : pct >= 60 ? 'mid' : 'low';
+            partHtml = '<div class="part-bar-wrap">' +
+              '<span class="part-pct-label" style="color:' + (pct >= 80 ? '#059669' : pct >= 60 ? '#d97706' : '#dc2626') + '">' + pct + '%</span>' +
+              '<div class="part-bar-track"><div class="part-bar-fill ' + barCls + '" style="width:' + pct + '%"></div></div>' +
+              '</div>';
+          } else {
+            partHtml = '<span style="color:var(--text-muted);">—</span>';
+          }
 
           table += '<tr>' +
             '<td>' + d.date + '</td>' +
@@ -3609,34 +3988,49 @@
             '</tr>';
         });
 
-        table += '</tbody></table>';
+        table += '</tbody></table></div></details>';
 
         // Build two-column layout
+        var si = report.students.indexOf(student);
         var pCommentPreview = generateParentCommentClient(student.name, student.letterGrade || '', student.summary.totalTardy, student.summary.totalAbsent, student.summary.totalPresent, getSelectedReportingPeriod());
 
         var bodyHtml = '<div class="src-body">' +
           '<div class="src-data-col">' + table + '</div>' +
           '<div class="src-comment-col">' +
-          '<div class="src-comment-label no-print">🌐 Email Language</div>' +
-          '<select class="src-language-select no-print" data-student-index="' + report.students.indexOf(student) + '" style="margin-bottom:12px;">' + languageOptionsHtml(student.language || 'en') + '</select>' +
+          // Student comment
           '<div class="src-comment-label">💬 Student Comment</div>' +
-          '<textarea class="src-comment-textarea" data-student-index="' + report.students.indexOf(student) + '">' + comment + '</textarea>' +
+          '<textarea class="src-comment-textarea" id="student-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + comment.replace(/"/g, '&quot;') + '" style="min-height:160px; resize: vertical;">' + comment + '</textarea>' +
+          // Parent comment
           '<div class="src-comment-label no-print" style="margin-top:16px;">📧 Parent Comment (Editable)</div>' +
-          '<textarea class="src-parent-textarea no-print" data-student-index="' + report.students.indexOf(student) + '" style="min-height:120px;">' + pCommentPreview + '</textarea>' +
+          '<textarea class="src-parent-textarea no-print" id="parent-comment-' + si + '" data-student-index="' + si + '" data-original-comment="' + pCommentPreview.replace(/"/g, '&quot;') + '" style="min-height:180px; resize: vertical;">' + pCommentPreview + '</textarea>' +
           '</div>' +
           '</div>';
 
         card.innerHTML += bodyHtml;
 
-        // Summary bar
+        // 2.6 Attendance Bar Redesign
         var s = student.summary;
+        var totalDays = s.totalPresent + s.totalTardy + s.totalAbsent + s.totalNotScheduled || 1;
+        var pPct = Math.round((s.totalPresent / totalDays) * 100);
+        var tPct = Math.round((s.totalTardy / totalDays) * 100);
+        var aPct = Math.round((s.totalAbsent / totalDays) * 100);
+        var nsPct = Math.max(0, 100 - pPct - tPct - aPct);
+
         card.innerHTML +=
-          '<div class="src-summary">' +
-          '<span>Present: <strong>' + s.totalPresent + '</strong></span>' +
-          '<span>Tardy: <strong style="color:#d97706;">' + s.totalTardy + '</strong></span>' +
-          '<span>Absent: <strong style="color:#dc2626;">' + s.totalAbsent + '</strong></span>' +
-          '<span>Not Scheduled: <strong>' + s.totalNotScheduled + '</strong></span>' +
-          '<span>Days: <strong>' + s.totalDays + '</strong></span>' +
+          '<div class="att-bar-wrap">' +
+          '<div class="att-bar-track">' +
+          (s.totalPresent > 0 ? '<div class="att-bar-fill present" style="width:' + pPct + '%" title="Present: ' + s.totalPresent + '"></div>' : '') +
+          (s.totalTardy > 0  ? '<div class="att-bar-fill tardy"   style="width:' + tPct + '%" title="Tardy: ' + s.totalTardy + '"></div>' : '') +
+          (s.totalAbsent > 0 ? '<div class="att-bar-fill absent"  style="width:' + aPct + '%" title="Absent: ' + s.totalAbsent + '"></div>' : '') +
+          (s.totalNotScheduled > 0 ? '<div class="att-bar-fill ns" style="width:' + nsPct + '%" title="Not Scheduled: ' + s.totalNotScheduled + '"></div>' : '') +
+          '</div>' +
+          '<div class="att-bar-legend">' +
+          '<span class="att-legend-item"><span class="att-legend-dot present"></span> Present: <strong>' + s.totalPresent + '</strong></span>' +
+          '<span class="att-legend-item"><span class="att-legend-dot tardy"></span> Tardy: <strong>' + s.totalTardy + '</strong></span>' +
+          '<span class="att-legend-item"><span class="att-legend-dot absent"></span> Absent: <strong>' + s.totalAbsent + '</strong></span>' +
+          (s.totalNotScheduled > 0 ? '<span class="att-legend-item"><span class="att-legend-dot ns"></span> Not Sched.: <strong>' + s.totalNotScheduled + '</strong></span>' : '') +
+          '<span class="att-legend-item" style="margin-left:auto;color:var(--text-muted);">Total Days: <strong>' + s.totalDays + '</strong></span>' +
+          '</div>' +
           '</div>';
 
         body.appendChild(card);
@@ -3690,6 +4084,47 @@
 
     function prevStudent() {
       selectStudent(window.currentStudentIndex - 1);
+    }
+
+    // ─── Module B: Per-Student Translation ───
+    window._studentLangPrefs = window._studentLangPrefs || {};
+
+    function changeStudentLang(index, studentName, langCode) {
+      if (!window._studentLangPrefs) window._studentLangPrefs = {};
+
+      var val = langCode;
+      if (!val) {
+        var sidebarSel = document.getElementById('sidebar-lang-' + index);
+        if (sidebarSel) val = sidebarSel.value;
+      }
+
+      if (!val) val = 'en';
+
+      // Save preference under the student's name
+      window._studentLangPrefs[studentName] = val;
+      saveLangPrefs();
+
+      // Synchronize select control in sidebar
+      var sidebarSel = document.getElementById('sidebar-lang-' + index);
+      if (sidebarSel) sidebarSel.value = val;
+    }
+
+    function saveLangPrefs() {
+      try {
+        google.script.run.saveUserPreference('student_lang_prefs', window._studentLangPrefs);
+      } catch(e) {}
+    }
+
+    function loadLangPrefs(callback) {
+      google.script.run
+        .withSuccessHandler(function(val) {
+          if (val && typeof val === 'object') {
+            window._studentLangPrefs = val;
+          }
+          if (callback) callback();
+        })
+        .withFailureHandler(function() { if (callback) callback(); })
+        .loadUserPreference('student_lang_prefs');
     }
 
     function filterStudents(query) {
@@ -4009,9 +4444,9 @@
           grade: s.letterGrade,
           tardies: s.summary.totalTardy,
           absences: s.summary.totalAbsent,
+          present: s.summary.totalPresent,
           dates: s.dates,
-          summary: s.summary,
-          language: languageSelect ? languageSelect.value : 'en'
+          lang: (window._studentLangPrefs && window._studentLangPrefs[s.name]) || 'en'
         };
       });
 
@@ -4066,6 +4501,157 @@
           });
         })
         .sendActivityEmails(ssId, autoDetectedEmailConfig, payload, teacherName, subject, customMessage, getSelectedReportingPeriod(), activityReport.dateRange, recipientType, className);
+    }
+
+    // ─── Module 4.2: School Roster Export ───
+    function openExportRosterModal() {
+      if (!activityReport || !activityReport.students || activityReport.students.length === 0) {
+        showModal({
+          icon: '⚠️',
+          title: 'No Report Generated',
+          body: '<p>Please generate the activity report first before exporting the roster.</p>',
+          buttons: [{ label: 'Got it', cls: 'btn-primary' }]
+        });
+        return;
+      }
+
+      var students = activityReport.students;
+      var rows = '';
+      students.forEach(function (s, i) {
+        var gc = s.letterGrade ? s.letterGrade.toUpperCase() : '';
+        var gcls = gc === 'A' ? 'grade-a' : gc === 'B' ? 'grade-b' : gc === 'C' ? 'grade-c' : gc === 'D' ? 'grade-d' : gc === 'F' ? 'grade-f' : '';
+        var gradeHtml = gc
+          ? '<span class="grade-pill ' + gcls + '" style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">' + gc + '</span>'
+          : '<span style="color:var(--text-muted);">—</span>';
+        rows += '<tr>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600;">' + (i + 1) + '</td>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);">' + s.name + '</td>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;">' + (s.period || '—') + '</td>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;">' + gradeHtml + '</td>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;color:#059669;font-weight:600;">' + (s.summary ? s.summary.totalPresent : '—') + '</td>' +
+          '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;color:#dc2626;font-weight:600;">' + (s.summary ? s.summary.totalAbsent : '—') + '</td>' +
+          '</tr>';
+      });
+
+      var tableHtml =
+        '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + students.length + ' students · ' +
+        (activityReport.dateRange ? activityReport.dateRange.start + ' to ' + activityReport.dateRange.end : '') + '</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">#</th>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Student Name</th>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Period</th>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Grade</th>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Present</th>' +
+        '<th style="padding:8px 12px;background:var(--bg-input);text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Absent</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+      document.getElementById('rosterModalBody').innerHTML = tableHtml;
+      document.getElementById('rosterEmailStatus').textContent = '';
+      document.getElementById('rosterModalOverlay').classList.add('show');
+    }
+
+    function closeRosterModal() {
+      document.getElementById('rosterModalOverlay').classList.remove('show');
+    }
+
+    function printRoster() {
+      if (!activityReport || !activityReport.students) return;
+      var students = activityReport.students;
+      var tutorName = document.getElementById('actTutorName') ? document.getElementById('actTutorName').value : '';
+      var dateRange = activityReport.dateRange ? activityReport.dateRange.start + ' – ' + activityReport.dateRange.end : '';
+
+      var rows = '';
+      students.forEach(function (s, i) {
+        var gc = s.letterGrade || '—';
+        rows += '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td><strong>' + s.name + '</strong></td>' +
+          '<td style="text-align:center;">' + (s.period || '—') + '</td>' +
+          '<td style="text-align:center;font-weight:700;">' + gc + '</td>' +
+          '<td style="text-align:center;color:#059669;font-weight:600;">' + (s.summary ? s.summary.totalPresent : '—') + '</td>' +
+          '<td style="text-align:center;color:#d97706;font-weight:600;">' + (s.summary ? s.summary.totalTardy : '—') + '</td>' +
+          '<td style="text-align:center;color:#dc2626;font-weight:600;">' + (s.summary ? s.summary.totalAbsent : '—') + '</td>' +
+          '</tr>';
+      });
+
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Blueprint School Roster</title>' +
+        '<style>@page{margin:0.5in;size:letter}@media print{.no-print{display:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
+        '*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;background:#f5f5f5}' +
+        '.no-print{background:#1e3a8a;color:#fff;padding:14px 24px;text-align:center;position:sticky;top:0;z-index:10}' +
+        '.no-print button{background:#2563eb;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:15px;font-weight:bold;cursor:pointer;margin:0 8px}' +
+        '.wrap{max-width:9in;margin:20px auto;background:#fff;border:1px solid #ccc;border-radius:8px;padding:24px}' +
+        'h2{font-size:18px;font-weight:bold;margin-bottom:4px}' +
+        '.sub{font-size:12px;color:#666;margin-bottom:20px}' +
+        'table{width:100%;border-collapse:collapse;font-size:12px}' +
+        'th{background:#1e3a8a;color:#fff;padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}' +
+        'td{padding:10px 12px;border-bottom:1px solid #e5e7eb;vertical-align:middle}' +
+        'tr:hover{background:#f8fafc}' +
+        '</style></head><body>' +
+        '<div class="no-print"><strong>Blueprint School Roster</strong> &nbsp; <button onclick="window.print()">🖨️ Print / Save as PDF</button></div>' +
+        '<div class="wrap"><h2>Blueprint School Roster</h2>' +
+        '<div class="sub">Tutor: ' + (tutorName || 'N/A') + ' · Date Range: ' + dateRange + ' · ' + students.length + ' students · Generated: ' + new Date().toLocaleDateString() + '</div>' +
+        '<table><thead><tr><th>#</th><th>Student Name</th><th>Period</th><th>Grade</th><th style="color:#86efac">Present</th><th style="color:#fde68a">Tardy</th><th style="color:#fca5a5">Absent</th></tr></thead><tbody>' +
+        rows + '</tbody></table></div></body></html>';
+
+      var w = window.open('', '_blank');
+      if (!w) { alert('Pop-up blocked! Allow pop-ups and try again.'); return; }
+      w.document.write(html);
+      w.document.close();
+    }
+
+    function emailRoster() {
+      var adminEmail = document.getElementById('rosterAdminEmail').value.trim();
+      var statusDiv = document.getElementById('rosterEmailStatus');
+      if (!adminEmail) {
+        statusDiv.textContent = '⚠️ Please enter an admin email address.';
+        statusDiv.style.color = 'var(--danger)';
+        return;
+      }
+      if (!activityReport || !activityReport.students) {
+        statusDiv.textContent = '⚠️ No report data to send.';
+        statusDiv.style.color = 'var(--danger)';
+        return;
+      }
+
+      var btn = document.getElementById('rosterEmailBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+      statusDiv.textContent = 'Sending...';
+      statusDiv.style.color = 'var(--text-muted)';
+
+      var rosterData = activityReport.students.map(function(s) {
+        return {
+          name: s.name,
+          period: s.period || '',
+          grade: s.letterGrade || '',
+          present: s.summary ? s.summary.totalPresent : 0,
+          tardy: s.summary ? s.summary.totalTardy : 0,
+          absent: s.summary ? s.summary.totalAbsent : 0
+        };
+      });
+      var tutorName = document.getElementById('actTutorName') ? document.getElementById('actTutorName').value : '';
+      var dateRange = activityReport.dateRange || {};
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.innerHTML = 'Send';
+          if (result && result.success) {
+            statusDiv.textContent = '✅ Roster emailed to ' + adminEmail;
+            statusDiv.style.color = 'var(--success)';
+          } else {
+            statusDiv.textContent = '❌ Failed: ' + (result ? result.error : 'Unknown error');
+            statusDiv.style.color = 'var(--danger)';
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = 'Send';
+          statusDiv.textContent = '❌ Error: ' + err.message;
+          statusDiv.style.color = 'var(--danger)';
+        })
+        .exportRosterByEmail(adminEmail, rosterData, tutorName, dateRange);
     }
   </script>
 </body>
