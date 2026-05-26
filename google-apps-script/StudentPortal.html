@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --border: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-light: #dbeafe;
+      --success: #059669;
+      --success-bg: #d1fae5;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --purple: #7c3aed;
+      --purple-bg: #ede9fe;
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px -6px rgba(15,23,42,0.12);
+      --shadow-lg: 0 12px 40px -12px rgba(15,23,42,0.25);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #2563eb 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Loading Screen ─── */
+    #loading-screen {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; color: white;
+    }
+    #loading-screen .spinner {
+      width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-screen p { font-size: 16px; opacity: 0.9; }
+
+    /* ─── Auth Error Screen ─── */
+    #auth-error {
+      display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+      flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9998; color: white; text-align: center; padding: 24px;
+    }
+    #auth-error h2 { font-size: 28px; margin-bottom: 12px; }
+    #auth-error p { font-size: 16px; opacity: 0.85; max-width: 400px; }
+
+    /* ─── Main App ─── */
+    #app { display: none; }
+
+    .container { width: 95%; max-width: 900px; margin: 0 auto; padding: 16px; }
+
+    /* ─── Header ─── */
+    .portal-header {
+      text-align: center; padding: 32px 16px 24px; color: white;
+    }
+    .portal-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+    .portal-header .welcome { font-size: 16px; opacity: 0.85; }
+    .portal-header .encouragement-msg {
+      margin-top: 12px; padding: 12px 20px;
+      background: rgba(255,255,255,0.15); border-radius: var(--radius-sm);
+      font-size: 15px; backdrop-filter: blur(8px); display: inline-block;
+    }
+
+    /* ─── Badges Row ─── */
+    .badges-row {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin: 12px 0 20px;
+    }
+    .badge {
+      background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);
+      padding: 6px 14px; border-radius: 20px; font-size: 13px;
+      color: white; display: flex; align-items: center; gap: 6px;
+    }
+    .badge .badge-icon { font-size: 18px; }
+    .badge-tooltip { display: none; position: absolute; background: var(--bg-card);
+      color: var(--text-primary); padding: 8px 12px; border-radius: 8px;
+      font-size: 12px; box-shadow: var(--shadow); z-index: 10; white-space: nowrap; }
+    .badge:hover .badge-tooltip { display: block; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; }
+
+    /* ─── Navigation Tabs ─── */
+    .nav-tabs {
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+      margin-bottom: 20px; padding: 0 8px;
+    }
+    .nav-tab {
+      padding: 8px 16px; border-radius: 20px; border: none;
+      background: rgba(255,255,255,0.15); color: white;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; backdrop-filter: blur(8px);
+    }
+    .nav-tab:hover { background: rgba(255,255,255,0.25); }
+    .nav-tab.active { background: white; color: var(--accent); }
+
+    /* ─── Cards ─── */
+    .card {
+      background: var(--bg-card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; color: var(--text-secondary); }
+
+    /* ─── Section Panels ─── */
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+
+    /* ─── Grade Card ─── */
+    .grade-display {
+      display: flex; align-items: center; gap: 20px;
+      padding: 20px; border-radius: var(--radius-sm);
+    }
+    .grade-letter {
+      font-size: 64px; font-weight: 800; line-height: 1;
+      min-width: 80px; text-align: center;
+    }
+    .grade-details { flex: 1; }
+    .grade-details .pct { font-size: 24px; font-weight: 700; }
+    .grade-details .label { font-size: 13px; color: var(--text-muted); }
+    .grade-a { color: var(--success); background: var(--success-bg); }
+    .grade-b { color: #0284c7; background: #e0f2fe; }
+    .grade-c { color: var(--warning); background: var(--warning-bg); }
+    .grade-d { color: #ea580c; background: #fff7ed; }
+    .grade-f { color: var(--danger); background: var(--danger-bg); }
+
+    /* ─── Activity Timeline ─── */
+    .activity-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .activity-table th { background: var(--bg-input); padding: 10px 12px; text-align: left;
+      font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid var(--border); }
+    .activity-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .activity-table tr:hover { background: var(--bg-input); }
+    .att-present { color: var(--success); font-weight: 600; }
+    .att-absent { color: var(--danger); font-weight: 600; }
+    .att-tardy { color: var(--warning); font-weight: 600; }
+    .att-excused { color: var(--purple); font-weight: 600; }
+
+    /* ─── Summary Stats ─── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat-box {
+      background: var(--bg-input); border-radius: var(--radius-sm);
+      padding: 16px; text-align: center;
+    }
+    .stat-box .stat-value { font-size: 28px; font-weight: 800; }
+    .stat-box .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    /* ─── Messages ─── */
+    .message-item {
+      padding: 16px; background: var(--bg-input); border-radius: var(--radius-sm);
+      margin-bottom: 10px; border-left: 4px solid var(--accent);
+    }
+    .message-item .msg-date { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .message-item .msg-from { font-weight: 600; font-size: 13px; color: var(--accent); }
+    .message-item .msg-body { font-size: 14px; margin-top: 6px; }
+
+    /* ─── Announcements ─── */
+    .announcement-item {
+      padding: 16px; background: var(--warning-bg); border-radius: var(--radius-sm);
+      margin-bottom: 10px; border-left: 4px solid var(--warning);
+    }
+    .announcement-item .ann-date { font-size: 12px; color: var(--text-muted); }
+    .announcement-item .ann-title { font-weight: 700; font-size: 15px; margin: 4px 0; }
+    .announcement-item .ann-body { font-size: 14px; color: var(--text-secondary); }
+
+    /* ─── Lesson Card ─── */
+    .lesson-card {
+      padding: 20px; background: var(--purple-bg); border-radius: var(--radius-sm);
+      border-left: 4px solid var(--purple);
+    }
+    .lesson-card .lesson-topic { font-size: 20px; font-weight: 700; color: var(--purple); }
+    .lesson-card .lesson-date { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .lesson-card .lesson-desc { font-size: 14px; margin: 8px 0; }
+    .lesson-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .lesson-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      text-decoration: none; color: white; background: var(--purple);
+      transition: opacity 0.2s;
+    }
+    .lesson-link:hover { opacity: 0.85; }
+    .lesson-link.desmos { background: #16a34a; }
+    .lesson-link.geogebra { background: #2563eb; }
+
+    /* ─── Resources ─── */
+    .resource-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 8px;
+      text-decoration: none; color: inherit; transition: box-shadow 0.2s;
+    }
+    .resource-item:hover { box-shadow: var(--shadow); }
+    .resource-icon { font-size: 24px; }
+    .resource-info { flex: 1; }
+    .resource-info .res-title { font-weight: 600; font-size: 14px; }
+    .resource-info .res-topic { font-size: 12px; color: var(--text-muted); }
+    .resource-type { font-size: 11px; padding: 4px 10px; border-radius: 12px; background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+    /* ─── Goals ─── */
+    .goal-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px;
+      background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 8px;
+    }
+    .goal-item.completed { opacity: 0.6; }
+    .goal-status-btn {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+      background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: all 0.2s; flex-shrink: 0;
+    }
+    .goal-status-btn.done { background: var(--success); border-color: var(--success); color: white; }
+    .goal-info { flex: 1; }
+    .goal-info .goal-text { font-size: 14px; font-weight: 500; }
+    .goal-info .goal-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ─── Reflections ─── */
+    .reflection-item {
+      padding: 14px; background: var(--bg-input); border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .reflection-item .ref-date { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .reflection-item .ref-text { font-size: 14px; }
+
+    /* ─── Help Requests ─── */
+    .help-item {
+      padding: 14px; background: var(--bg-input); border-radius: var(--radius-sm);
+      margin-bottom: 10px; border-left: 4px solid var(--accent);
+    }
+    .help-item.replied { border-left-color: var(--success); }
+    .help-item .help-date { font-size: 12px; color: var(--text-muted); }
+    .help-item .help-q { font-size: 14px; font-weight: 500; margin: 4px 0; }
+    .help-item .help-status { display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 10px; font-weight: 600; margin-top: 4px; }
+    .help-item .status-pending { background: var(--warning-bg); color: var(--warning); }
+    .help-item .status-answered { background: var(--success-bg); color: var(--success); }
+    .help-item .help-reply {
+      margin-top: 10px; padding: 10px; background: var(--success-bg);
+      border-radius: var(--radius-sm); font-size: 13px;
+    }
+    .help-item .help-reply strong { color: var(--success); }
+
+    /* ─── Upload Area ─── */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius-sm);
+      padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: var(--accent-light); }
+    .upload-area .upload-icon { font-size: 40px; margin-bottom: 8px; }
+    .upload-area p { font-size: 14px; color: var(--text-muted); }
+    .upload-area input[type="file"] { display: none; }
+    .upload-status { font-size: 13px; padding: 8px; text-align: center; }
+
+    /* ─── Forms ─── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+    .form-input, .form-textarea {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 14px; font-family: inherit;
+      background: var(--bg-input); transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .form-textarea { min-height: 100px; resize: vertical; }
+
+    .btn {
+      padding: 10px 20px; border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── Empty States ─── */
+    .empty-state {
+      text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px;
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 8px; }
+
+    /* ─── Grade History Chart ─── */
+    #grade-chart { width: 100%; height: 250px; }
+
+    /* ─── Footer ─── */
+    .portal-footer {
+      text-align: center; padding: 24px 16px; font-size: 11px; color: rgba(255,255,255,0.6);
+    }
+
+    /* ─── Mobile Responsive ─── */
+    @media (max-width: 640px) {
+      .container { width: 100%; padding: 8px; }
+      .card { padding: 16px; border-radius: 12px; }
+      .portal-header h1 { font-size: 22px; }
+      .grade-letter { font-size: 48px; min-width: 60px; }
+      .grade-details .pct { font-size: 20px; }
+      .nav-tab { padding: 6px 12px; font-size: 12px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .activity-table { font-size: 12px; }
+      .activity-table th, .activity-table td { padding: 8px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p>Loading your dashboard...</p>
+</div>
+
+<!-- Auth Error Screen -->
+<div id="auth-error">
+  <h2>🔒 Access Denied</h2>
+  <p id="auth-error-msg">Your account is not registered. Please contact your teacher.</p>
+</div>
+
+<!-- Main Application -->
+<div id="app">
+  <!-- Header -->
+  <div class="portal-header">
+    <h1>📐 Blueprint Math Portal</h1>
+    <p class="welcome">Welcome, <span id="student-name">Student</span>!</p>
+    <div class="encouragement-msg" id="encouragement-msg"></div>
+    <div class="badges-row" id="badges-row"></div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="container">
+    <div class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab active" data-section="dashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+      <button class="nav-tab" data-section="activity" onclick="showSection('activity')">📅 Activity</button>
+      <button class="nav-tab" data-section="lesson" onclick="showSection('lesson')">📚 Lesson</button>
+      <button class="nav-tab" data-section="messages" onclick="showSection('messages')">💬 Messages</button>
+      <button class="nav-tab" data-section="goals" onclick="showSection('goals')">🎯 Goals</button>
+      <button class="nav-tab" data-section="journal" onclick="showSection('journal')">📝 Journal</button>
+      <button class="nav-tab" data-section="upload" onclick="showSection('upload')">📸 Upload</button>
+      <button class="nav-tab" data-section="help" onclick="showSection('help')">💡 Help</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           DASHBOARD SECTION            -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel active" id="section-dashboard">
+      <!-- Grade Card -->
+      <div class="card" id="grade-card">
+        <h2>📊 Current Grade</h2>
+        <div class="grade-display" id="grade-display">
+          <div class="grade-letter" id="grade-letter">--</div>
+          <div class="grade-details">
+            <div class="pct" id="grade-pct">--</div>
+            <div class="label" id="grade-class">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card">
+        <h2>📈 Last 2 Weeks Summary</h2>
+        <div class="stats-row" id="stats-row">
+          <div class="stat-box"><div class="stat-value" id="stat-attendance">--</div><div class="stat-label">Attendance</div></div>
+          <div class="stat-box"><div class="stat-value" id="stat-present">--</div><div class="stat-label">Days Present</div></div>
+          <div class="stat-box"><div class="stat-value" id="stat-absent">--</div><div class="stat-label">Absences</div></div>
+          <div class="stat-box"><div class="stat-value" id="stat-tardy">--</div><div class="stat-label">Tardies</div></div>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div class="card" id="announcements-card" style="display:none;">
+        <h2>🔔 Announcements</h2>
+        <div id="announcements-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           ACTIVITY SECTION             -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-activity">
+      <div class="card">
+        <h2>📅 Recent Activity</h2>
+        <div id="activity-content">
+          <div class="empty-state"><div class="empty-icon">📅</div>Loading activity data...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           LESSON SECTION               -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-lesson">
+      <div class="card">
+        <h2>📚 Current Lesson</h2>
+        <div id="lesson-content">
+          <div class="empty-state"><div class="empty-icon">📚</div>No lesson available yet.</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📐 Math Resources</h2>
+        <div id="resources-content">
+          <div class="empty-state"><div class="empty-icon">📐</div>No resources available yet. Your teacher will add them soon!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           MESSAGES SECTION             -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-messages">
+      <div class="card">
+        <h2>💬 Teacher Messages</h2>
+        <div id="messages-content">
+          <div class="empty-state"><div class="empty-icon">💬</div>No messages yet. Check back later!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           GOALS SECTION                -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-goals">
+      <div class="card">
+        <h2>🎯 My Goals</h2>
+        <div id="goals-list"></div>
+        <h3>Add a New Goal</h3>
+        <div class="form-group">
+          <label>What's your goal?</label>
+          <input type="text" class="form-input" id="goal-input" placeholder="e.g., Score 80%+ on exit tickets this week">
+        </div>
+        <div class="form-group">
+          <label>Target Date (optional)</label>
+          <input type="date" class="form-input" id="goal-date">
+        </div>
+        <button class="btn btn-primary" onclick="addGoal(this)">➕ Add Goal</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           JOURNAL SECTION              -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-journal">
+      <div class="card">
+        <h2>📝 Self-Reflection Journal</h2>
+        <div class="form-group">
+          <label>What did you learn this week? What was challenging?</label>
+          <textarea class="form-textarea" id="reflection-input" placeholder="Write your reflection here..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addReflection(this)">💾 Save Reflection</button>
+        <h3>Past Reflections</h3>
+        <div id="reflections-list">
+          <div class="empty-state"><div class="empty-icon">📝</div>No reflections yet. Start writing!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           UPLOAD SECTION               -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-upload">
+      <div class="card">
+        <h2>📸 Exit Ticket Upload</h2>
+        <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+          Take a photo of your exit ticket and upload it here. Your teacher will receive it automatically.
+        </p>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+          <div class="upload-icon">📷</div>
+          <p>Click or drag & drop to upload your exit ticket</p>
+          <p style="font-size:12px; margin-top:4px;">Accepts: JPEG, PNG, GIF, WebP, PDF (max 10MB)</p>
+          <input type="file" id="file-input" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
+        </div>
+        <div class="upload-status" id="upload-status"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--           HELP SECTION                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <div class="section-panel" id="section-help">
+      <div class="card">
+        <h2>💡 Ask for Help</h2>
+        <div class="form-group">
+          <label>What do you need help with?</label>
+          <textarea class="form-textarea" id="help-input" placeholder="Describe your question or what you're stuck on..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitHelp(this)">📤 Send Question</button>
+        <h3>My Questions</h3>
+        <div id="help-list">
+          <div class="empty-state"><div class="empty-icon">💡</div>No questions yet. Don't be shy — ask away!</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.container -->
+
+  <div class="portal-footer">
+    Blueprint Fellows — Student Progress Portal<br>
+    Data is private and secure within Google Workspace
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//                   APP STATE
+// ═══════════════════════════════════════════════════════
+var state = {
+  student: null,
+  grade: null,
+  activity: null,
+  messages: null,
+  announcements: null,
+  lesson: null,
+  encouragement: null,
+  goals: null,
+  reflections: null,
+  helpRequests: null
+};
+
+// ═══════════════════════════════════════════════════════
+//                   INITIALIZATION
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  google.script.run
+    .withSuccessHandler(handleDashboardLoad)
+    .withFailureHandler(handleLoadError)
+    .getStudentDashboard();
+});
+
+function handleDashboardLoad(data) {
+  document.getElementById('loading-screen').style.display = 'none';
+
+  if (!data.authenticated) {
+    document.getElementById('auth-error-msg').textContent = data.error || 'Access denied.';
+    document.getElementById('auth-error').style.display = 'flex';
+    return;
+  }
+
+  state = data;
+  document.getElementById('app').style.display = 'block';
+
+  renderHeader();
+  renderGrade();
+  renderActivitySummary();
+  renderAnnouncements();
+  renderActivity();
+  renderLesson();
+  renderResources();
+  renderMessages();
+  renderGoals();
+  renderReflections();
+  renderHelpRequests();
+}
+
+function handleLoadError(err) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('auth-error-msg').textContent = 'Something went wrong: ' + (err.message || err);
+  document.getElementById('auth-error').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════
+//                   NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showSection(name) {
+  var panels = document.querySelectorAll('.section-panel');
+  for (var i = 0; i < panels.length; i++) {
+    panels[i].classList.remove('active');
+  }
+  document.getElementById('section-' + name).classList.add('active');
+
+  var tabs = document.querySelectorAll('.nav-tab');
+  for (var j = 0; j < tabs.length; j++) {
+    tabs[j].classList.toggle('active', tabs[j].getAttribute('data-section') === name);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//                   RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+function renderHeader() {
+  if (state.student) {
+    document.getElementById('student-name').textContent = state.student.name || 'Student';
+  }
+  if (state.encouragement) {
+    var msgEl = document.getElementById('encouragement-msg');
+    msgEl.textContent = state.encouragement.message || '';
+    if (!state.encouragement.message) msgEl.style.display = 'none';
+
+    var badgesEl = document.getElementById('badges-row');
+    var badges = state.encouragement.badges || [];
+    if (badges.length === 0) {
+      badgesEl.style.display = 'none';
+    } else {
+      badgesEl.innerHTML = badges.map(function(b) {
+        return '<div class="badge" style="position:relative;" title="' + escHtml(b.desc) + '">' +
+          '<span class="badge-icon">' + b.icon + '</span>' + escHtml(b.label) +
+          '</div>';
+      }).join('');
+    }
+  }
+}
+
+function renderGrade() {
+  var g = state.grade;
+  if (!g || g.error) {
+    document.getElementById('grade-letter').textContent = 'N/A';
+    document.getElementById('grade-pct').textContent = g && g.error ? g.error : 'Not available';
+    return;
+  }
+  var letter = g.letterGrade || 'N/A';
+  document.getElementById('grade-letter').textContent = letter;
+  document.getElementById('grade-pct').textContent = g.percentage || '';
+  document.getElementById('grade-class').textContent = g.class ? 'Class: ' + g.class : '';
+
+  // Color coding
+  var display = document.getElementById('grade-display');
+  var first = letter.charAt(0).toUpperCase();
+  display.className = 'grade-display';
+  if (first === 'A') display.classList.add('grade-a');
+  else if (first === 'B') display.classList.add('grade-b');
+  else if (first === 'C') display.classList.add('grade-c');
+  else if (first === 'D') display.classList.add('grade-d');
+  else if (first === 'F') display.classList.add('grade-f');
+}
+
+function renderActivitySummary() {
+  var a = state.activity;
+  if (!a || !a.summary) return;
+  var s = a.summary;
+  document.getElementById('stat-attendance').textContent = s.attendancePct + '%';
+  document.getElementById('stat-present').textContent = s.totalPresent;
+  document.getElementById('stat-absent').textContent = s.totalAbsent;
+  document.getElementById('stat-tardy').textContent = s.totalTardy;
+}
+
+function renderAnnouncements() {
+  var anns = (state.announcements && state.announcements.announcements) || [];
+  var card = document.getElementById('announcements-card');
+  if (anns.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('announcements-list').innerHTML = anns.map(function(a) {
+    return '<div class="announcement-item">' +
+      '<div class="ann-date">' + escHtml(a.date) + '</div>' +
+      '<div class="ann-title">' + escHtml(a.title) + '</div>' +
+      '<div class="ann-body">' + escHtml(a.body) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderActivity() {
+  var a = state.activity;
+  var container = document.getElementById('activity-content');
+  if (!a || !a.activities || a.activities.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div>' +
+      (a && a.error ? escHtml(a.error) : 'No activity data available for the last 2 weeks.') + '</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto;"><table class="activity-table">' +
+    '<tr><th>Date</th><th>Day</th><th>Attendance</th><th>Exit Ticket</th><th>Grade</th></tr>';
+  a.activities.forEach(function(act) {
+    var attClass = '';
+    var attLower = (act.attendance || '').toLowerCase();
+    if (attLower === 'present') attClass = 'att-present';
+    else if (attLower === 'absent') attClass = 'att-absent';
+    else if (attLower === 'tardy') attClass = 'att-tardy';
+    else if (attLower.indexOf('excus') > -1) attClass = 'att-excused';
+
+    html += '<tr>' +
+      '<td>' + escHtml(act.date) + '</td>' +
+      '<td>' + escHtml(act.day) + '</td>' +
+      '<td class="' + attClass + '">' + escHtml(act.attendance) + '</td>' +
+      '<td>' + (act.exitTicket !== '' ? act.exitTicket : '—') + '</td>' +
+      '<td>' + (act.dailyGrade !== '' ? escHtml(act.dailyGrade) : '—') + '</td>' +
+      '</tr>';
+  });
+  html += '</table></div>';
+  container.innerHTML = html;
+}
+
+function renderLesson() {
+  var l = state.lesson && state.lesson.lesson;
+  var container = document.getElementById('lesson-content');
+  if (!l) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div>No current lesson posted yet. Check back soon!</div>';
+    return;
+  }
+
+  var linksHtml = '';
+  if (l.desmosLink) linksHtml += '<a href="' + escHtml(l.desmosLink) + '" target="_blank" class="lesson-link desmos">📊 Open in Desmos</a>';
+  if (l.geogebraLink) linksHtml += '<a href="' + escHtml(l.geogebraLink) + '" target="_blank" class="lesson-link geogebra">📐 Open in GeoGebra</a>';
+
+  container.innerHTML = '<div class="lesson-card">' +
+    '<div class="lesson-date">' + escHtml(l.date) + '</div>' +
+    '<div class="lesson-topic">' + escHtml(l.topic) + '</div>' +
+    '<div class="lesson-desc">' + escHtml(l.description) + '</div>' +
+    (linksHtml ? '<div class="lesson-links">' + linksHtml + '</div>' : '') +
+    '</div>';
+}
+
+function renderResources() {
+  var r = (state.resources && state.resources.resources) || [];
+  var container = document.getElementById('resources-content');
+
+  // Load resources asynchronously if not in initial state
+  if (!state.resources) {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        state.resources = data;
+        renderResources();
+      })
+      .getResources('');
+    return;
+  }
+
+  if (r.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📐</div>No resources available yet. Your teacher will add them soon!</div>';
+    return;
+  }
+
+  container.innerHTML = r.map(function(res) {
+    var icon = '📄';
+    var t = (res.type || '').toLowerCase();
+    if (t === 'video') icon = '🎬';
+    else if (t === 'worksheet') icon = '📝';
+    else if (t === 'guide') icon = '📖';
+
+    return '<a href="' + escHtml(res.url) + '" target="_blank" class="resource-item">' +
+      '<div class="resource-icon">' + icon + '</div>' +
+      '<div class="resource-info">' +
+        '<div class="res-title">' + escHtml(res.title) + '</div>' +
+        '<div class="res-topic">' + escHtml(res.topic) + '</div>' +
+      '</div>' +
+      '<div class="resource-type">' + escHtml(res.type) + '</div>' +
+      '</a>';
+  }).join('');
+}
+
+function renderMessages() {
+  var msgs = (state.messages && state.messages.messages) || [];
+  var container = document.getElementById('messages-content');
+  if (msgs.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div>No messages yet. Check back later!</div>';
+    return;
+  }
+  container.innerHTML = msgs.map(function(m) {
+    return '<div class="message-item">' +
+      '<div class="msg-date">' + escHtml(m.date) + '</div>' +
+      '<div class="msg-from">' + escHtml(m.from) + '</div>' +
+      '<div class="msg-body">' + escHtml(m.message) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderGoals() {
+  var goals = (state.goals && state.goals.goals) || [];
+  var container = document.getElementById('goals-list');
+  if (goals.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div>No goals set yet. Add one below!</div>';
+    return;
+  }
+  container.innerHTML = goals.map(function(g, idx) {
+    var isDone = g.status === 'Completed';
+    return '<div class="goal-item' + (isDone ? ' completed' : '') + '">' +
+      '<button class="goal-status-btn' + (isDone ? ' done' : '') + '" onclick="toggleGoal(' + g.row + ', ' + isDone + ')">' +
+        (isDone ? '✓' : '') +
+      '</button>' +
+      '<div class="goal-info">' +
+        '<div class="goal-text">' + escHtml(g.goal) + '</div>' +
+        '<div class="goal-meta">' +
+          (g.targetDate ? 'Target: ' + escHtml(g.targetDate) + ' · ' : '') +
+          'Status: ' + escHtml(g.status) +
+          (g.created ? ' · Created: ' + escHtml(g.created) : '') +
+        '</div>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderReflections() {
+  var refs = (state.reflections && state.reflections.reflections) || [];
+  var container = document.getElementById('reflections-list');
+  if (refs.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div>No reflections yet. Start writing!</div>';
+    return;
+  }
+  container.innerHTML = refs.map(function(r) {
+    return '<div class="reflection-item">' +
+      '<div class="ref-date">' + escHtml(r.date) + '</div>' +
+      '<div class="ref-text">' + escHtml(r.reflection) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderHelpRequests() {
+  var reqs = (state.helpRequests && state.helpRequests.requests) || [];
+  var container = document.getElementById('help-list');
+  if (reqs.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💡</div>No questions yet. Don\'t be shy — ask away!</div>';
+    return;
+  }
+  container.innerHTML = reqs.map(function(h) {
+    var hasReply = h.teacherReply && h.teacherReply.trim();
+    return '<div class="help-item' + (hasReply ? ' replied' : '') + '">' +
+      '<div class="help-date">' + escHtml(h.date) + '</div>' +
+      '<div class="help-q">' + escHtml(h.question) + '</div>' +
+      '<span class="help-status ' + (hasReply ? 'status-answered' : 'status-pending') + '">' +
+        (hasReply ? '✓ Answered' : '⏳ Pending') +
+      '</span>' +
+      (hasReply ? '<div class="help-reply"><strong>Teacher:</strong> ' + escHtml(h.teacherReply) + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//                   ACTION HANDLERS
+// ═══════════════════════════════════════════════════════
+
+function addGoal(btn) {
+  var goalText = document.getElementById('goal-input').value.trim();
+  if (!goalText) { alert('Please enter a goal.'); return; }
+  var targetDate = document.getElementById('goal-date').value || '';
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      btn.disabled = false;
+      btn.textContent = '➕ Add Goal';
+      if (result.error) { alert(result.error); return; }
+      document.getElementById('goal-input').value = '';
+      document.getElementById('goal-date').value = '';
+      // Refresh goals
+      google.script.run.withSuccessHandler(function(data) {
+        state.goals = data;
+        renderGoals();
+      }).getStudentGoals();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.textContent = '➕ Add Goal';
+      alert('Error: ' + err.message);
+    })
+    .addStudentGoal(goalText, targetDate);
+}
+
+function toggleGoal(row, isDone) {
+  var newStatus = isDone ? 'In Progress' : 'Completed';
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.error) { alert(result.error); return; }
+      google.script.run.withSuccessHandler(function(data) {
+        state.goals = data;
+        renderGoals();
+      }).getStudentGoals();
+    })
+    .updateGoalStatus(row, newStatus);
+}
+
+function addReflection(btn) {
+  var text = document.getElementById('reflection-input').value.trim();
+  if (!text) { alert('Please write a reflection.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Reflection';
+      if (result.error) { alert(result.error); return; }
+      document.getElementById('reflection-input').value = '';
+      google.script.run.withSuccessHandler(function(data) {
+        state.reflections = data;
+        renderReflections();
+      }).getStudentReflections();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Reflection';
+      alert('Error: ' + err.message);
+    })
+    .addStudentReflection(text);
+}
+
+function submitHelp(btn) {
+  var question = document.getElementById('help-input').value.trim();
+  if (!question) { alert('Please describe your question.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      btn.disabled = false;
+      btn.textContent = '📤 Send Question';
+      if (result.error) { alert(result.error); return; }
+      document.getElementById('help-input').value = '';
+      google.script.run.withSuccessHandler(function(data) {
+        state.helpRequests = data;
+        renderHelpRequests();
+      }).getHelpRequests();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.textContent = '📤 Send Question';
+      alert('Error: ' + err.message);
+    })
+    .submitHelpRequest(question);
+}
+
+// ─── File Upload ───
+function handleFileSelect(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  uploadFile(file);
+}
+
+// Drag & drop
+(function() {
+  var area = document.getElementById('upload-area');
+  if (!area) return;
+  ['dragenter', 'dragover'].forEach(function(evt) {
+    area.addEventListener(evt, function(e) { e.preventDefault(); area.classList.add('drag-over'); });
+  });
+  ['dragleave', 'drop'].forEach(function(evt) {
+    area.addEventListener(evt, function(e) { e.preventDefault(); area.classList.remove('drag-over'); });
+  });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault();
+    var file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  });
+})();
+
+function uploadFile(file) {
+  var statusEl = document.getElementById('upload-status');
+  // Validate size client-side
+  if (file.size > 10 * 1024 * 1024) {
+    statusEl.innerHTML = '<span style="color:var(--danger);">❌ File too large. Max 10MB.</span>';
+    return;
+  }
+
+  statusEl.innerHTML = '<span style="color:var(--accent);">⏳ Uploading ' + escHtml(file.name) + '...</span>';
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64 = e.target.result.split(',')[1];
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.error) {
+          statusEl.innerHTML = '<span style="color:var(--danger);">❌ ' + escHtml(result.error) + '</span>';
+        } else {
+          statusEl.innerHTML = '<span style="color:var(--success);">✅ Uploaded successfully! ' +
+            '<a href="' + escHtml(result.fileUrl) + '" target="_blank">View file</a></span>';
+        }
+      })
+      .withFailureHandler(function(err) {
+        statusEl.innerHTML = '<span style="color:var(--danger);">❌ Upload failed: ' + escHtml(err.message) + '</span>';
+      })
+      .uploadExitTicket(base64, file.name, file.type);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════════════════
+//                   UTILITY
+// ═══════════════════════════════════════════════════════
+function escHtml(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(String(str)));
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
