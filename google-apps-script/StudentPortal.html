@@ -446,7 +446,7 @@
           <label>Target Date (optional)</label>
           <input type="date" class="form-input" id="goal-date">
         </div>
-        <button class="btn btn-primary" onclick="addGoal()">➕ Add Goal</button>
+        <button class="btn btn-primary" onclick="addGoal(this)">➕ Add Goal</button>
       </div>
     </div>
 
@@ -460,7 +460,7 @@
           <label>What did you learn this week? What was challenging?</label>
           <textarea class="form-textarea" id="reflection-input" placeholder="Write your reflection here..."></textarea>
         </div>
-        <button class="btn btn-primary" onclick="addReflection()">💾 Save Reflection</button>
+        <button class="btn btn-primary" onclick="addReflection(this)">💾 Save Reflection</button>
         <h3>Past Reflections</h3>
         <div id="reflections-list">
           <div class="empty-state"><div class="empty-icon">📝</div>No reflections yet. Start writing!</div>
@@ -497,7 +497,7 @@
           <label>What do you need help with?</label>
           <textarea class="form-textarea" id="help-input" placeholder="Describe your question or what you're stuck on..."></textarea>
         </div>
-        <button class="btn btn-primary" onclick="submitHelp()">📤 Send Question</button>
+        <button class="btn btn-primary" onclick="submitHelp(this)">📤 Send Question</button>
         <h3>My Questions</h3>
         <div id="help-list">
           <div class="empty-state"><div class="empty-icon">💡</div>No questions yet. Don't be shy — ask away!</div>
@@ -830,12 +830,11 @@ function renderHelpRequests() {
 //                   ACTION HANDLERS
 // ═══════════════════════════════════════════════════════
 
-function addGoal() {
+function addGoal(btn) {
   var goalText = document.getElementById('goal-input').value.trim();
   if (!goalText) { alert('Please enter a goal.'); return; }
   var targetDate = document.getElementById('goal-date').value || '';
 
-  var btn = event.target;
   btn.disabled = true;
   btn.textContent = 'Saving...';
 
@@ -873,11 +872,10 @@ function toggleGoal(row, isDone) {
     .updateGoalStatus(row, newStatus);
 }
 
-function addReflection() {
+function addReflection(btn) {
   var text = document.getElementById('reflection-input').value.trim();
   if (!text) { alert('Please write a reflection.'); return; }
 
-  var btn = event.target;
   btn.disabled = true;
   btn.textContent = 'Saving...';
 
@@ -900,11 +898,10 @@ function addReflection() {
     .addStudentReflection(text);
 }
 
-function submitHelp() {
+function submitHelp(btn) {
   var question = document.getElementById('help-input').value.trim();
   if (!question) { alert('Please describe your question.'); return; }
 
-  var btn = event.target;
   btn.disabled = true;
   btn.textContent = 'Sending...';
 

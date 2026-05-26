@@ -134,9 +134,9 @@ function getStudentGrade() {
       }
     }
     if (!gradesSheet) {
-      for (var i = 0; i < sheets.length; i++) {
-        if (sheets[i].getName().toLowerCase().indexOf('grade') > -1) {
-          gradesSheet = sheets[i];
+      for (var j = 0; j < sheets.length; j++) {
+        if (sheets[j].getName().toLowerCase().indexOf('grade') > -1) {
+          gradesSheet = sheets[j];
           break;
         }
       }
